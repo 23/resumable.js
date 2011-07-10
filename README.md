@@ -50,12 +50,12 @@ The object is loaded with a configuation hash:
     
 Available configuration options are:
 
-* `chunkSize`: (Default: `1*1024*1024`)
-* `simultaneousUploads`: (Default: `3`)
-* `fileParameterName`: (Default: `file`)
-* `query`: (Default: `{}`)
-* `prioritizeFirstAndLastChunk`: (Default: `false`)
-* `target`: (Default: `/`)
+* `target`: The target URL for the multipart POST request (Default: `/`)
+* `chunkSize`: The size in bytes of each uploaded chunk of data (Default: `1*1024*1024`)
+* `simultaneousUploads`: Number of simultaneous uploads (Default: `3`)
+* `fileParameterName`: The name of the multipart POST parameter to use for the file chunk  (Default: `file`)
+* `query`: Extra parameters to include in the multipart POST with data (Default: `{}`)
+* `prioritizeFirstAndLastChunk`: Prioritize first and last chunks of all files. This can be handy if you can determine if a file is valid for your service from only the first or last chunk. For example, photo or video meta data is usually located in the first part of a file, making it easy to test support from only the first chunk. (Default: `false`)
 
 
 #### Properties

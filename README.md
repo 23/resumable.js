@@ -62,7 +62,7 @@ Available configuration options are:
 
 * `.support`: A boolean value indicator whether or not Resumable.js is supported by the current browser.
 * `.opts`: A hash object of the configuration of the Resumable.js instance.
-* `.files`: An array of files add by the user.
+* `.files`: An array of `ResumableFile` file objects add by the user (see full docs for this object type below).
 
 #### Methods
 
@@ -90,16 +90,16 @@ Available configuration options are:
 ### ResumableFile
 #### Properties
 
-* `.resumableObj`:
-* `.file`:
-* `.fileName`:
-* `.size`:
-* `.uniqueIdentifier`:
-* `.chunks`:
+* `.resumableObj`: A back-reference to the parent `Resumable` object.
+* `.file`: The correlating HTML5 `File` object.
+* `.fileName`: The name of the file.
+* `.size`: Size in bytes of the file.
+* `.uniqueIdentifier`: A unique identifier assigned to this file object. This value is included in uploads to the server for reference, but can also be used in CSS classes etc when building your upload UI.
+* `.chunks`: An array of `ResumableChunk` items. You shouldn't need to dig into these.
 
 #### Methods
 
-* `.abort()`:
-* `.retry()`:
-* `.bootstrap()`:
-* `.progress()`:
+* `.progress(relative)`: Returns a float between 0 and 1 indicating the current upload progress of the file. If `relative` is `true`, the value is returned relative to all files in the Resumable.js instance.
+* `.abort()`: Abort uploading the file.
+* `.retry()`: Retry uploading the file.
+* `.bootstrap()`: Rebuild the state of a `ResumableFile` object, including reassigning chunks and XMLHttpRequest instances.

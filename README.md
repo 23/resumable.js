@@ -39,17 +39,16 @@ bootstrapping options
 extra parameters sent in POST
 returning error messages (200 is good, 500 is bad, everything else is retry)
 
----
+## Full documentation
 
-### Full documentation
-
-#### `Resumable` properties
+### `Resumable`
+#### Properties
 
 * `.support`: A boolean value indicator whether or not Resumable.js is supported by the current browser.
 * `.opts`: A hash object of the configuration of the Resumable.js instance.
 * `.files`: An array of files add by the user.
 
-#### `Resumable` methods
+#### Methods
 
 * `.assignBrowse(domNodes)`: Assign a browse action to one or more DOM nodes.
 * `.assignDrop(domNodes)`: Assign one or more DOM nodes as a drop target.
@@ -59,7 +58,7 @@ returning error messages (200 is good, 500 is bad, everything else is retry)
 * `.progress()`: Returns a float between 0 and 1 indicating the current upload progress of all files.
 * `.isUploading()`: Returns a boolean indicating whether or not the instance is currently uploading anything.
 
-#### `Resumable` events
+#### Events
 
 * `.fileSuccess(file)`: A specific file was completed.
 * `.fileProgress(file)`: Uploading progressed for a specific file.
@@ -72,7 +71,8 @@ returning error messages (200 is good, 500 is bad, everything else is retry)
 * `.pause()`: Uploading was paused.
 * `.catchAll(event, ...)`: Listen to all the events listed above with the same callback function.
 
-#### `ResumableFile` properties
+### `ResumableFile` 
+#### Properties
 
 * `.resumableObj`:
 * `.file`:
@@ -81,7 +81,7 @@ returning error messages (200 is good, 500 is bad, everything else is retry)
 * `.uniqueIdentifier`:
 * `.chunks`:
 
-#### `ResumableFile` methods
+#### Methods
 
 * `.abort()`:
 * `.retry()`:

@@ -41,7 +41,23 @@ returning error messages (200 is good, 500 is bad, everything else is retry)
 
 ## Full documentation
 
-### `Resumable`
+### Resumable
+#### Configuration
+
+The object is loaded with a configuation hash:
+
+    var r = new Resumable({opt1:'val', ...});
+    
+Available configuration options are:
+
+* `chunkSize`: (Default: `1*1024*1024`)
+* `simultaneousUploads`: (Default: `3`)
+* `fileParameterName`: (Default: `file`)
+* `query`: (Default: `{}`)
+* `prioritizeFirstAndLastChunk`: (Default: `false`)
+* `target`: (Default: `/`)
+
+
 #### Properties
 
 * `.support`: A boolean value indicator whether or not Resumable.js is supported by the current browser.
@@ -71,7 +87,7 @@ returning error messages (200 is good, 500 is bad, everything else is retry)
 * `.pause()`: Uploading was paused.
 * `.catchAll(event, ...)`: Listen to all the events listed above with the same callback function.
 
-### `ResumableFile` 
+### ResumableFile
 #### Properties
 
 * `.resumableObj`:

@@ -30,7 +30,6 @@ var Resumable = function(opts){
   $.defaults = {
     chunkSize:1*1024*1024,
     simultaneousUploads:3,
-    resumeInterval:10,
     fileParameterName:'file',
     query:{},
     prioritizeFirstAndLastChunk:false,

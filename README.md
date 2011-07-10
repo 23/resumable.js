@@ -15,6 +15,7 @@ A new `Resumable` object is created with information of what and where to post:
       target:'/api/photo/redeem-upload-token', 
       query:{upload_token:'my_token'}
     });
+    // Resumable.js isn't support, fall back on a different method
     if(!r.support) location.href = '/some-old-crappy-uploader';
   
 To allow files to either selected or dropped, you'll assign drop target and a DOM item to be clicked for browsing:
@@ -48,6 +49,7 @@ To handle the state of upload chunks, a number of extra parameters are sent alon
 You should allow for the same chunk being uploaded more than once; this isn't standard behaviour, but in an unstable network environment it could happen, and this case is exactly what Resumable.js is designed for.
 
 For every request, you can confirm reception in HTTP status codes:
+
 * `200`: The chunk was accepted and correct. No need to re-upload.
 * `500`: The file for which the chunk was uploaded is not supported, cancel the entire upload.
 * _Anything else_: Something went wrong, but try reuploading the file.

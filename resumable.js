@@ -116,7 +116,7 @@ var Resumable = function(opts){
       case 'success':
         if(_error) return;
         $.resumableObj.fire('fileProgress', $); // it's at least progress
-        if($.progress()>0.9999) {
+        if($.progress()==1) {
           $.resumableObj.fire('fileSuccess', $);
         }
         break;
@@ -156,7 +156,7 @@ var Resumable = function(opts){
           if(c.status()=='error') error = true;
           ret += c.progress(true); // get chunk progress relative to entire file
         });
-      return(error ? 1 : ret);
+      return(error ? 1 : (ret>0.99999 ? 1 : ret));
     }
 
     // Bootstrap and return
@@ -173,8 +173,8 @@ var Resumable = function(opts){
 
     // Computed properties
     $.loaded = 0;
-    $.startByte = Math.min($.offset*$.resumableObj.opts.chunkSize, $.fileObj.file.size);
-    $.endByte = Math.min( (($.offset+1)*$.resumableObj.opts.chunkSize)-1, $.fileObj.file.size);
+    $.startByte = $.offset*$.resumableObj.opts.chunkSize
+    $.endByte = Math.min( (($.offset+1)*$.resumableObj.opts.chunkSize), $.fileObj.file.size);
     $.xhr = null;
     $.send = function(){
       // Set up request and listen for event

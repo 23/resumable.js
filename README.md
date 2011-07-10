@@ -1,13 +1,13 @@
 ### What is Resumable.js
 
-A JavaScript library for providing multiple simultaneous, stable and resumable uploads via the HTML5 File API. 
+It's a JavaScript library for providing multiple simultaneous, stable and resumable uploads via the HTML5 File API. 
 
 The library is design to introduce fault-tolerance into the upload of large files through HTTP. This is done by splitting each files into small chunks; whenever the upload of a chunk fails, uploading is retries until the procedure completes. This allows uploads to automatically resume uploading after a network connection is lost either locally or to the server. Additionally, it allows for users to pause and resume uploads without loosing state. 
 
 Resumable.js relies on the `HTML5 File API` and the ability to chunks files into smaller pieces. Currently, this means that support is limited to Firefox 4+ and Chrome 11+.
 
 
-### How does it work?
+### How can I use it?
 
 A new `Resumable` object is created with information of what and where to post:
 
@@ -34,10 +34,23 @@ After this, interaction with Resumable.js is by listening to events:
         ...
       });
 
+### How do I set it up with my server?
 
-bootstrapping options
-extra parameters sent in POST
-returning error messages (200 is good, 500 is bad, everything else is retry)
+Most of the magic for Resumable.js happens in the user's browser, but files still need to be reassembled from chunks on the server side. This should be a fairly simple task and can be achieved in any web framework or language, which is able to receive file uploads.
+
+To handle the state of upload chunks, a number of extra parameters are sent along with all requests:
+
+* `resumableChunkNumber`: The index of chunk in the current upload. First chunk is `1` (no base-0 counting here).
+* `resumableChunkSize`: The general chunk size. Using this value and `resumableTotalSize` you can calculate the total number of chunks. Please note that the size of the data received in the HTTP might be lower than `resumableChunkSize` of this is the last chunk for a file.
+* `resumableTotalSize`: The total file size.
+* `resumableIdentifier`: A unique identifier for the file contained in the request.
+
+You should allow for the same chunk being uploaded more than once; this isn't standard behaviour, but in an unstable network environment it could happen, and this case is exactly what Resumable.js is designed for.
+
+For every request, you can confirm reception in HTTP status codes:
+* `200`: The chunk was accepted and correct. No need to re-upload.
+* `500`: The file for which the chunk was uploaded is not supported, cancel the entire upload.
+* _Anything else_: Something went wrong, but try reuploading the file.
 
 ## Full documentation
 

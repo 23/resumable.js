@@ -39,49 +39,51 @@ bootstrapping options
 extra parameters sent in POST
 returning error messages (200 is good, 500 is bad, everything else is retry)
 
+---
+
 ### Full documentation
 
 #### `Resumable` properties
 
-    .support: A boolean value indicator whether or not Resumable.js is supported by the current browser.
-    .opts: A hash object of the configuration of the Resumable.js instance.
-    .files: An array of files add by the user.
+* `.support`: A boolean value indicator whether or not Resumable.js is supported by the current browser.
+* `.opts`: A hash object of the configuration of the Resumable.js instance.
+* `.files`: An array of files add by the user.
 
 #### `Resumable` methods
 
-    .assignBrowse(domNodes): Assign a 'browse' action to one or more DOM nodes.
-    .assignDrop(domNodes): Assign one or more DOM nodes as a drop target.
-    .on(event, callback): Listen for event from Resumable.js (see below)
-    .upload(): Start or resume uploading.
-    .pause(): Pause uploading.
-    .progress(): Returns a float between 0 and 1 indicating the current upload progress of all files.
-    .isUploading(): Returns a boolean indicating whether or not the instance is currently uploading anything.
+* `.assignBrowse(domNodes)`: Assign a browse action to one or more DOM nodes.
+* `.assignDrop(domNodes)`: Assign one or more DOM nodes as a drop target.
+* `.on(event, callback)`: Listen for event from Resumable.js (see below)
+* `.upload()`: Start or resume uploading.
+* `.pause()`: Pause uploading.
+* `.progress()`: Returns a float between 0 and 1 indicating the current upload progress of all files.
+* `.isUploading()`: Returns a boolean indicating whether or not the instance is currently uploading anything.
 
 #### `Resumable` events
 
-    fileSuccess(file): A specific file was completed.
-    fileProgress(file): Uploading progressed for a specific file.
-    fileAdded(file): A new file was added.
-    fileRetry(file): Something went wrong during upload of a specific file, uploading is being retried.
-    fileError(file, message): An error occured during upload of a specific file.
-    complete(): Uploading completed.
-    progress(): Uploading progress.
-    error(message, file): An error, including fileError, occured.
-    pause(): Uploading was paused.
-    catchAll(event, ...): Listen to all the events listed above with the same callback function.
+* `.fileSuccess(file)`: A specific file was completed.
+* `.fileProgress(file)`: Uploading progressed for a specific file.
+* `.fileAdded(file)`: A new file was added.
+* `.fileRetry(file)`: Something went wrong during upload of a specific file, uploading is being retried.
+* `.fileError(file, message)`: An error occured during upload of a specific file.
+* `.complete()`: Uploading completed.
+* `.progress()`: Uploading progress.
+* `.error(message, file)`: An error, including fileError, occured.
+* `.pause()`: Uploading was paused.
+* `.catchAll(event, ...)`: Listen to all the events listed above with the same callback function.
 
 #### `ResumableFile` properties
 
-    $.resumableObj = resumableObj;
-    $.file = file;
-    $.fileName = file.fileName;
-    $.size = file.size;
-    $.uniqueIdentifier = (Math.floor(Math.random()*9999999) + '-' + $.file.fileName).replace(/[^0-9a-zA-Z_-]/img, '');
-    $.chunks = (Math.floor(Math.random()*9999999) + '-' + $.file.fileName).replace(/[^0-9a-zA-Z_-]/img, '');
+* `.resumableObj`:
+* `.file`:
+* `.fileName`:
+* `.size`:
+* `.uniqueIdentifier`:
+* `.chunks`:
 
 #### `ResumableFile` methods
 
-    abort():
-    retry():
-    bootstrap():
-    progress():
+* `.abort()`:
+* `.retry()`:
+* `.bootstrap()`:
+* `.progress()`:

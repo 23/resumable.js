@@ -1,8 +1,8 @@
 ### What is Resumable.js
 
-It's a JavaScript library for providing multiple simultaneous, stable and resumable uploads via the HTML5 File API. 
+It's a JavaScript library providing multiple simultaneous, stable and resumable uploads via the HTML5 File API. 
 
-The library is design to introduce fault-tolerance into the upload of large files through HTTP. This is done by splitting each files into small chunks; whenever the upload of a chunk fails, uploading is retries until the procedure completes. This allows uploads to automatically resume uploading after a network connection is lost either locally or to the server. Additionally, it allows for users to pause and resume uploads without loosing state. 
+The library is designed to introduce fault-tolerance into the upload of large files through HTTP. This is done by splitting each files into small chunks; whenever the upload of a chunk fails, uploading is retried until the procedure completes. This allows uploads to automatically resume uploading after a network connection is lost either locally or to the server. Additionally, it allows for users to pause and resume uploads without loosing state. 
 
 Resumable.js relies on the `HTML5 File API` and the ability to chunks files into smaller pieces. Currently, this means that support is limited to Firefox 4+ and Chrome 11+.
 
@@ -15,15 +15,15 @@ A new `Resumable` object is created with information of what and where to post:
       target:'/api/photo/redeem-upload-token', 
       query:{upload_token:'my_token'}
     });
-    // Resumable.js isn't support, fall back on a different method
+    // Resumable.js isn't supported, fall back on a different method
     if(!r.support) location.href = '/some-old-crappy-uploader';
   
-To allow files to either selected or dropped, you'll assign drop target and a DOM item to be clicked for browsing:
+To allow files to be either selected and drag-dropped, you'll assign drop target and a DOM item to be clicked for browsing:
 
     r.assignBrowse(document.getElementById('browseButton'));
     r.assignBrowse(document.getElementById('dropTarget'));
 
-After this, interaction with Resumable.js is by listening to events:
+After this, interaction with Resumable.js is done by listening to events:
 
     r.on('fileAdded', function(file){
         ...
@@ -41,12 +41,12 @@ Most of the magic for Resumable.js happens in the user's browser, but files stil
 
 To handle the state of upload chunks, a number of extra parameters are sent along with all requests:
 
-* `resumableChunkNumber`: The index of chunk in the current upload. First chunk is `1` (no base-0 counting here).
-* `resumableChunkSize`: The general chunk size. Using this value and `resumableTotalSize` you can calculate the total number of chunks. Please note that the size of the data received in the HTTP might be lower than `resumableChunkSize` of this is the last chunk for a file.
+* `resumableChunkNumber`: The index of the chunk in the current upload. First chunk is `1` (no base-0 counting here).
+* `resumableChunkSize`: The general chunk size. Using this value and `resumableTotalSize` you can calculate the total number of chunks. Please note that the size of the data received in the HTTP might be lower than `resumableChunkSize` of this for the last chunk for a file.
 * `resumableTotalSize`: The total file size.
 * `resumableIdentifier`: A unique identifier for the file contained in the request.
 
-You should allow for the same chunk being uploaded more than once; this isn't standard behaviour, but in an unstable network environment it could happen, and this case is exactly what Resumable.js is designed for.
+You should allow for the same chunk to be uploaded more than once; this isn't standard behaviour, but on an unstable network environment it could happen, and this case is exactly what Resumable.js is designed for.
 
 For every request, you can confirm reception in HTTP status codes:
 

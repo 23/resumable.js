@@ -29,7 +29,7 @@ var Resumable = function(opts){
   $.files = [];
   $.defaults = {
     chunkSize:1*1024*1024,
-    simultaneousUploads:3,
+    simultaneousUploads:5,
     fileParameterName:'file',
     query:{},
     prioritizeFirstAndLastChunk:false,
@@ -93,11 +93,12 @@ var Resumable = function(opts){
   // INTERNAL OBJECT TYPES
   function ResumableFile(resumableObj, file){
     var $ = this;
+    $._prevProgress = 0;
     $.resumableObj = resumableObj;
     $.file = file;
-    $.fileName = file.fileName;
+    $.fileName = file.fileName||file.name; // Some confusion in different versions of Firefox
     $.size = file.size;
-    $.uniqueIdentifier = (Math.floor(Math.random()*9999999) + '-' + $.file.fileName).replace(/[^0-9a-zA-Z_-]/img, '');
+    $.uniqueIdentifier = (Math.floor(Math.random()*9999999) + '-' + $.fileName).replace(/[^0-9a-zA-Z_-]/img, '');
     var _error = false;
 
     // Callback when something happens within the chunk
@@ -130,10 +131,22 @@ var Resumable = function(opts){
     // packaged to be able to handle retries if needed.
     $.chunks = [];
     $.abort = function(){
+      // Reset this file to be void
+      var _chunks = $.chunks;
+      $.chunks = [];
       // Stop current uploads
-      $h.each($.chunks, function(c){if(c.status()=='uploading') c.abort();});
+      $h.each(_chunks, function(c){
+          if(c.status()=='uploading')  {
+            c.abort();
+            $h.uploadNextChunk();
+          }
+        });
       $.resumableObj.fire('fileProgress', $);
     }
+    $.cancel = function(){
+      $.abort();
+      $.resumableObj.removeFile($);
+    },
     $.retry = function(){
       $.bootstrap();
       $.resumableObj.upload();
@@ -143,6 +156,7 @@ var Resumable = function(opts){
         _error = false;
       // Rebuild stack of chunks from file
       $.chunks = [];
+      $._prevProgress = 0;
       for (var offset=0; offset<Math.ceil($.file.size/$.resumableObj.opts.chunkSize); offset++) {
         $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
       }
@@ -156,7 +170,10 @@ var Resumable = function(opts){
           if(c.status()=='error') error = true;
           ret += c.progress(true); // get chunk progress relative to entire file
         });
-      return(error ? 1 : (ret>0.99999 ? 1 : ret));
+      ret = (error ? 1 : (ret>0.999 ? 1 : ret))
+      ret = Math.max($._prevProgress, ret); // We don't want to loose percentages when an upload is paused 
+      $._prevProgress = ret;
+      return(ret);
     }
 
     // Bootstrap and return
@@ -213,6 +230,7 @@ var Resumable = function(opts){
       formData.append('resumableChunkSize', $.resumableObj.opts.chunkSize);
       formData.append('resumableTotalSize', $.fileObj.file.size);
       formData.append('resumableIdentifier', $.fileObj.uniqueIdentifier);
+      formData.append('resumableFilename', $.fileObj.fileName);
       // Append the relevant chunk and send it
       var func = ($.fileObj.file.mozSlice ? 'mozSlice' : 'webkitSlice');
       formData.append($.resumableObj.opts.fileParameterName, $.fileObj.file[func]($.startByte,$.endByte));
@@ -332,14 +350,18 @@ var Resumable = function(opts){
         var input = document.createElement('input');
         input.setAttribute('type', 'file');
         input.setAttribute('multiple', 'multiple');
-        document.body.appendChild(input);
+        // Place <input multiple /> with the dom node an position the input to fill the entire space
+        domNode.style.display = 'inline-block';
+        domNode.style.position = 'relative';
+        input.style.position = 'absolute';
+        input.style.top = input.style.left = input.style.bottom = input.style.right = 0;
+        input.style.opacity = 0;
+        input.style.cursor = 'pointer';
+        domNode.appendChild(input);
         // When new files are added, simply append them to the overall list
         input.addEventListener('change', function(e){
             appendFilesFromFileList(input.files);
           }, false);
-        // Overlay and hide the input element
-        input.absolutize().clonePosition(domNode); // TODO: Manage this without Prototype
-        input.setStyle({opacity:0, cursor:'pointer'});
       });
   };
   $.assignDrop = function(domNodes){
@@ -390,6 +412,13 @@ var Resumable = function(opts){
         totalSize += file.size;
       });
     return(totalDone/totalSize);
+  };
+  $.removeFile = function(file){
+    $h.each($.files, function(f,i){
+        if(f.uniqueIdentifier==file.uniqueIdentifier) {
+          $.files.splice(i,1);
+        }
+      });
   };
         
 

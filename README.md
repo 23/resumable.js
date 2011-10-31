@@ -21,7 +21,7 @@ A new `Resumable` object is created with information of what and where to post:
 To allow files to be either selected and drag-dropped, you'll assign drop target and a DOM item to be clicked for browsing:
 
     r.assignBrowse(document.getElementById('browseButton'));
-    r.assignBrowse(document.getElementById('dropTarget'));
+    r.assignDrop(document.getElementById('dropTarget'));
 
 After this, interaction with Resumable.js is done by listening to events:
 
@@ -116,6 +116,7 @@ Available configuration options are:
 
 * `.progress(relative)` Returns a float between 0 and 1 indicating the current upload progress of the file. If `relative` is `true`, the value is returned relative to all files in the Resumable.js instance.
 * `.abort()` Abort uploading the file.
+* `.cancel()` Abort uploading the file and delete it from the list of files to upload.
 * `.retry()` Retry uploading the file.
 * `.bootstrap()` Rebuild the state of a `ResumableFile` object, including reassigning chunks and XMLHttpRequest instances.
 

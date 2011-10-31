@@ -45,6 +45,7 @@ To handle the state of upload chunks, a number of extra parameters are sent alon
 * `resumableChunkSize`: The general chunk size. Using this value and `resumableTotalSize` you can calculate the total number of chunks. Please note that the size of the data received in the HTTP might be lower than `resumableChunkSize` of this for the last chunk for a file.
 * `resumableTotalSize`: The total file size.
 * `resumableIdentifier`: A unique identifier for the file contained in the request.
+* `resumableFilename`: The original file name (since a bug in Firefox results in the file name not being transmitted in chunk multipart posts).
 
 You should allow for the same chunk to be uploaded more than once; this isn't standard behaviour, but on an unstable network environment it could happen, and this case is exactly what Resumable.js is designed for.
 

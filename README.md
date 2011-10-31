@@ -52,7 +52,7 @@ You should allow for the same chunk to be uploaded more than once; this isn't st
 For every request, you can confirm reception in HTTP status codes:
 
 * `200`: The chunk was accepted and correct. No need to re-upload.
-* `500`: The file for which the chunk was uploaded is not supported, cancel the entire upload.
+* `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload (in fact, any >=400 HTTP status code will trigger this result, [see details](https://twitter.com/#!/guan/status/131056635341844480).
 * _Anything else_: Something went wrong, but try reuploading the file.
 
 ## Full documentation

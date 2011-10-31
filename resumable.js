@@ -253,8 +253,8 @@ var Resumable = function(opts){
         if($.xhr.status==200) {
           // HTTP 200, perfect
           return('success');
-        } else if($.xhr.status==500) {
-          // HTTP 500, permanent error
+        } else if($.xhr.status>=400) {
+          // HTTP 415/500/501, permanent error
           return('error');
         } else {
           // this should never happen, but we'll reset and queue a retry

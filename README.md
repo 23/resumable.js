@@ -55,6 +55,13 @@ For every request, you can confirm reception in HTTP status codes:
 * `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload (in fact, any >=400 HTTP status code will trigger this result, [see details](https://twitter.com/#!/guan/status/131056635341844480).
 * _Anything else_: Something went wrong, but try reuploading the file.
 
+### Handling GET (or `test()` requests)
+
+This allow uploads to be resumed after browser restarts and even across browsers (in theory you could even run the same file upload across multiple tabs or different browsers).  The `POST` data requests listed are required to use Resumable.js to receive data, but you can extend support by implementing a corresponding `GET` request with the same parameters:
+
+* If this request return a `200` HTTP code, the chunks is assumed to have been completed.
+* If the request returns anything else, the chunk will be uploaded in the standard fashion.
+
 ## Full documentation
 
 ### Resumable
@@ -72,7 +79,7 @@ Available configuration options are:
 * `fileParameterName` The name of the multipart POST parameter to use for the file chunk  (Default: `file`)
 * `query` Extra parameters to include in the multipart POST with data (Default: `{}`)
 * `prioritizeFirstAndLastChunk` Prioritize first and last chunks of all files. This can be handy if you can determine if a file is valid for your service from only the first or last chunk. For example, photo or video meta data is usually located in the first part of a file, making it easy to test support from only the first chunk. (Default: `false`)
-
+* `testChunks` Make a GET request to the server for each chunks to see if it already exists. If implemented on the server-side, this will allow for upload resumes even after a browser crash or even a computer restart. (Default: `true`)
 
 #### Properties
 

@@ -34,7 +34,8 @@ var Resumable = function(opts){
     throttleProgressCallbacks:0.5,
     query:{},
     prioritizeFirstAndLastChunk:false,
-    target:'/'
+    target:'/',
+    testChunks:true
   };
 
 
@@ -200,13 +201,57 @@ var Resumable = function(opts){
     $.offset = offset;
     $.callback = callback;
     $.lastProgressCallback = 0;
+    $.tested = false;
 
     // Computed properties
     $.loaded = 0;
-    $.startByte = $.offset*$.resumableObj.opts.chunkSize
+    $.startByte = $.offset*$.resumableObj.opts.chunkSize;
     $.endByte = Math.min( (($.offset+1)*$.resumableObj.opts.chunkSize), $.fileObj.file.size);
     $.xhr = null;
+
+    // test() makes a GET request without any data to see if the chunk has already been uploaded in a previous session
+    $.test = function(){
+      // Set up request and listen for event
+      $.xhr = new XMLHttpRequest();
+      $.xhr.timeout = 5000; // set a fairly low threshold before server must respond, since we'll just be retrying
+
+      var testHandler = function(e){
+        $.tested = true;
+        var status = $.status();
+        if(status=='success') {
+          $.callback(status, $.message());
+          $h.uploadNextChunk();
+        } else {
+          $.send();
+        }
+      }
+      $.xhr.addEventListener("load", testHandler, false);
+      $.xhr.addEventListener("error", testHandler, false);
+
+      // Add data from the query options
+      var url = ""
+      var params = [];
+      $h.each($.resumableObj.opts.query, function(k,v){
+          params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
+        });
+      // Add extra data to identify chunk
+      params.push(['resumableChunkNumber', encodeURIComponent($.offset+1)].join('='));
+      params.push(['resumableChunkSize', encodeURIComponent($.resumableObj.opts.chunkSize)].join('='));
+      params.push(['resumableTotalSize', encodeURIComponent($.fileObj.file.size)].join('='));
+      params.push(['resumableIdentifier', encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
+      params.push(['resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
+      // Append the relevant chunk and send it
+      $.xhr.open("GET", $.resumableObj.opts.target + '?' + params.join('&'));
+      $.xhr.send(null);
+    }
+
+    // send() uploads the actual data in a POST call
     $.send = function(){
+      if($.resumableObj.opts.testChunks && !$.tested) {
+        $.test();
+        return;
+      }
+      
       // Set up request and listen for event
       $.xhr = new XMLHttpRequest();
       $.xhr.timeout = 5000; // set a fairly low threshold before server must respond, since we'll just be retrying

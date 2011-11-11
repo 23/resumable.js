@@ -89,6 +89,8 @@ Available configuration options are:
 * `.pause()` Pause uploading.
 * `.progress()` Returns a float between 0 and 1 indicating the current upload progress of all files.
 * `.isUploading()` Returns a boolean indicating whether or not the instance is currently uploading anything.
+* `.removeFile(file)` Cancel upload of a specific `ResumableFile` object on the list from the list.
+* `.getFromUniqueIdentifier(uniqueIdentifier)` Look up a `ResumableFile` object by its unique identifier.
 
 #### Events
 

@@ -29,8 +29,9 @@ var Resumable = function(opts){
   $.files = [];
   $.defaults = {
     chunkSize:1*1024*1024,
-    simultaneousUploads:5,
+    simultaneousUploads:3,
     fileParameterName:'file',
+    throttleProgressCallbacks:0.5,
     query:{},
     prioritizeFirstAndLastChunk:false,
     target:'/'
@@ -78,15 +79,22 @@ var Resumable = function(opts){
           if(callback(i,o[i])===false) return;
         }
       }
+    },
+    generateUniqueIdentifier:function(file){
+      var fileName = file.fileName||file.name; // Some confusion in different versions of Firefox
+      var size = file.size;
+      return(size + '-' + fileName.replace(/[^0-9a-zA-Z_-]/img, ''));
     }
   }
 
   // INTERNAL METHODS (both handy and responsible for the heavy load)
   var appendFilesFromFileList = function(fileList){            
     $h.each(fileList, function(file){
-        var f = new ResumableFile($, file);
-        $.files.push(f);
-        $.fire('fileAdded', f);
+        if (!$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
+          var f = new ResumableFile($, file);
+          $.files.push(f);
+          $.fire('fileAdded', f);
+        }
       });
   }
     
@@ -98,7 +106,7 @@ var Resumable = function(opts){
     $.file = file;
     $.fileName = file.fileName||file.name; // Some confusion in different versions of Firefox
     $.size = file.size;
-    $.uniqueIdentifier = (Math.floor(Math.random()*9999999) + '-' + $.fileName).replace(/[^0-9a-zA-Z_-]/img, '');
+    $.uniqueIdentifier = $h.generateUniqueIdentifier(file);
     var _error = false;
 
     // Callback when something happens within the chunk
@@ -131,6 +139,13 @@ var Resumable = function(opts){
     // packaged to be able to handle retries if needed.
     $.chunks = [];
     $.abort = function(){
+      // Stop current uploads
+      $h.each($.chunks, function(c){
+          if(c.status()=='uploading') c.abort();
+        });
+      $.resumableObj.fire('fileProgress', $);
+    }
+    $.cancel = function(){
       // Reset this file to be void
       var _chunks = $.chunks;
       $.chunks = [];
@@ -141,11 +156,8 @@ var Resumable = function(opts){
             $h.uploadNextChunk();
           }
         });
-      $.resumableObj.fire('fileProgress', $);
-    }
-    $.cancel = function(){
-      $.abort();
       $.resumableObj.removeFile($);
+      $.resumableObj.fire('fileProgress', $);
     },
     $.retry = function(){
       $.bootstrap();
@@ -187,6 +199,7 @@ var Resumable = function(opts){
     $.fileObj = fileObj;
     $.offset = offset;
     $.callback = callback;
+    $.lastProgressCallback = 0;
 
     // Computed properties
     $.loaded = 0;
@@ -200,7 +213,10 @@ var Resumable = function(opts){
 
       // Progress
       $.xhr.upload.addEventListener("progress", function(e){
-          $.callback('progress');
+          if( (new Date) - $.lastProgressCallback > $.resumableObj.throttleProgressCallbacks * 1000 ) {
+            $.callback('progress');
+            $.lastProgressCallback = (new Date);
+          }
           $.loaded=e.loaded||0; 
         }, false);
       $.loaded = 0;
@@ -253,11 +269,12 @@ var Resumable = function(opts){
         if($.xhr.status==200) {
           // HTTP 200, perfect
           return('success');
-        } else if($.xhr.status>=400) {
+        } else if($.xhr.status==415 || $.xhr.status==500 || $.xhr.status==501) {
           // HTTP 415/500/501, permanent error
           return('error');
         } else {
-          // this should never happen, but we'll reset and queue a retry
+          // this should never happen, but we'll reset and queue a retry 
+          // a likely case for this would be 503 service unavailable
           $.abort();
           return('pending');
         }
@@ -414,11 +431,18 @@ var Resumable = function(opts){
     return(totalDone/totalSize);
   };
   $.removeFile = function(file){
+    var files = [];
     $h.each($.files, function(f,i){
-        if(f.uniqueIdentifier==file.uniqueIdentifier) {
-          $.files.splice(i,1);
-        }
+        if(f!==file) files.push(f);
       });
+    $.files = files;
+  };
+  $.getFromUniqueIdentifier = function(uniqueIdentifier){
+    var ret = false;
+    $h.each($.files, function(f){
+        if(f.uniqueIdentifier==uniqueIdentifier) ret = f;
+      });
+    return(ret);
   };
         
 

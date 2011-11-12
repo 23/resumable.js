@@ -200,7 +200,7 @@ var Resumable = function(opts){
     $.fileObj = fileObj;
     $.offset = offset;
     $.callback = callback;
-    $.lastProgressCallback = 0;
+    $.lastProgressCallback = (new Date);
     $.tested = false;
 
     // Computed properties
@@ -258,7 +258,7 @@ var Resumable = function(opts){
 
       // Progress
       $.xhr.upload.addEventListener("progress", function(e){
-          if( (new Date) - $.lastProgressCallback > $.resumableObj.throttleProgressCallbacks * 1000 ) {
+          if( (new Date) - $.lastProgressCallback > $.resumableObj.opts.throttleProgressCallbacks * 1000 ) {
             $.callback('progress');
             $.lastProgressCallback = (new Date);
           }

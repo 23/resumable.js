@@ -209,7 +209,11 @@ var Resumable = function(opts){
     // Computed properties
     $.loaded = 0;
     $.startByte = $.offset*$.resumableObj.opts.chunkSize;
-    $.endByte = Math.min( (($.offset+1)*$.resumableObj.opts.chunkSize), $.fileObj.file.size);
+    $.endByte = ($.offset+1)*$.resumableObj.opts.chunkSize;
+    if ($.fileObj.file.size-$.endByte < $.resumableObj.opts.chunkSize) {
+	// The last chunk will be bigger than the chunk size, but less than 2*chunkSize
+	$.endByte = $.fileObj.file.size;
+    }
     $.xhr = null;
 
     // test() makes a GET request without any data to see if the chunk has already been uploaded in a previous session

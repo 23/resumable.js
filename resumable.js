@@ -173,7 +173,7 @@ var Resumable = function(opts){
       // Rebuild stack of chunks from file
       $.chunks = [];
       $._prevProgress = 0;
-      for (var offset=0; offset<Math.ceil($.file.size/$.resumableObj.opts.chunkSize); offset++) {
+      for (var offset=0; offset<Math.max(Math.floor($.file.size/$.resumableObj.opts.chunkSize),1); offset++) {
         $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
       }
     }

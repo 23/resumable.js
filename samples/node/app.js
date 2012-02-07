@@ -9,12 +9,14 @@ app.use(express.static(__dirname + '/public'));
 // Handle uploads through Resumable.js
 app.post('/upload', function(req, res){
            resumable.post(req, function(status, filename, original_filename, identifier){
+                            console.log('POST', status);
                             res.send(status);
                           });
          });
 // Handle status checks on chunks through Resumable.js
 app.get('/upload', function(req, res){
           resumable.get(req, function(status, filename, original_filename, identifier){
+                          console.log('GET', status);
                           res.send(status, (status=='found' ? 200 : 404));
                         });
         });

@@ -104,7 +104,7 @@ After this, all Resumable.js cases can be handled easily, including
 fallback to non-resumable requests.
 
     # Is this a file from Resumable.js?
-    lassign [um::util::handle_resumable_file] resumable_status resumable_context resumable_original_filename resumable_identifier
+    lassign [handle_resumable_file] resumable_status resumable_context resumable_original_filename resumable_identifier
     if { $resumable_status ne "non_resumable_request" } {
         # Yes, it is
         switch -exact $resumable_status {

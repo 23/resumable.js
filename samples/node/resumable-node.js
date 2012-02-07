@@ -1,5 +1,4 @@
-var fs = require('fs'),
-    path = require('path');
+var fs = require('fs'), path = require('path');
 
 module.exports = resumable = function(temporaryFolder){
   var $ = this;
@@ -29,30 +28,30 @@ module.exports = resumable = function(temporaryFolder){
 
     // Check if the request is sane
     if (chunkNumber==0 || chunkSize==0 || totalSize==0 || identifier.length==0 || filename.length==0) {
-      return 'none_resumable_request';
+      return 'non_resumable_request';
     }
     var numberOfChunks = Math.max(Math.floor(totalSize/(chunkSize*1.0)), 1);
     if (chunkNumber>numberOfChunks) {
-      return 'invalid_resumable_request';
+      return 'invalid_resumable_request1';
     }
 
     // Is the file too big?
     if($.maxFileSize && totalSize>$.maxFileSize) {
-      return 'invalid_resumable_request'; 
+      return 'invalid_resumable_request2'; 
     }
 
     if(typeof(fileSize)!='undefined') {
       if(chunkNumber<numberOfChunks && fileSize!=chunkSize) {
         // The chunk in the POST request isn't the correct size
-        return 'invalid_resumable_request'; 
+        return 'invalid_resumable_request3'; 
       } 
       if(numberOfChunks>1 && chunkNumber==numberOfChunks && fileSize!=((totalSize%chunkSize)+chunkSize)) {
         // The chunks in the POST is the last one, and the fil is not the correct size
-        return 'invalid_resumable_request'; 
+        return 'invalid_resumable_request4'; 
       }
       if(numberOfChunks==1 && fileSize!=totalSize) {
         // The file is only a single chunk, and the data size does not fit
-        return 'invalid_resumable_request'; 
+        return 'invalid_resumable_request5'; 
       }
     }
 
@@ -106,10 +105,10 @@ module.exports = resumable = function(temporaryFolder){
           fs.rename(files[$.fileParameterName].path, chunkFilename, function(){
 
               // Do we have all the chunks?
-              var currentTestChunk = 0;
+              var currentTestChunk = 1;
               var numberOfChunks = Math.max(Math.floor(totalSize/(chunkSize*1.0)), 1);
               var testChunkExists = function(){
-                path.exists(chunkFilename(currentTestChunk, identifier), function(exists){
+                path.exists(getChunkFilename(currentTestChunk, identifier), function(exists){
                     if(exists){
                       currentTestChunk++;
                       if(currentTestChunk>numberOfChunks) {
@@ -123,7 +122,7 @@ module.exports = resumable = function(temporaryFolder){
                     }
                   });
               }
-              
+              testChunkExists();
             });
         } else {
           callback(validation, null, null, null);

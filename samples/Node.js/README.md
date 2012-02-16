@@ -8,7 +8,7 @@ To install and run:
     npm install express connect-form
     node app.js
     
-The browse to [localhost:3000](http://localhost:3000).
+Then browse to [localhost:3000](http://localhost:3000).
 
 
 If you would like to load the resumable.js library from one domain and have your Node.js reside on another, you must allow 'Access-Control-Allow-Origin' from '*'.  For an example, use the following:

@@ -12,9 +12,24 @@ app.use(express.static(__dirname + '/public'));
 app.post('/upload', function(req, res){
 	resumable.post(req, function(status, filename, original_filename, identifier){
 		console.log('POST', status);
-		res.send(status);
+		res.send(status, {
+			// NOTE: Uncomment this funciton to enable cross-domain request.
+			//'Access-Control-Allow-Origin': '*'
+		});
 	});
 });
+
+// Handle cross-domain requests
+// NOTE: Uncomment this funciton to enable cross-domain request.
+/*
+app.options('/upload', function(req, res){
+		console.log('OPTIONS');
+		res.send(true, {
+			'Access-Control-Allow-Origin': '*'
+		}, 200);
+});
+*/
+
 // Handle status checks on chunks through Resumable.js
 app.get('/upload', function(req, res){
 	resumable.get(req, function(status, filename, original_filename, identifier){

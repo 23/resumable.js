@@ -9,3 +9,10 @@ To install and run:
     node app.js
     
 The browse to [localhost:3000](http://localhost:3000).
+
+
+If you would like to load the resumable.js library from one domain and have your Node.js reside on another, you must allow 'Access-Control-Allow-Origin' from '*'.  For an example, use the following:
+
+    node app_crossDomain.js
+
+Then in public/index.html, on line 49, update the target with your server's address.  For example: http://www.example.com/upload

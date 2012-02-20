@@ -88,12 +88,16 @@ module.exports = resumable = function(temporaryFolder){
   //'invalid_resumable_request', null, null, null
   //'non_resumable_request', null, null, null
   $.post = function(req, callback){
+	// console.log('req', req);
     req.form.complete(function(err, fields, files){
         var chunkNumber = fields['resumableChunkNumber'];
         var chunkSize = fields['resumableChunkSize'];
         var totalSize = fields['resumableTotalSize'];
         var identifier = cleanIdentifier(fields['resumableIdentifier']);
         var filename = fields['resumableFilename'];
+
+ 		// console.log('fields', fields);
+		var original_filename = fields['resumableIdentifier'];
 
         if(!files[$.fileParameterName] || !files[$.fileParameterName].size) {
           callback('invalid_resumable_request', null, null, null);
@@ -105,7 +109,7 @@ module.exports = resumable = function(temporaryFolder){
 
           // Save the chunk (TODO: OVERWRITE)
           fs.rename(files[$.fileParameterName].path, chunkFilename, function(){
-
+//filename, original_filename, identifier
               // Do we have all the chunks?
               var currentTestChunk = 1;
               var numberOfChunks = Math.max(Math.floor(totalSize/(chunkSize*1.0)), 1);
@@ -114,20 +118,20 @@ module.exports = resumable = function(temporaryFolder){
                     if(exists){
                       currentTestChunk++;
                       if(currentTestChunk>numberOfChunks) {
-                        callback('done', null, null, null);
+                        callback('done', filename, original_filename, identifier);
                       } else {
                         // Recursion
                         testChunkExists();
                       }
                     } else {
-                      callback('partly_done', null, null, null);
+                      callback('partly_done', filename, original_filename, identifier);
                     }
                   });
               }
               testChunkExists();
             });
         } else {
-          callback(validation, null, null, null);
+          callback(validation, filename, original_filename, identifier);
         }
       });
   }
@@ -147,9 +151,12 @@ module.exports = resumable = function(temporaryFolder){
 
     // Iterate over each chunk
     var pipeChunk = function(number){
+	console.log('piping ', number);
       var chunkFilename = getChunkFilename(number,identifier);
       path.exists(chunkFilename, function(exists){
+		console.log('exisit1 ', chunkFilename);
           if(exists) {
+			// console.log('exisit ', chunkFilename);
             // If the chunk with the current number exists, 
             // then create a ReadStream from the file
             // and pipe it to the specified writableStream.
@@ -162,11 +169,41 @@ module.exports = resumable = function(temporaryFolder){
               });
           } else {
             // When all the chunks have been piped, end the stream
-            if(options.end) writableStream.end();
+            if (options.end) writableStream.end();
+			if (options.done) options.done();
           }
         });
     }
     pipeChunk(1);
+  }
+
+
+  $.clean = function(identifier, options){
+    options = options||{};
+  
+   // Iterate over each chunk
+	var pipeChunkRm = function(number){
+		
+     	var chunkFilename = getChunkFilename(number,identifier);
+		console.log('removing pipeChunkRm ', number, 'chunkFilename', chunkFilename);
+
+      	path.exists(chunkFilename, function(exists){
+          if(exists) {
+			
+			console.log('exist removing ', chunkFilename);
+			fs.unlink(chunkFilename, function (err) {
+			  if (err) throw err;
+			  
+			});
+			
+			pipeChunkRm(number+1);
+			
+          } else {
+			if (options.done) options.done();
+          }
+        });
+    }
+    pipeChunkRm(1);
   }
 
   return $;

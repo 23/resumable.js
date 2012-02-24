@@ -88,7 +88,7 @@ module.exports = resumable = function(temporaryFolder){
   //'invalid_resumable_request', null, null, null
   //'non_resumable_request', null, null, null
   $.post = function(req, callback){
-	// console.log('req', req);
+
     req.form.complete(function(err, fields, files){
         var chunkNumber = fields['resumableChunkNumber'];
         var chunkSize = fields['resumableChunkSize'];
@@ -96,7 +96,6 @@ module.exports = resumable = function(temporaryFolder){
         var identifier = cleanIdentifier(fields['resumableIdentifier']);
         var filename = fields['resumableFilename'];
 
- 		// console.log('fields', fields);
 		var original_filename = fields['resumableIdentifier'];
 
         if(!files[$.fileParameterName] || !files[$.fileParameterName].size) {
@@ -109,7 +108,7 @@ module.exports = resumable = function(temporaryFolder){
 
           // Save the chunk (TODO: OVERWRITE)
           fs.rename(files[$.fileParameterName].path, chunkFilename, function(){
-//filename, original_filename, identifier
+	
               // Do we have all the chunks?
               var currentTestChunk = 1;
               var numberOfChunks = Math.max(Math.floor(totalSize/(chunkSize*1.0)), 1);
@@ -151,12 +150,11 @@ module.exports = resumable = function(temporaryFolder){
 
     // Iterate over each chunk
     var pipeChunk = function(number){
-	console.log('piping ', number);
+
       var chunkFilename = getChunkFilename(number,identifier);
       path.exists(chunkFilename, function(exists){
-		console.log('exisit1 ', chunkFilename);
+
           if(exists) {
-			// console.log('exisit ', chunkFilename);
             // If the chunk with the current number exists, 
             // then create a ReadStream from the file
             // and pipe it to the specified writableStream.

@@ -175,7 +175,7 @@ module.exports = resumable = function(temporaryFolder){
           });
       }
       pipeChunk(1);
-  }​
+  }
 
 
   $.clean = function(identifier, options) {
@@ -205,7 +205,7 @@ module.exports = resumable = function(temporaryFolder){
           });
       }
       pipeChunkRm(1);
-  }​
+  }
 
   return $;
 }

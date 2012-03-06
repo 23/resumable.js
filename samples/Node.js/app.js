@@ -20,8 +20,8 @@ app.post('/upload', function(req, res){
             // NOTE: Uncomment this funciton to enable cross-domain request.
             //'Access-Control-Allow-Origin': '*'
         });
-
-	});
+    });
+});
 
 // Handle cross-domain requests
 // NOTE: Uncomment this funciton to enable cross-domain request.

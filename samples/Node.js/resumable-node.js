@@ -144,36 +144,38 @@ module.exports = resumable = function(temporaryFolder){
   //   r.write(identifier, stream);
   //   stream.on('data', function(data){...});
   //   stream.on('end', function(){...});
-  $.write = function(identifier, writableStream, options){
-    options = options||{};
-    options.end = (typeof options['end']=='undefined' ? true : options['end']);
+  $.write = function(identifier, writableStream, options) {
+      options = options || {};
+      options.end = (typeof options['end'] == 'undefined' ? true : options['end']);
 
-    // Iterate over each chunk
-    var pipeChunk = function(number){
+      // Iterate over each chunk
+      var pipeChunk = function(number) {
 
-      var chunkFilename = getChunkFilename(number,identifier);
-      path.exists(chunkFilename, function(exists){
+          var chunkFilename = getChunkFilename(number, identifier);
+          path.exists(chunkFilename, function(exists) {
 
-          if(exists) {
-            // If the chunk with the current number exists, 
-            // then create a ReadStream from the file
-            // and pipe it to the specified writableStream.
-            var sourceStream = fs.createReadStream(chunkFilename);
-            sourceStream.pipe(writableStream, {end:false});
-            sourceStream.on('end', function(){
-                // When the chunk is fully streamed, 
-                // jump to the next one
-                pipeChunk(number+1);
-              });
-          } else {
-            // When all the chunks have been piped, end the stream
-            if (options.end) writableStream.end();
-			if (options.done) options.done();
-          }
-        });
-    }
-    pipeChunk(1);
-  }
+              if (exists) {
+                  // If the chunk with the current number exists, 
+                  // then create a ReadStream from the file
+                  // and pipe it to the specified writableStream.
+                  var sourceStream = fs.createReadStream(chunkFilename);
+                  sourceStream.pipe(writableStream, {
+                      end: false
+                  });
+                  sourceStream.on('end', function() {
+                      // When the chunk is fully streamed, 
+                      // jump to the next one
+                      pipeChunk(number + 1);
+                  });
+              } else {
+                  // When all the chunks have been piped, end the stream
+                  if (options.end) writableStream.end();
+                  if (options.onDone) options.onDone();
+              }
+          });
+      }
+      pipeChunk(1);
+  }​
 
 
   $.clean = function(identifier, options) {
@@ -190,20 +192,20 @@ module.exports = resumable = function(temporaryFolder){
 
                   console.log('exist removing ', chunkFilename);
                   fs.unlink(chunkFilename, function(err) {
-                      if (options.error) opentions.error(err);
+                      if (options.onError) opentions.onError(err);
                   });
 
                   pipeChunkRm(number + 1);
 
               } else {
 
-                  if (options.end) options.end();
+                  if (options.onDone) options.onDone();
               
               }
           });
       }
       pipeChunkRm(1);
   }​
-  
+
   return $;
 }

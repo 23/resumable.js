@@ -10,14 +10,18 @@ app.use(express.static(__dirname + '/public'));
 
 // Handle uploads through Resumable.js
 app.post('/upload', function(req, res){
+	
+	// console.log(req);
+	
     resumable.post(req, function(status, filename, original_filename, identifier){
-        console.log('POST', status);
+        console.log('POST', status, original_filename, identifier);
+
         res.send(status, {
             // NOTE: Uncomment this funciton to enable cross-domain request.
             //'Access-Control-Allow-Origin': '*'
-          });
-      });
-  });
+        });
+
+	});
 
 // Handle cross-domain requests
 // NOTE: Uncomment this funciton to enable cross-domain request.
@@ -39,7 +43,9 @@ app.get('/upload', function(req, res){
   });
 
 app.get('/download/:identifier', function(req, res){
-    resumable.write(req.params.identifier, res);
+	resumable.write(req.params.identifier, res);
+	
+
   });
 
 app.listen(3000);

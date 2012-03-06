@@ -176,33 +176,34 @@ module.exports = resumable = function(temporaryFolder){
   }
 
 
-  $.clean = function(identifier, options){
-    options = options||{};
+  $.clean = function(identifier, options) {
+      options = options || {};
+
+      // Iterate over each chunk
+      var pipeChunkRm = function(number) {
+
+          var chunkFilename = getChunkFilename(number, identifier);
+
+          //console.log('removing pipeChunkRm ', number, 'chunkFilename', chunkFilename);
+          path.exists(chunkFilename, function(exists) {
+              if (exists) {
+
+                  console.log('exist removing ', chunkFilename);
+                  fs.unlink(chunkFilename, function(err) {
+                      if (options.error) opentions.error(err);
+                  });
+
+                  pipeChunkRm(number + 1);
+
+              } else {
+
+                  if (options.end) options.end();
+              
+              }
+          });
+      }
+      pipeChunkRm(1);
+  }​
   
-   // Iterate over each chunk
-	var pipeChunkRm = function(number){
-		
-     	var chunkFilename = getChunkFilename(number,identifier);
-		console.log('removing pipeChunkRm ', number, 'chunkFilename', chunkFilename);
-
-      	path.exists(chunkFilename, function(exists){
-          if(exists) {
-			
-			console.log('exist removing ', chunkFilename);
-			fs.unlink(chunkFilename, function (err) {
-			  if (err) throw err;
-			  
-			});
-			
-			pipeChunkRm(number+1);
-			
-          } else {
-			if (options.done) options.done();
-          }
-        });
-    }
-    pipeChunkRm(1);
-  }
-
   return $;
 }

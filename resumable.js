@@ -60,8 +60,8 @@ var Resumable = function(opts){
       if($.events[i]==event) $.events[i+1].apply($,args.slice(1));
       if($.events[i]=='catchall') $.events[i+1].apply(null,args);
     }
-    if(event=='fileError') $.fire('error', args[2], args[1]);
-    if(event=='fileProgress') $.fire('progress');
+    if(event=='fileerror') $.fire('error', args[2], args[1]);
+    if(event=='fileprogress') $.fire('progress');
   };
 
 
@@ -130,7 +130,7 @@ var Resumable = function(opts){
         if(_error) return;
         $.resumableObj.fire('fileProgress', $); // it's at least progress
         if($.progress()==1) {
-          $.resumableObj.fire('fileSuccess', $);
+          $.resumableObj.fire('fileSuccess', $, message);
         }
         break;
       case 'retry':
@@ -157,7 +157,7 @@ var Resumable = function(opts){
       $h.each(_chunks, function(c){
           if(c.status()=='uploading')  {
             c.abort();
-            $h.uploadNextChunk();
+            $.resumableObj.uploadNextChunk();
           }
         });
       $.resumableObj.removeFile($);
@@ -187,7 +187,7 @@ var Resumable = function(opts){
           ret += c.progress(true); // get chunk progress relative to entire file
         });
       ret = (error ? 1 : (ret>0.999 ? 1 : ret))
-      ret = Math.max($._prevProgress, ret); // We don't want to loose percentages when an upload is paused 
+      ret = Math.max($._prevProgress, ret); // We don't want to lose percentages when an upload is paused 
       $._prevProgress = ret;
       return(ret);
     }
@@ -211,8 +211,8 @@ var Resumable = function(opts){
     $.startByte = $.offset*$.resumableObj.opts.chunkSize;
     $.endByte = ($.offset+1)*$.resumableObj.opts.chunkSize;
     if ($.fileObj.file.size-$.endByte < $.resumableObj.opts.chunkSize) {
-	// The last chunk will be bigger than the chunk size, but less than 2*chunkSize
-	$.endByte = $.fileObj.file.size;
+      // The last chunk will be bigger than the chunk size, but less than 2*chunkSize
+      $.endByte = $.fileObj.file.size;
     }
     $.xhr = null;
 
@@ -227,7 +227,7 @@ var Resumable = function(opts){
         var status = $.status();
         if(status=='success') {
           $.callback(status, $.message());
-          $h.uploadNextChunk();
+          $.resumableObj.uploadNextChunk();
         } else {
           $.send();
         }
@@ -278,7 +278,7 @@ var Resumable = function(opts){
         var status = $.status();
         if(status=='success'||status=='error') {
           $.callback(status, $.message());
-          $h.uploadNextChunk();
+          $.resumableObj.uploadNextChunk();
         } else {
           $.callback('retry', $.message());
           $.abort();
@@ -353,7 +353,7 @@ var Resumable = function(opts){
   }
 
   // QUEUE
-  $h.uploadNextChunk = function(){
+  $.uploadNextChunk = function(){
     var found = false;
 
     // In some cases (such as videos) it's really handy to upload the first 
@@ -462,7 +462,7 @@ var Resumable = function(opts){
     if($.isUploading()) return;
     // Kick off the queue
     for (var num=1; num<=$.opts.simultaneousUploads; num++) {
-      $h.uploadNextChunk();
+      $.uploadNextChunk();
     }
   };
   $.pause = function(){

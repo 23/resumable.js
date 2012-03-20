@@ -2,11 +2,11 @@
 
 It's a JavaScript library providing multiple simultaneous, stable and resumable uploads via the HTML5 File API. 
 
-The library is designed to introduce fault-tolerance into the upload of large files through HTTP. This is done by splitting each files into small chunks; whenever the upload of a chunk fails, uploading is retried until the procedure completes. This allows uploads to automatically resume uploading after a network connection is lost either locally or to the server. Additionally, it allows for users to pause, resume and even recover uploads without loosing state. 
+The library is designed to introduce fault-tolerance into the upload of large files through HTTP. This is done by splitting each files into small chunks; whenever the upload of a chunk fails, uploading is retried until the procedure completes. This allows uploads to automatically resume uploading after a network connection is lost either locally or to the server. Additionally, it allows for users to pause, resume and even recover uploads without losing state. 
 
 Resumable.js does not have any external dependencies other the `HTML5 File API`. This is relied on for the ability to chunk files into smaller pieces. Currently, this means that support is limited to Firefox 4+ and Chrome 11+.
 
-Samples and examples are available in the `samples/` folder. Please push your own as Markdow to help document the project.
+Samples and examples are available in the `samples/` folder. Please push your own as Markdown to help document the project.
 
 
 ### How can I use it?
@@ -61,7 +61,7 @@ For every request, you can confirm reception in HTTP status codes:
 
 This will allow uploads to be resumed after browser restarts and even across browsers (in theory you could even run the same file upload across multiple tabs or different browsers).  The `POST` data requests listed are required to use Resumable.js to receive data, but you can extend support by implementing a corresponding `GET` request with the same parameters:
 
-* If this request return a `200` HTTP code, the chunks is assumed to have been completed.
+* If this request returns a `200` HTTP code, the chunks is assumed to have been completed.
 * If the request returns anything else, the chunk will be uploaded in the standard fashion.
 
 ## Full documentation
@@ -87,7 +87,7 @@ Available configuration options are:
 
 * `.support` A boolean value indicator whether or not Resumable.js is supported by the current browser.
 * `.opts` A hash object of the configuration of the Resumable.js instance.
-* `.files` An array of `ResumableFile` file objects add by the user (see full docs for this object type below).
+* `.files` An array of `ResumableFile` file objects added by the user (see full docs for this object type below).
 
 #### Methods
 
@@ -135,7 +135,7 @@ Available configuration options are:
 
 ### Alternatives
 
-This library is explicitly designed for modern browsers supporting advanced HTML5 file features, and the motivation has been to provide stable and resumable support for large files (allowing uploads of several GB files through HTTP is a predictable fashion). 
+This library is explicitly designed for modern browsers supporting advanced HTML5 file features, and the motivation has been to provide stable and resumable support for large files (allowing uploads of several GB files through HTTP in a predictable fashion). 
 
 If your aim is just to support progress indications during upload/uploading multiple files at once, Resumable.js isn't for you. In those cases, [SWFUpload](http://swfupload.org/) and [Plupload](http://plupload.com/) provides the same features with wider browser support.
 

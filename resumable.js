@@ -130,7 +130,7 @@ var Resumable = function(opts){
         if(_error) return;
         $.resumableObj.fire('fileProgress', $); // it's at least progress
         if($.progress()==1) {
-          $.resumableObj.fire('fileSuccess', $);
+          $.resumableObj.fire('fileSuccess', $, message);
         }
         break;
       case 'retry':

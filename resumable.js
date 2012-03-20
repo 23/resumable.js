@@ -60,8 +60,8 @@ var Resumable = function(opts){
       if($.events[i]==event) $.events[i+1].apply($,args.slice(1));
       if($.events[i]=='catchall') $.events[i+1].apply(null,args);
     }
-    if(event=='fileError') $.fire('error', args[2], args[1]);
-    if(event=='fileProgress') $.fire('progress');
+    if(event=='fileerror') $.fire('error', args[2], args[1]);
+    if(event=='fileprogress') $.fire('progress');
   };
 
 

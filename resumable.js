@@ -220,7 +220,6 @@ var Resumable = function(opts){
     $.test = function(){
       // Set up request and listen for event
       $.xhr = new XMLHttpRequest();
-      $.xhr.timeout = 5000; // set a fairly low threshold before server must respond, since we'll just be retrying
 
       var testHandler = function(e){
         $.tested = true;
@@ -261,7 +260,6 @@ var Resumable = function(opts){
       
       // Set up request and listen for event
       $.xhr = new XMLHttpRequest();
-      $.xhr.timeout = 5000; // set a fairly low threshold before server must respond, since we'll just be retrying
 
       // Progress
       $.xhr.upload.addEventListener("progress", function(e){
@@ -273,6 +271,7 @@ var Resumable = function(opts){
         }, false);
       $.loaded = 0;
       $.callback('progress');
+
       // Done (either done, failed or retry)
       var doneHandler = function(e){
         var status = $.status();
@@ -303,6 +302,7 @@ var Resumable = function(opts){
       var func = ($.fileObj.file.mozSlice ? 'mozSlice' : 'webkitSlice');
       formData.append($.resumableObj.opts.fileParameterName, $.fileObj.file[func]($.startByte,$.endByte));
       $.xhr.open("POST", $.resumableObj.opts.target);
+      //$.xhr.open("POST", '/sandbox');
       $.xhr.send(formData);
     }
     $.abort = function(){
@@ -480,7 +480,7 @@ var Resumable = function(opts){
         totalDone += file.progress()*file.size;
         totalSize += file.size;
       });
-    return(totalDone/totalSize);
+    return(totalSize>0 ? totalDone/totalSize : 0);
   };
   $.removeFile = function(file){
     var files = [];

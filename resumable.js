@@ -201,6 +201,7 @@ var Resumable = function(opts){
     var $ = this;
     $.resumableObj = resumableObj;
     $.fileObj = fileObj;
+    $.fileObjSize = fileObj.file.size;
     $.offset = offset;
     $.callback = callback;
     $.lastProgressCallback = (new Date);
@@ -210,9 +211,9 @@ var Resumable = function(opts){
     $.loaded = 0;
     $.startByte = $.offset*$.resumableObj.opts.chunkSize;
     $.endByte = ($.offset+1)*$.resumableObj.opts.chunkSize;
-    if ($.fileObj.file.size-$.endByte < $.resumableObj.opts.chunkSize) {
+    if ($.fileObjSize-$.endByte < $.resumableObj.opts.chunkSize) {
       // The last chunk will be bigger than the chunk size, but less than 2*chunkSize
-      $.endByte = $.fileObj.file.size;
+      $.endByte = $.fileObjSize;
     }
     $.xhr = null;
 
@@ -243,7 +244,7 @@ var Resumable = function(opts){
       // Add extra data to identify chunk
       params.push(['resumableChunkNumber', encodeURIComponent($.offset+1)].join('='));
       params.push(['resumableChunkSize', encodeURIComponent($.resumableObj.opts.chunkSize)].join('='));
-      params.push(['resumableTotalSize', encodeURIComponent($.fileObj.file.size)].join('='));
+      params.push(['resumableTotalSize', encodeURIComponent($.fileObjSize)].join('='));
       params.push(['resumableIdentifier', encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
       params.push(['resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
       // Append the relevant chunk and send it
@@ -295,7 +296,7 @@ var Resumable = function(opts){
       // Add extra data to identify chunk
       formData.append('resumableChunkNumber', $.offset+1);
       formData.append('resumableChunkSize', $.resumableObj.opts.chunkSize);
-      formData.append('resumableTotalSize', $.fileObj.file.size);
+      formData.append('resumableTotalSize', $.fileObjSize);
       formData.append('resumableIdentifier', $.fileObj.uniqueIdentifier);
       formData.append('resumableFilename', $.fileObj.fileName);
       // Append the relevant chunk and send it
@@ -337,7 +338,7 @@ var Resumable = function(opts){
     }
     $.progress = function(relative){
       if(typeof(relative)==='undefined') relative = false;
-      var factor = (relative ? ($.endByte-$.startByte)/$.fileObj.file.size : 1);
+      var factor = (relative ? ($.endByte-$.startByte)/$.fileObjSize : 1);
       var s = $.status();
       switch(s){
       case 'success':

@@ -1,18 +1,17 @@
 var express = require('express');
-var form = require('connect-form');
 var resumable = require('./resumable-node.js')('/tmp/resumable.js/');
-var app = express.createServer(form({
-      keepExtensions: true
-    }));
+var app = express.createServer();
 
 // Host most stuff in the public folder
 app.use(express.static(__dirname + '/public'));
 
+app.use(express.bodyParser());
+
 // Handle uploads through Resumable.js
 app.post('/upload', function(req, res){
-	
+
 	// console.log(req);
-	
+
     resumable.post(req, function(status, filename, original_filename, identifier){
         console.log('POST', status, original_filename, identifier);
 
@@ -44,7 +43,7 @@ app.get('/upload', function(req, res){
 
 app.get('/download/:identifier', function(req, res){
 	resumable.write(req.params.identifier, res);
-	
+
 
   });
 

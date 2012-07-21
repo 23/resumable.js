@@ -44,13 +44,13 @@ var Resumable = function(opts){
 
   // EVENTS
   // catchAll(event, ...)
-  // fileSuccess(file), fileProgress(file), fileAdded(file), fileRetry(file), fileError(file, message), 
+  // fileSuccess(file), fileProgress(file), fileAdded(file), fileRetry(file), fileError(file, message),
   // complete(), progress(), error(message, file), pause()
   $.events = [];
   $.on = function(event,callback){
     $.events.push(event.toLowerCase(), callback);
   };
-  $.fire = function(){            
+  $.fire = function(){
     // `arguments` is an object, not array, in FF, so:
     var args = [];
     for (var i=0; i<arguments.length; i++) args.push(arguments[i]);
@@ -92,7 +92,7 @@ var Resumable = function(opts){
   }
 
   // INTERNAL METHODS (both handy and responsible for the heavy load)
-  var appendFilesFromFileList = function(fileList){            
+  var appendFilesFromFileList = function(fileList){
     $h.each(fileList, function(file){
         if (!$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
           var f = new ResumableFile($, file);
@@ -101,7 +101,7 @@ var Resumable = function(opts){
         }
       });
   }
-    
+
   // INTERNAL OBJECT TYPES
   function ResumableFile(resumableObj, file){
     var $ = this;
@@ -139,7 +139,7 @@ var Resumable = function(opts){
       }
     }
 
-    // Main code to set up a file object with chunks, 
+    // Main code to set up a file object with chunks,
     // packaged to be able to handle retries if needed.
     $.chunks = [];
     $.abort = function(){
@@ -187,7 +187,7 @@ var Resumable = function(opts){
           ret += c.progress(true); // get chunk progress relative to entire file
         });
       ret = (error ? 1 : (ret>0.999 ? 1 : ret))
-      ret = Math.max($._prevProgress, ret); // We don't want to lose percentages when an upload is paused 
+      ret = Math.max($._prevProgress, ret); // We don't want to lose percentages when an upload is paused
       $._prevProgress = ret;
       return(ret);
     }
@@ -258,7 +258,7 @@ var Resumable = function(opts){
         $.test();
         return;
       }
-      
+
       // Set up request and listen for event
       $.xhr = new XMLHttpRequest();
 
@@ -268,7 +268,7 @@ var Resumable = function(opts){
             $.callback('progress');
             $.lastProgressCallback = (new Date);
           }
-          $.loaded=e.loaded||0; 
+          $.loaded=e.loaded||0;
         }, false);
       $.loaded = 0;
       $.callback('progress');
@@ -326,7 +326,7 @@ var Resumable = function(opts){
           // HTTP 415/500/501, permanent error
           return('error');
         } else {
-          // this should never happen, but we'll reset and queue a retry 
+          // this should never happen, but we'll reset and queue a retry
           // a likely case for this would be 503 service unavailable
           $.abort();
           return('pending');
@@ -357,8 +357,8 @@ var Resumable = function(opts){
   $.uploadNextChunk = function(){
     var found = false;
 
-    // In some cases (such as videos) it's really handy to upload the first 
-    // and last chunk of a file quickly; this let's the server check the file's 
+    // In some cases (such as videos) it's really handy to upload the first
+    // and last chunk of a file quickly; this let's the server check the file's
     // metadata and determine if there's even a point in continuing.
     if ($.opts.prioritizeFirstAndLastChunk) {
       $h.each($.files, function(file){
@@ -407,32 +407,37 @@ var Resumable = function(opts){
     }
     return(false);
   }
-  
+
 
   // PUBLIC METHODS FOR RESUMABLE.JS
   $.assignBrowse = function(domNodes){
     if(typeof(domNodes.length)=='undefined') domNodes = [domNodes];
 
-    // We will create an <input> and overlay it on the domNode 
+    // We will create an <input> and overlay it on the domNode
     // (crappy, but since HTML5 doesn't have a cross-browser.browse() method we haven't a choice.
     //  FF4+ allows click() for this though: https://developer.mozilla.org/en/using_files_from_web_applications)
     $h.each(domNodes, function(domNode) {
-        var input = document.createElement('input');
-        input.setAttribute('type', 'file');
-        input.setAttribute('multiple', 'multiple');
-        // Place <input multiple /> with the dom node an position the input to fill the entire space
-        domNode.style.display = 'inline-block';
-        domNode.style.position = 'relative';
-        input.style.position = 'absolute';
-        input.style.top = input.style.left = input.style.bottom = input.style.right = 0;
-        input.style.opacity = 0;
-        input.style.cursor = 'pointer';
-        domNode.appendChild(input);
+        var input;
+        if(domNode.tagName==='INPUT' && domNode.type==='file'){
+            input = domNode;
+        } else {
+            input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('multiple', 'multiple');
+            // Place <input multiple /> with the dom node an position the input to fill the entire space
+            domNode.style.display = 'inline-block';
+            domNode.style.position = 'relative';
+            input.style.position = 'absolute';
+            input.style.top = input.style.left = input.style.bottom = input.style.right = 0;
+            input.style.opacity = 0;
+            input.style.cursor = 'pointer';
+            domNode.appendChild(input);
+        }
         // When new files are added, simply append them to the overall list
         input.addEventListener('change', function(e){
             appendFilesFromFileList(input.files);
-          }, false);
-      });
+        }, false);
+    });
   };
   $.assignDrop = function(domNodes){
     if(typeof(domNodes.length)=='undefined') domNodes = [domNodes];
@@ -458,8 +463,8 @@ var Resumable = function(opts){
       });
     return(uploading);
   }
-  $.upload = function(){    
-    // Make sure we don't start too many uploads at once 
+  $.upload = function(){
+    // Make sure we don't start too many uploads at once
     if($.isUploading()) return;
     // Kick off the queue
     for (var num=1; num<=$.opts.simultaneousUploads; num++) {
@@ -497,7 +502,7 @@ var Resumable = function(opts){
       });
     return(ret);
   };
-        
+
 
   // FINALIZE AND RETURN OBJECT
   // Mix in defaults

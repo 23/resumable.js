@@ -300,7 +300,7 @@ var Resumable = function(opts){
       formData.append('resumableIdentifier', $.fileObj.uniqueIdentifier);
       formData.append('resumableFilename', $.fileObj.fileName);
       // Append the relevant chunk and send it
-      var func = ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice'));
+      var func = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice')));
       formData.append($.resumableObj.opts.fileParameterName, $.fileObj.file[func]($.startByte,$.endByte));
       $.xhr.open("POST", $.resumableObj.opts.target);
       //$.xhr.open("POST", '/sandbox');

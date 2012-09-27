@@ -38,7 +38,11 @@ var Resumable = function(opts){
     query:{},
     prioritizeFirstAndLastChunk:false,
     target:'/',
-    testChunks:true
+    testChunks:true,
+    allowMultiplefiles:true,
+    showSelectSingleFileCallback:function () {
+      alert('Please upload one file at a time.');
+    }
   };
 
 
@@ -93,6 +97,12 @@ var Resumable = function(opts){
 
   // INTERNAL METHODS (both handy and responsible for the heavy load)
   var appendFilesFromFileList = function(fileList){
+    // check for multiple files in a
+    if (!$.opts.allowMultiplefiles&&fileList.length != 1) {
+      $.opts.showSelectSingleFileCallback();
+      return false;
+    }
+
     $h.each(fileList, function(file){
         if (!$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
           var f = new ResumableFile($, file);
@@ -423,7 +433,9 @@ var Resumable = function(opts){
         } else {
             input = document.createElement('input');
             input.setAttribute('type', 'file');
-            input.setAttribute('multiple', 'multiple');
+            if ($.opts.allowMultiplefiles)
+              input.setAttribute('multiple', 'multiple');
+
             // Place <input multiple /> with the dom node an position the input to fill the entire space
             domNode.style.display = 'inline-block';
             domNode.style.position = 'relative';

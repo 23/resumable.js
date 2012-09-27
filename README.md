@@ -82,6 +82,8 @@ Available configuration options are:
 * `query` Extra parameters to include in the multipart POST with data (Default: `{}`)
 * `prioritizeFirstAndLastChunk` Prioritize first and last chunks of all files. This can be handy if you can determine if a file is valid for your service from only the first or last chunk. For example, photo or video meta data is usually located in the first part of a file, making it easy to test support from only the first chunk. (Default: `false`)
 * `testChunks` Make a GET request to the server for each chunks to see if it already exists. If implemented on the server-side, this will allow for upload resumes even after a browser crash or even a computer restart. (Default: `true`)
+* `allowMultiplefiles` Indicates whether multiple files can be selected by the user at the same time. Valid values are `true` and `false`. (Default: `true`)
+* `showSelectSingleFileCallback` A function which displays the *please upload one file at a time* message. (Default: displays an alert box with the message *Please upload one file at a time.*)
 
 #### Properties
 

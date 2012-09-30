@@ -482,6 +482,12 @@ var Resumable = function(opts){
       });
     $.fire('pause');
   };
+  $.cancel = function(){
+    $h.each($.files, function(file){
+        file.cancel();
+      });
+    $.fire('cancel');
+  };
   $.progress = function(){
     var totalDone = 0;
     var totalSize = 0;

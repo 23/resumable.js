@@ -97,6 +97,7 @@ Available configuration options are:
 * `.on(event, callback)` Listen for event from Resumable.js (see below)
 * `.upload()` Start or resume uploading.
 * `.pause()` Pause uploading.
+* `.cancel()` Cancel upload of all `ResumableFile` objects and remove them from the list.
 * `.progress()` Returns a float between 0 and 1 indicating the current upload progress of all files.
 * `.isUploading()` Returns a boolean indicating whether or not the instance is currently uploading anything.
 * `.removeFile(file)` Cancel upload of a specific `ResumableFile` object on the list from the list.
@@ -113,6 +114,7 @@ Available configuration options are:
 * `.progress()` Uploading progress.
 * `.error(message, file)` An error, including fileError, occured.
 * `.pause()` Uploading was paused.
+* `.cancel()` Uploading was canceled.
 * `.catchAll(event, ...)` Listen to all the events listed above with the same callback function.
 
 ### ResumableFile

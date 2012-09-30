@@ -38,7 +38,8 @@ var Resumable = function(opts){
     query:{},
     prioritizeFirstAndLastChunk:false,
     target:'/',
-    testChunks:true
+    testChunks:true,
+	generateUniqueIdentifier:null
   };
 
 
@@ -85,6 +86,9 @@ var Resumable = function(opts){
       }
     },
     generateUniqueIdentifier:function(file){
+	  if(typeof $.opts.generateUniqueIdentifier === 'function') {
+	    return $.opts.generateUniqueIdentifier(file);
+	  }
       var fileName = file.fileName||file.name; // Some confusion in different versions of Firefox
       var size = file.size;
       return(size + '-' + fileName.replace(/[^0-9a-zA-Z_-]/img, ''));

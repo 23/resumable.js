@@ -36,6 +36,7 @@ var Resumable = function(opts){
     fileParameterName:'file',
     throttleProgressCallbacks:0.5,
     query:{},
+	headers:{},
     prioritizeFirstAndLastChunk:false,
     target:'/',
     testChunks:true
@@ -249,6 +250,10 @@ var Resumable = function(opts){
       params.push(['resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
       // Append the relevant chunk and send it
       $.xhr.open("GET", $.resumableObj.opts.target + '?' + params.join('&'));
+	  // Add data from header options
+	  $h.each($.resumableObj.opts.headers, function(k,v) {
+	    $.xhr.setRequestHeader(k, v);
+	  });	  
       $.xhr.send(null);
     }
 
@@ -303,6 +308,10 @@ var Resumable = function(opts){
       var func = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice')));
       formData.append($.resumableObj.opts.fileParameterName, $.fileObj.file[func]($.startByte,$.endByte));
       $.xhr.open("POST", $.resumableObj.opts.target);
+	  // Add data from header options
+	  $h.each($.resumableObj.opts.headers, function(k,v) {
+	    $.xhr.setRequestHeader(k, v);
+	  });	  
       //$.xhr.open("POST", '/sandbox');
       $.xhr.send(formData);
     }

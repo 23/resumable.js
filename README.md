@@ -103,6 +103,7 @@ Available configuration options are:
 * `.isUploading()` Returns a boolean indicating whether or not the instance is currently uploading anything.
 * `.removeFile(file)` Cancel upload of a specific `ResumableFile` object on the list from the list.
 * `.getFromUniqueIdentifier(uniqueIdentifier)` Look up a `ResumableFile` object by its unique identifier.
+* `.getSize()` Returns the total size of the upload in bytes.
 
 #### Events
 

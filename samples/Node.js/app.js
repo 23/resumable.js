@@ -1,6 +1,6 @@
 var express = require('express');
 var resumable = require('./resumable-node.js')('/tmp/resumable.js/');
-var app = express.createServer();
+var app = express();
 
 // Host most stuff in the public folder
 app.use(express.static(__dirname + '/public'));

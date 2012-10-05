@@ -48,6 +48,7 @@ To handle the state of upload chunks, a number of extra parameters are sent alon
 * `resumableTotalSize`: The total file size.
 * `resumableIdentifier`: A unique identifier for the file contained in the request.
 * `resumableFilename`: The original file name (since a bug in Firefox results in the file name not being transmitted in chunk multipart posts).
+* `resumableRelativePath`: The file's relative path when selecting a directory (defaults to file name in all browsers except Chrome).
 
 You should allow for the same chunk to be uploaded more than once; this isn't standard behaviour, but on an unstable network environment it could happen, and this case is exactly what Resumable.js is designed for.
 
@@ -93,7 +94,7 @@ Available configuration options are:
 
 #### Methods
 
-* `.assignBrowse(domNodes)` Assign a browse action to one or more DOM nodes.
+* `.assignBrowse(domNodes, isDirectory)` Assign a browse action to one or more DOM nodes.  Pass in `true` to allow directories to be selected (Chrome only).
 * `.assignDrop(domNodes)` Assign one or more DOM nodes as a drop target.
 * `.on(event, callback)` Listen for event from Resumable.js (see below)
 * `.upload()` Start or resume uploading.
@@ -125,6 +126,7 @@ Available configuration options are:
 * `.resumableObj` A back-reference to the parent `Resumable` object.
 * `.file` The correlating HTML5 `File` object.
 * `.fileName` The name of the file.
+* `.relativePath` The relative path to the file (defaults to file name if relative path doesn't exist)
 * `.size` Size in bytes of the file.
 * `.uniqueIdentifier` A unique identifier assigned to this file object. This value is included in uploads to the server for reference, but can also be used in CSS classes etc when building your upload UI.
 * `.chunks` An array of `ResumableChunk` items. You shouldn't need to dig into these.

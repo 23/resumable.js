@@ -521,7 +521,13 @@ var Resumable = function(opts){
       });
     return(ret);
   };
-
+  $.getSize = function(){
+    var totalSize = 0;
+    $h.each($.files, function(file){
+        totalSize += file.size;
+      });
+    return(totalSize);
+  };
 
   // FINALIZE AND RETURN OBJECT
   // Mix in defaults

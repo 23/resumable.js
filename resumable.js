@@ -449,6 +449,7 @@ var Resumable = function(opts){
         // When new files are added, simply append them to the overall list
         input.addEventListener('change', function(e){
             appendFilesFromFileList(input.files);
+			input.value = '';
         }, false);
     });
   };

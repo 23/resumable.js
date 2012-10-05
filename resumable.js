@@ -90,16 +90,17 @@ var Resumable = function(opts){
 	  if(typeof $.opts.generateUniqueIdentifier === 'function') {
 	    return $.opts.generateUniqueIdentifier(file);
 	  }
-      var fileName = file.fileName||file.name; // Some confusion in different versions of Firefox
+      var relativePath = file.webkitRelativePath||file.fileName||file.name; // Some confusion in different versions of Firefox
       var size = file.size;
-      return(size + '-' + fileName.replace(/[^0-9a-zA-Z_-]/img, ''));
+      return(size + '-' + relativePath.replace(/[^0-9a-zA-Z_-]/img, ''));
     }
   }
 
   // INTERNAL METHODS (both handy and responsible for the heavy load)
   var appendFilesFromFileList = function(fileList){
     $h.each(fileList, function(file){
-        if (!$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
+		// directories have size == 0
+        if (file.size > 0 && !$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
           var f = new ResumableFile($, file);
           $.files.push(f);
           $.fire('fileAdded', f);
@@ -115,6 +116,7 @@ var Resumable = function(opts){
     $.file = file;
     $.fileName = file.fileName||file.name; // Some confusion in different versions of Firefox
     $.size = file.size;
+    $.relativePath = file.webkitRelativePath || $.fileName;
     $.uniqueIdentifier = $h.generateUniqueIdentifier(file);
     var _error = false;
 
@@ -252,6 +254,7 @@ var Resumable = function(opts){
       params.push(['resumableTotalSize', encodeURIComponent($.fileObjSize)].join('='));
       params.push(['resumableIdentifier', encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
       params.push(['resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
+      params.push(['resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
       // Append the relevant chunk and send it
       $.xhr.open("GET", $.resumableObj.opts.target + '?' + params.join('&'));
 	  // Add data from header options
@@ -308,6 +311,7 @@ var Resumable = function(opts){
       formData.append('resumableTotalSize', $.fileObjSize);
       formData.append('resumableIdentifier', $.fileObj.uniqueIdentifier);
       formData.append('resumableFilename', $.fileObj.fileName);
+      formData.append('resumableRelativePath', $.fileObj.relativePath);
       // Append the relevant chunk and send it
       var func = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice')));
       formData.append($.resumableObj.opts.fileParameterName, $.fileObj.file[func]($.startByte,$.endByte));
@@ -423,7 +427,7 @@ var Resumable = function(opts){
 
 
   // PUBLIC METHODS FOR RESUMABLE.JS
-  $.assignBrowse = function(domNodes){
+  $.assignBrowse = function(domNodes, isDirectory){
     if(typeof(domNodes.length)=='undefined') domNodes = [domNodes];
 
     // We will create an <input> and overlay it on the domNode
@@ -446,10 +450,13 @@ var Resumable = function(opts){
             input.style.cursor = 'pointer';
             domNode.appendChild(input);
         }
+		if(isDirectory){
+		    input.setAttribute('webkitdirectory', 'webkitdirectory');
+		}
         // When new files are added, simply append them to the overall list
         input.addEventListener('change', function(e){
-            appendFilesFromFileList(input.files);
-			input.value = '';
+            appendFilesFromFileList(e.target.files);
+			e.target.value = '';
         }, false);
     });
   };

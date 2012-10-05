@@ -455,7 +455,6 @@ var Resumable = function(opts){
 		}
         // When new files are added, simply append them to the overall list
         input.addEventListener('change', function(e){
-		    debugger;
             appendFilesFromFileList(e.target.files);
 			e.target.value = '';
         }, false);

@@ -36,7 +36,8 @@ var Resumable = function(opts){
     fileParameterName:'file',
     throttleProgressCallbacks:0.5,
     query:{},
-	headers:{},
+    useFormData:true,	
+    headers:{},
     prioritizeFirstAndLastChunk:false,
     target:'/',
     testChunks:true,
@@ -234,6 +235,51 @@ var Resumable = function(opts){
     }
     $.xhr = null;
 
+    // INTERNAL METHODS
+    var getUploadUrl = function(useFormData){
+      var url = $.resumableObj.opts.target;
+      if(!useFormData) {
+        var params = [];
+        $h.each($.resumableObj.opts.query, function(k,v){
+          params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
+        });
+        // Add extra data to identify chunk
+        params.push(['resumableChunkNumber', encodeURIComponent($.offset+1)].join('='));
+        params.push(['resumableChunkSize', encodeURIComponent($.resumableObj.opts.chunkSize)].join('='));
+        params.push(['resumableTotalSize', encodeURIComponent($.fileObjSize)].join('='));
+        params.push(['resumableIdentifier', encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
+        params.push(['resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
+        params.push(['resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
+	    url += '?' + params.join('&');
+	  }
+      return url;
+    }
+    var getFormData = function(useFormData){
+      var formData = new FormData();
+      if(useFormData) {
+        $h.each($.resumableObj.opts.query, function(k,v){
+          formData.append(k,v);
+        });
+        // Add extra data to identify chunk
+        formData.append('resumableChunkNumber', $.offset+1);
+        formData.append('resumableChunkSize', $.resumableObj.opts.chunkSize);
+        formData.append('resumableTotalSize', $.fileObjSize);
+        formData.append('resumableIdentifier', $.fileObj.uniqueIdentifier);
+        formData.append('resumableFilename', $.fileObj.fileName);
+        formData.append('resumableRelativePath', $.fileObj.relativePath);
+      }
+      // Append the relevant chunk and send it
+      var func = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice')));
+      formData.append($.resumableObj.opts.fileParameterName, $.fileObj.file[func]($.startByte,$.endByte));
+      return formData;
+    }
+    var setHeaders = function(){
+      if(!$.xhr) return;
+      $h.each($.resumableObj.opts.headers, function(k,v) {
+        $.xhr.setRequestHeader(k, v);
+      });
+    }
+		
     // test() makes a GET request without any data to see if the chunk has already been uploaded in a previous session
     $.test = function(){
       // Set up request and listen for event
@@ -253,24 +299,11 @@ var Resumable = function(opts){
       $.xhr.addEventListener("error", testHandler, false);
 
       // Add data from the query options
-      var url = ""
-      var params = [];
-      $h.each($.resumableObj.opts.query, function(k,v){
-          params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
-        });
-      // Add extra data to identify chunk
-      params.push(['resumableChunkNumber', encodeURIComponent($.offset+1)].join('='));
-      params.push(['resumableChunkSize', encodeURIComponent($.resumableObj.opts.chunkSize)].join('='));
-      params.push(['resumableTotalSize', encodeURIComponent($.fileObjSize)].join('='));
-      params.push(['resumableIdentifier', encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
-      params.push(['resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
-      params.push(['resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
+      var uploadUrl = getUploadUrl(false);
       // Append the relevant chunk and send it
-      $.xhr.open("GET", $.resumableObj.opts.target + '?' + params.join('&'));
+      $.xhr.open("GET", uploadUrl);
 	  // Add data from header options
-	  $h.each($.resumableObj.opts.headers, function(k,v) {
-	    $.xhr.setRequestHeader(k, v);
-	  });	  
+	  setHeaders();  
       $.xhr.send(null);
     }
 
@@ -311,25 +344,11 @@ var Resumable = function(opts){
       $.xhr.addEventListener("error", doneHandler, false);
 
       // Add data from the query options
-      var formData = new FormData();
-      $h.each($.resumableObj.opts.query, function(k,v){
-          formData.append(k,v);
-        });
-      // Add extra data to identify chunk
-      formData.append('resumableChunkNumber', $.offset+1);
-      formData.append('resumableChunkSize', $.resumableObj.opts.chunkSize);
-      formData.append('resumableTotalSize', $.fileObjSize);
-      formData.append('resumableIdentifier', $.fileObj.uniqueIdentifier);
-      formData.append('resumableFilename', $.fileObj.fileName);
-      formData.append('resumableRelativePath', $.fileObj.relativePath);
-      // Append the relevant chunk and send it
-      var func = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice')));
-      formData.append($.resumableObj.opts.fileParameterName, $.fileObj.file[func]($.startByte,$.endByte));
-      $.xhr.open("POST", $.resumableObj.opts.target);
+	  var uploadUrl = getUploadUrl($.resumableObj.opts.useFormData);
+	  var formData = getFormData($.resumableObj.opts.useFormData);      
+      $.xhr.open("POST", uploadUrl);
 	  // Add data from header options
-	  $h.each($.resumableObj.opts.headers, function(k,v) {
-	    $.xhr.setRequestHeader(k, v);
-	  });	  
+	  setHeaders();
       //$.xhr.open("POST", '/sandbox');
       $.xhr.send(formData);
     }

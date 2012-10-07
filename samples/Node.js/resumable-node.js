@@ -92,13 +92,13 @@ module.exports = resumable = function(temporaryFolder){
     var fields = req.body;
     var files = req.files;
 
-    var chunkNumber = fields['resumableChunkNumber'];
-    var chunkSize = fields['resumableChunkSize'];
-    var totalSize = fields['resumableTotalSize'];
-    var identifier = cleanIdentifier(fields['resumableIdentifier']);
-    var filename = fields['resumableFilename'];
+    var chunkNumber = fields['resumableChunkNumber'] || req.param('resumableChunkNumber', 0);
+    var chunkSize = fields['resumableChunkSize'] || req.param('resumableChunkSize', 0);
+    var totalSize = fields['resumableTotalSize'] || req.param('resumableTotalSize', 0);
+    var identifier = cleanIdentifier(fields['resumableIdentifier'] || req.param('resumableIdentifier', ""));
+    var filename = fields['resumableFilename'] || req.param('resumableFilename', "");
 
-		var original_filename = fields['resumableIdentifier'];
+    var original_filename = fields['resumableIdentifier'] || req.param('resumableIdentifier', "");
 
     if(!files[$.fileParameterName] || !files[$.fileParameterName].size) {
       callback('invalid_resumable_request', null, null, null);

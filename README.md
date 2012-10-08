@@ -93,6 +93,8 @@ Available configuration options are:
 * `.support` A boolean value indicator whether or not Resumable.js is supported by the current browser.
 * `.opts` A hash object of the configuration of the Resumable.js instance.
 * `.files` An array of `ResumableFile` file objects added by the user (see full docs for this object type below).
+* `.browseNodes` An array of `input` nodes which trigger the file browsing dialog.
+* `.disabled` A boolean value indicating whether or not file selection and drag and drop are disabled.
 
 #### Methods
 
@@ -104,6 +106,7 @@ Available configuration options are:
 * `.cancel()` Cancel upload of all `ResumableFile` objects and remove them from the list.
 * `.progress()` Returns a float between 0 and 1 indicating the current upload progress of all files.
 * `.isUploading()` Returns a boolean indicating whether or not the instance is currently uploading anything.
+* `.disable(disabled)` Enables/disables file selection and adding files via drag and drop.
 * `.removeFile(file)` Cancel upload of a specific `ResumableFile` object on the list from the list.
 * `.getFromUniqueIdentifier(uniqueIdentifier)` Look up a `ResumableFile` object by its unique identifier.
 * `.getSize()` Returns the total size of the upload in bytes.

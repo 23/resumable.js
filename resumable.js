@@ -30,6 +30,8 @@ var Resumable = function(opts){
   // PROPERTIES
   var $ = this;
   $.files = [];
+  $.browseNodes = [];
+  $.disabled = false;
   $.defaults = {
     chunkSize:1*1024*1024,
     simultaneousUploads:3,
@@ -116,7 +118,7 @@ var Resumable = function(opts){
           $.fire('fileAdded', f);
         }
       });
-  }
+  };
 
   // INTERNAL OBJECT TYPES
   function ResumableFile(resumableObj, file){
@@ -463,25 +465,28 @@ var Resumable = function(opts){
             domNode.appendChild(input);
         }
 		if(isDirectory){
-		    input.setAttribute('webkitdirectory', 'webkitdirectory');
+          input.setAttribute('webkitdirectory', 'webkitdirectory');
 		}
         // When new files are added, simply append them to the overall list
         input.addEventListener('change', function(e){
-            appendFilesFromFileList(e.target.files);
-			e.target.value = '';
+          appendFilesFromFileList(e.target.files);
+          e.target.value = '';
         }, false);
+	    $.browseNodes.push(input);
     });
   };
   $.assignDrop = function(domNodes){
     if(typeof(domNodes.length)=='undefined') domNodes = [domNodes];
 
     $h.each(domNodes, function(domNode) {
-        domNode.addEventListener('dragover', function(e){e.preventDefault();}, false);
-        domNode.addEventListener('drop', function(e){
-            $h.stopEvent(e);
-            appendFilesFromFileList(e.dataTransfer.files);
-          }, false);
-      });
+      domNode.addEventListener('dragover', function(e){e.preventDefault();}, false);
+      domNode.addEventListener('drop', function(e){
+        $h.stopEvent(e);
+        if(!$.disabled) {
+          appendFilesFromFileList(e.dataTransfer.files);
+        }
+      }, false);
+    });
   };
   $.isUploading = function(){
     var uploading = false;
@@ -534,6 +539,12 @@ var Resumable = function(opts){
       });
     $.files = files;
   };
+  $.disable = function(disabled){
+    $.disabled = disabled;
+    $h.each($.browseNodes, function(browseNode) {
+      browseNode.disabled = disabled;
+    });
+  }
   $.getFromUniqueIdentifier = function(uniqueIdentifier){
     var ret = false;
     $h.each($.files, function(f){

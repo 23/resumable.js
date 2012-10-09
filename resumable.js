@@ -459,13 +459,15 @@ var Resumable = function(opts){
             input.style.cursor = 'pointer';
             domNode.appendChild(input);
         }
-		if(isDirectory){
-		    input.setAttribute('webkitdirectory', 'webkitdirectory');
-		}
         if (typeof($.opts.maxFiles)==='undefined'||$.opts.maxFiles!=1){
           input.setAttribute('multiple', 'multiple');
         } else {
           input.removeAttribute('multiple');
+        }
+        if(isDirectory){
+          input.setAttribute('webkitdirectory', 'webkitdirectory');
+        } else {
+          input.removeAttribute('webkitdirectory');
         }
         // When new files are added, simply append them to the overall list
         input.addEventListener('change', function(e){

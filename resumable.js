@@ -36,11 +36,11 @@ var Resumable = function(opts){
     fileParameterName:'file',
     throttleProgressCallbacks:0.5,
     query:{},
-	headers:{},
+    headers:{},
     prioritizeFirstAndLastChunk:false,
     target:'/',
     testChunks:true,
-	generateUniqueIdentifier:null,
+    generateUniqueIdentifier:null,
     maxFiles:undefined,
     maxFilesErrorCallback:function () {
       alert('Please upload ' + $.opts.maxFiles + ' file' + ($.opts.maxFiles === 1 ? '' : 's') + ' at a time.');
@@ -91,9 +91,9 @@ var Resumable = function(opts){
       }
     },
     generateUniqueIdentifier:function(file){
-	  if(typeof $.opts.generateUniqueIdentifier === 'function') {
-	    return $.opts.generateUniqueIdentifier(file);
-	  }
+      if(typeof $.opts.generateUniqueIdentifier === 'function') {
+        return $.opts.generateUniqueIdentifier(file);
+      }
       var relativePath = file.webkitRelativePath||file.fileName||file.name; // Some confusion in different versions of Firefox
       var size = file.size;
       return(size + '-' + relativePath.replace(/[^0-9a-zA-Z_-]/img, ''));
@@ -109,7 +109,7 @@ var Resumable = function(opts){
     }
 
     $h.each(fileList, function(file){
-		// directories have size == 0
+        // directories have size == 0
         if (file.size > 0 && !$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
           var f = new ResumableFile($, file);
           $.files.push(f);
@@ -267,10 +267,10 @@ var Resumable = function(opts){
       params.push(['resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
       // Append the relevant chunk and send it
       $.xhr.open("GET", $.resumableObj.opts.target + '?' + params.join('&'));
-	  // Add data from header options
-	  $h.each($.resumableObj.opts.headers, function(k,v) {
-	    $.xhr.setRequestHeader(k, v);
-	  });	  
+      // Add data from header options
+      $h.each($.resumableObj.opts.headers, function(k,v) {
+        $.xhr.setRequestHeader(k, v);
+      });      
       $.xhr.send(null);
     }
 
@@ -326,10 +326,10 @@ var Resumable = function(opts){
       var func = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice')));
       formData.append($.resumableObj.opts.fileParameterName, $.fileObj.file[func]($.startByte,$.endByte));
       $.xhr.open("POST", $.resumableObj.opts.target);
-	  // Add data from header options
-	  $h.each($.resumableObj.opts.headers, function(k,v) {
-	    $.xhr.setRequestHeader(k, v);
-	  });	  
+      // Add data from header options
+      $h.each($.resumableObj.opts.headers, function(k,v) {
+        $.xhr.setRequestHeader(k, v);
+      });      
       //$.xhr.open("POST", '/sandbox');
       $.xhr.send(formData);
     }
@@ -449,11 +449,8 @@ var Resumable = function(opts){
             input = domNode;
         } else {
             input = document.createElement('input');
-            input.setAttribute('type', 'file');
-            if (typeof($.opts.maxFiles)==='undefined'||$.opts.maxFiles!=1)
-              input.setAttribute('multiple', 'multiple');
-            
-            // Place <input multiple /> with the dom node an position the input to fill the entire space
+            input.setAttribute('type', 'file');           
+            // Place <input /> with the dom node an position the input to fill the entire space
             domNode.style.display = 'inline-block';
             domNode.style.position = 'relative';
             input.style.position = 'absolute';
@@ -465,10 +462,15 @@ var Resumable = function(opts){
 		if(isDirectory){
 		    input.setAttribute('webkitdirectory', 'webkitdirectory');
 		}
+        if (typeof($.opts.maxFiles)==='undefined'||$.opts.maxFiles!=1){
+          input.setAttribute('multiple', 'multiple');
+        } else {
+          input.removeAttribute('multiple');
+        }
         // When new files are added, simply append them to the overall list
         input.addEventListener('change', function(e){
             appendFilesFromFileList(e.target.files);
-			e.target.value = '';
+            e.target.value = '';
         }, false);
     });
   };

@@ -255,7 +255,8 @@ var Resumable = function(opts){
       // Add data from the query options
       var url = ""
       var params = [];
-      $h.each($.resumableObj.opts.query, function(k,v){
+      var query = (typeof $.resumableObj.opts.query == "function") ? $.resumableObj.opts.query($.fileObj) : $.resumableObj.opts.query;
+      $h.each(query, function(k,v){
           params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
         });
       // Add extra data to identify chunk
@@ -312,7 +313,8 @@ var Resumable = function(opts){
 
       // Add data from the query options
       var formData = new FormData();
-      $h.each($.resumableObj.opts.query, function(k,v){
+      var query = (typeof $.resumableObj.opts.query == "function") ? $.resumableObj.opts.query($.fileObj) : $.resumableObj.opts.query;
+      $h.each(query, function(k,v){
           formData.append(k,v);
         });
       // Add extra data to identify chunk

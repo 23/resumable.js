@@ -1,0 +1,29 @@
+{
+    "name": "resumable.js",
+    "description": "a JavaScript library (and node module) providing multiple simultaneous, stable and resumable uploads via the HTML5 File API",
+    "version": "0.0.1",
+    "author": "23, http://www.23developer.com",
+    "scripts": {
+    },
+    "main": "resumable-node",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/23/resumable.js"
+    },
+    "keywords": [
+        "file-transfer",
+        "resumable",
+        "formidable"
+    ],
+    "dependencies" : {
+        "express" : "3.x"
+    },
+    "devDependencies": {
+    },
+    "bundledDependencies": [
+    ],
+    "license": "MIT",
+    "engines": {
+        "node": ">=0.6"
+    }
+}

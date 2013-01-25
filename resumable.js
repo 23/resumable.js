@@ -100,6 +100,14 @@ var Resumable = function(opts){
     }
   }
 
+  var onDrop = function(e){
+    $h.stopEvent(e);
+    appendFilesFromFileList(e.dataTransfer.files);
+  };
+  var onDragOver = function(e) {
+    e.preventDefault();
+  };
+
   // INTERNAL METHODS (both handy and responsible for the heavy load)
   var appendFilesFromFileList = function(fileList){
     // check for uploading too many files
@@ -482,11 +490,16 @@ var Resumable = function(opts){
     if(typeof(domNodes.length)=='undefined') domNodes = [domNodes];
 
     $h.each(domNodes, function(domNode) {
-        domNode.addEventListener('dragover', function(e){e.preventDefault();}, false);
-        domNode.addEventListener('drop', function(e){
-            $h.stopEvent(e);
-            appendFilesFromFileList(e.dataTransfer.files);
-          }, false);
+        domNode.addEventListener('dragover', onDragOver, false);
+        domNode.addEventListener('drop', onDrop, false);
+      });
+  };
+  $.unAssignDrop = function(domNodes) {
+    if (typeof(domNodes.length) == 'undefined') domNodes = [domNodes];
+
+    $h.each(domNodes, function(domNode) {
+        domNode.removeEventListener('dragover', onDragOver);
+        domNode.removeEventListener('drop', onDrop);
       });
   };
   $.isUploading = function(){

@@ -40,9 +40,9 @@ function _log($str) {
     echo $log_str;
 
     // log to file
-    if (($fp = @fopen('upload_log.txt', 'a+')) !== false) {
-        @fputs($fp, $log_str);
-        @fclose($fp);
+    if (($fp = fopen('upload_log.txt', 'a+')) !== false) {
+        fputs($fp, $log_str);
+        fclose($fp);
     }
 }
 
@@ -92,15 +92,16 @@ function createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize) {
     }
 
     // check that all the parts are present
-    if ($total_files * $chunkSize >=  $totalSize) {
+    // the size of the last part is between chunkSize and 2*$chunkSize
+    if ($total_files * $chunkSize >=  ($totalSize - $chunkSize + 1)) {
 
         // create the final destination file 
-        if (($fp = @fopen($fileName, 'w')) !== false) {
+        if (($fp = fopen('temp/'.$fileName, 'w')) !== false) {
             for ($i=1; $i<=$total_files; $i++) {
-                @fwrite($fp, file_get_contents($temp_dir.'/'.$fileName.'.part'.$i));
+                fwrite($fp, file_get_contents($temp_dir.'/'.$fileName.'.part'.$i));
                 _log('writing chunk '.$i);
             }
-            @fclose($f);
+            fclose($f);
         } else {
             _log('cannot create the destination file');
             return false;
@@ -108,7 +109,7 @@ function createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize) {
 
         // rename the temporary directory (to avoid access from other 
         // concurrent chunks uploads) and than delete it
-        if (@rename($temp_dir, $temp_dir.'_UNUSED')) {
+        if (rename($temp_dir, $temp_dir.'_UNUSED')) {
             rrmdir($temp_dir.'_UNUSED');
         } else {
             rrmdir($temp_dir);
@@ -138,10 +139,12 @@ if (!empty($_FILES)) foreach ($_FILES as $file) {
     $dest_file = $temp_dir.'/'.$_POST['resumableFilename'].'.part'.$_POST['resumableChunkNumber'];
 
     // create the temporary directory
-    @mkdir($dir, 0777, true);
+    if (!is_dir($dir)) {
+        mkdir($dir, 0777, true);
+    }   
 
     // move the temporary file
-    if (!@move_uploaded_file($file['tmp_name'], $dest_file)) {
+    if (!move_uploaded_file($file['tmp_name'], $dest_file)) {
         _log('Error saving (move_uploaded_file) chunk '.$_POST['resumableChunkNumber'].' for file '.$_POST['resumableFilename']);
     } else {
 

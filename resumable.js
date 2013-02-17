@@ -270,6 +270,7 @@ var Resumable = function(opts){
       // Add extra data to identify chunk
       params.push(['resumableChunkNumber', encodeURIComponent($.offset+1)].join('='));
       params.push(['resumableChunkSize', encodeURIComponent($.resumableObj.opts.chunkSize)].join('='));
+      params.push(['resumableCurrentChunkSize', encodeURIComponent($.endByte - $.startByte)].join('='));
       params.push(['resumableTotalSize', encodeURIComponent($.fileObjSize)].join('='));
       params.push(['resumableIdentifier', encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
       params.push(['resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
@@ -328,6 +329,7 @@ var Resumable = function(opts){
       // Add extra data to identify chunk
       formData.append('resumableChunkNumber', $.offset+1);
       formData.append('resumableChunkSize', $.resumableObj.opts.chunkSize);
+      formData.append('resumableCurrentChunkSize', $.endByte - $.startByte);
       formData.append('resumableTotalSize', $.fileObjSize);
       formData.append('resumableIdentifier', $.fileObj.uniqueIdentifier);
       formData.append('resumableFilename', $.fileObj.fileName);

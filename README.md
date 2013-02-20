@@ -1,4 +1,4 @@
-### What is Resumable.js
+## What is Resumable.js
 
 It's a JavaScript library providing multiple simultaneous, stable and resumable uploads via the HTML5 File API. 
 
@@ -9,7 +9,7 @@ Resumable.js does not have any external dependencies other the `HTML5 File API`.
 Samples and examples are available in the `samples/` folder. Please push your own as Markdown to help document the project.
 
 
-### How can I use it?
+## How can I use it?
 
 A new `Resumable` object is created with information of what and where to post:
 
@@ -37,7 +37,7 @@ After this, interaction with Resumable.js is done by listening to events:
         ...
       });
 
-### How do I set it up with my server?
+## How do I set it up with my server?
 
 Most of the magic for Resumable.js happens in the user's browser, but files still need to be reassembled from chunks on the server side. This should be a fairly simple task and can be achieved in any web framework or language, which is able to receive file uploads.
 
@@ -58,7 +58,7 @@ For every request, you can confirm reception in HTTP status codes:
 * `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload (in fact, any >=400 HTTP status code will trigger this result, [see details](https://twitter.com/#!/guan/status/131056635341844480).
 * _Anything else_: Something went wrong, but try reuploading the file.
 
-### Handling GET (or `test()` requests)
+## Handling GET (or `test()` requests)
 
 This will allow uploads to be resumed after browser restarts and even across browsers (in theory you could even run the same file upload across multiple tabs or different browsers).  The `POST` data requests listed are required to use Resumable.js to receive data, but you can extend support by implementing a corresponding `GET` request with the same parameters:
 
@@ -142,7 +142,7 @@ Available configuration options are:
 * `.bootstrap()` Rebuild the state of a `ResumableFile` object, including reassigning chunks and XMLHttpRequest instances.
 
 
-### Alternatives
+## Alternatives
 
 This library is explicitly designed for modern browsers supporting advanced HTML5 file features, and the motivation has been to provide stable and resumable support for large files (allowing uploads of several GB files through HTTP in a predictable fashion). 
 

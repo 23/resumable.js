@@ -113,6 +113,7 @@ Available configuration options are:
 * `.fileSuccess(file)` A specific file was completed.
 * `.fileProgress(file)` Uploading progressed for a specific file.
 * `.fileAdded(file)` A new file was added.
+* `.filesAdded(array)` New files were added.
 * `.fileRetry(file)` Something went wrong during upload of a specific file, uploading is being retried.
 * `.fileError(file, message)` An error occured during upload of a specific file.
 * `.complete()` Uploading completed.

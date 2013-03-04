@@ -41,6 +41,9 @@ var Resumable = function(opts){
     target:'/',
     testChunks:true,
     generateUniqueIdentifier:null,
+    maxChunkRetries:undefined,
+    chunkRetryInterval:undefined,
+    permanentErrors:[415, 500, 501],
     maxFiles:undefined,
     maxFilesErrorCallback:function () {
       alert('Please upload ' + $.opts.maxFiles + ' file' + ($.opts.maxFiles === 1 ? '' : 's') + ' at a time.');
@@ -97,8 +100,21 @@ var Resumable = function(opts){
       var relativePath = file.webkitRelativePath||file.fileName||file.name; // Some confusion in different versions of Firefox
       var size = file.size;
       return(size + '-' + relativePath.replace(/[^0-9a-zA-Z_-]/img, ''));
+    },
+    contains:function(array,test) {
+      var result = false;
+
+      $h.each(array, function(value) {
+          if (value == test) {
+            result = true;
+            return false;
+          }
+          return true;
+      });
+
+      return result;
     }
-  }
+  };
 
   var onDrop = function(e){
     $h.stopEvent(e);
@@ -115,16 +131,18 @@ var Resumable = function(opts){
       $.opts.maxFilesErrorCallback();
       return false;
     }
-
+    var files = [];
     $h.each(fileList, function(file){
         // directories have size == 0
         if (file.size > 0 && !$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
           var f = new ResumableFile($, file);
           $.files.push(f);
+          files.push(f);
           $.fire('fileAdded', f);
         }
       });
-  }
+    $.fire('filesAdded', files);
+  };
 
   // INTERNAL OBJECT TYPES
   function ResumableFile(resumableObj, file){
@@ -231,6 +249,7 @@ var Resumable = function(opts){
     $.callback = callback;
     $.lastProgressCallback = (new Date);
     $.tested = false;
+    $.retries = 0;
 
     // Computed properties
     $.loaded = 0;
@@ -280,7 +299,7 @@ var Resumable = function(opts){
       // Add data from header options
       $h.each($.resumableObj.opts.headers, function(k,v) {
         $.xhr.setRequestHeader(k, v);
-      });      
+      });
       $.xhr.send(null);
     }
 
@@ -314,7 +333,12 @@ var Resumable = function(opts){
         } else {
           $.callback('retry', $.message());
           $.abort();
-          $.send(); // TODO: Insert a retryInterval pause into this loop
+          $.retries++;
+          if($.resumableObj.opts.chunkRetryInterval !== undefined) {
+              setTimeout($.send, $.resumableObj.opts.chunkRetryInterval);
+          } else {
+            $.send();
+          }
         }
       };
       $.xhr.addEventListener("load", doneHandler, false);
@@ -341,7 +365,7 @@ var Resumable = function(opts){
       // Add data from header options
       $h.each($.resumableObj.opts.headers, function(k,v) {
         $.xhr.setRequestHeader(k, v);
-      });      
+      });
       //$.xhr.open("POST", '/sandbox');
       $.xhr.send(formData);
     }
@@ -361,7 +385,7 @@ var Resumable = function(opts){
         if($.xhr.status==200) {
           // HTTP 200, perfect
           return('success');
-        } else if($.xhr.status==415 || $.xhr.status==500 || $.xhr.status==501) {
+        } else if($h.contains($.resumableObj.opts.permanentErrors, $.xhr.status) || $.retries >= $.resumableObj.opts.maxChunkRetries) {
           // HTTP 415/500/501, permanent error
           return('error');
         } else {
@@ -445,7 +469,7 @@ var Resumable = function(opts){
       $.fire('complete');
     }
     return(false);
-  }
+  };
 
 
   // PUBLIC METHODS FOR RESUMABLE.JS
@@ -461,7 +485,7 @@ var Resumable = function(opts){
             input = domNode;
         } else {
             input = document.createElement('input');
-            input.setAttribute('type', 'file');           
+            input.setAttribute('type', 'file');
             // Place <input /> with the dom node an position the input to fill the entire space
             domNode.style.display = 'inline-block';
             domNode.style.position = 'relative';

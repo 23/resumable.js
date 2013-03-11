@@ -37,6 +37,7 @@ var Resumable = function(opts){
     throttleProgressCallbacks:0.5,
     query:{},
     headers:{},
+    method:'multipart',
     prioritizeFirstAndLastChunk:false,
     target:'/',
     testChunks:true,
@@ -344,30 +345,44 @@ var Resumable = function(opts){
       $.xhr.addEventListener("load", doneHandler, false);
       $.xhr.addEventListener("error", doneHandler, false);
 
-      // Add data from the query options
-      var formData = new FormData();
       var query = (typeof $.resumableObj.opts.query == "function") ? $.resumableObj.opts.query($.fileObj, $) : $.resumableObj.opts.query;
-      $h.each(query, function(k,v){
-          formData.append(k,v);
-        });
-      // Add extra data to identify chunk
-      formData.append('resumableChunkNumber', $.offset+1);
-      formData.append('resumableChunkSize', $.resumableObj.opts.chunkSize);
-      formData.append('resumableCurrentChunkSize', $.endByte - $.startByte);
-      formData.append('resumableTotalSize', $.fileObjSize);
-      formData.append('resumableIdentifier', $.fileObj.uniqueIdentifier);
-      formData.append('resumableFilename', $.fileObj.fileName);
-      formData.append('resumableRelativePath', $.fileObj.relativePath);
-      // Append the relevant chunk and send it
-      var func = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice')));
-      formData.append($.resumableObj.opts.fileParameterName, $.fileObj.file[func]($.startByte,$.endByte));
-      $.xhr.open("POST", $.resumableObj.opts.target);
+      query.resumableChunkNumber = $.offset+1;
+      query.resumableChunkSize = $.resumableObj.opts.chunkSize;
+      query.resumableCurrentChunkSize = $.endByte - $.startByte;
+      query.resumableTotalSize = $.fileObjSize;
+      query.resumableIdentifier = $.fileObj.uniqueIdentifier;
+      query.resumableFilename = $.fileObj.fileName;
+      query.resumableRelativePath = $.fileObj.relativePath;
+
       // Add data from header options
       $h.each($.resumableObj.opts.headers, function(k,v) {
         $.xhr.setRequestHeader(k, v);
       });
-      //$.xhr.open("POST", '/sandbox');
-      $.xhr.send(formData);
+
+      var func   = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice'))),
+          bytes  = $.fileObj.file[func]($.startByte,$.endByte), 
+          data   = null,
+          target = $.resumableObj.opts.target;
+ 
+      if ($.resumableObj.opts.method === 'octet') {
+        // Add data from the query options
+        data = bytes;
+        var params = [];
+        $h.each(query, function(k,v){
+          params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
+        });
+        target += '?' + params.join('&');
+      } else {
+        // Add data from the query options
+        data = new FormData();
+        $h.each(query, function(k,v){
+          data.append(k,v);
+        });
+        data.append($.resumableObj.opts.fileParameterName, bytes);
+      }
+     
+      $.xhr.open('POST', target); 
+      $.xhr.send(data);
     }
     $.abort = function(){
       // Abort and reset

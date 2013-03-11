@@ -15,7 +15,7 @@ It's a sample implementation to illustrate chunking. It should probably not be u
  * the files were uploaded using standard HTML form (multipart).
  *
  * This PHP script stores all the chunks of a file in a temporary
- * directory (`temp`) with the extension `_part<#ChunkN>`. Once all 
+ * directory (`temp`) with the extension `_part<#ChunkN>`. Once all
  * the parts have been uploaded, a final destination file is
  * being created from all the stored parts (appending one by one).
  *
@@ -48,7 +48,7 @@ function _log($str) {
 
 
 /**
- * 
+ *
  * Delete a directory RECURSIVELY
  * @param string $dir - directory path
  * @link http://php.net/manual/en/function.rmdir.php
@@ -59,7 +59,7 @@ function rrmdir($dir) {
         foreach ($objects as $object) {
             if ($object != "." && $object != "..") {
                 if (filetype($dir . "/" . $object) == "dir") {
-                    rrmdir($dir . "/" . $object); 
+                    rrmdir($dir . "/" . $object);
                 } else {
                     unlink($dir . "/" . $object);
                 }
@@ -74,12 +74,13 @@ function rrmdir($dir) {
 
 /**
  *
- * Check if all the parts exist, and 
+ * Check if all the parts exist, and
  * gather all the parts of the file together
- * @param string $dir - the temporary directory holding all the parts of the file
+ * @param string $temp_dir - the temporary directory holding all the parts of the file
  * @param string $fileName - the original file name
  * @param string $chunkSize - each chunk size (in bytes)
  * @param string $totalSize - original file size (in bytes)
+ * @return bool - File creation result
  */
 function createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize) {
 
@@ -95,25 +96,30 @@ function createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize) {
     // the size of the last part is between chunkSize and 2*$chunkSize
     if ($total_files * $chunkSize >=  ($totalSize - $chunkSize + 1)) {
 
-        // create the final destination file 
+        // create the final destination file
         if (($fp = fopen('temp/'.$fileName, 'w')) !== false) {
             for ($i=1; $i<=$total_files; $i++) {
                 fwrite($fp, file_get_contents($temp_dir.'/'.$fileName.'.part'.$i));
                 _log('writing chunk '.$i);
             }
-            fclose($f);
+            fclose($fp);
         } else {
             _log('cannot create the destination file');
             return false;
         }
 
-        // rename the temporary directory (to avoid access from other 
+        // rename the temporary directory (to avoid access from other
         // concurrent chunks uploads) and than delete it
         if (rename($temp_dir, $temp_dir.'_UNUSED')) {
             rrmdir($temp_dir.'_UNUSED');
         } else {
             rrmdir($temp_dir);
         }
+
+        return true;
+    } else {
+
+        return false;
     }
 
 }
@@ -139,9 +145,9 @@ if (!empty($_FILES)) foreach ($_FILES as $file) {
     $dest_file = $temp_dir.'/'.$_POST['resumableFilename'].'.part'.$_POST['resumableChunkNumber'];
 
     // create the temporary directory
-    if (!is_dir($dir)) {
-        mkdir($dir, 0777, true);
-    }   
+    if (!is_dir($temp_dir)) {
+        mkdir($temp_dir, 0777, true);
+    }
 
     // move the temporary file
     if (!move_uploaded_file($file['tmp_name'], $dest_file)) {
@@ -149,10 +155,8 @@ if (!empty($_FILES)) foreach ($_FILES as $file) {
     } else {
 
         // check if all the parts present, and create the final destination file
-        createFileFromChunks($temp_dir, $_POST['resumableFilename'], 
+        createFileFromChunks($temp_dir, $_POST['resumableFilename'],
                 $_POST['resumableChunkSize'], $_POST['resumableTotalSize']);
     }
 }
 ```
-
-

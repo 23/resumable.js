@@ -63,10 +63,11 @@ var Resumable = function(opts){
   $.fire = function(){
     // `arguments` is an object, not array, in FF, so:
     var args = [];
-    for (var i=0; i<arguments.length; i++) args.push(arguments[i]);
+    var i;
+    for (i=0; i<arguments.length; i++) args.push(arguments[i]);
     // Find event listeners, and support pseudo-event `catchAll`
     var event = args[0].toLowerCase();
-    for (var i=0; i<=$.events.length; i+=2) {
+    for (i=0; i<=$.events.length; i+=2) {
       if($.events[i]==event) $.events[i+1].apply($,args.slice(1));
       if($.events[i]=='catchall') $.events[i+1].apply(null,args);
     }
@@ -76,7 +77,7 @@ var Resumable = function(opts){
 
 
   // INTERNAL HELPER METHODS (handy, but ultimately not part of uploading)
-  $h = {
+  var $h = {
     stopEvent: function(e){
       e.stopPropagation();
       e.preventDefault();
@@ -181,7 +182,7 @@ var Resumable = function(opts){
         $.resumableObj.fire('fileRetry', $);
         break;
       }
-    }
+    };
 
     // Main code to set up a file object with chunks,
     // packaged to be able to handle retries if needed.
@@ -192,7 +193,7 @@ var Resumable = function(opts){
           if(c.status()=='uploading') c.abort();
         });
       $.resumableObj.fire('fileProgress', $);
-    }
+    };
     $.cancel = function(){
       // Reset this file to be void
       var _chunks = $.chunks;
@@ -206,11 +207,11 @@ var Resumable = function(opts){
         });
       $.resumableObj.removeFile($);
       $.resumableObj.fire('fileProgress', $);
-    },
+    };
     $.retry = function(){
       $.bootstrap();
       $.resumableObj.upload();
-    }
+    };
     $.bootstrap = function(){
       $.abort();
         _error = false;
@@ -220,7 +221,7 @@ var Resumable = function(opts){
       for (var offset=0; offset<Math.max(Math.floor($.file.size/$.resumableObj.opts.chunkSize),1); offset++) {
         $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
       }
-    }
+    };
     $.progress = function(){
       if(_error) return(1);
       // Sum up progress across everything
@@ -230,11 +231,11 @@ var Resumable = function(opts){
           if(c.status()=='error') error = true;
           ret += c.progress(true); // get chunk progress relative to entire file
         });
-      ret = (error ? 1 : (ret>0.999 ? 1 : ret))
+      ret = (error ? 1 : (ret>0.999 ? 1 : ret));
       ret = Math.max($._prevProgress, ret); // We don't want to lose percentages when an upload is paused
       $._prevProgress = ret;
       return(ret);
-    }
+    };
 
     // Bootstrap and return
     $.bootstrap();
@@ -276,12 +277,11 @@ var Resumable = function(opts){
         } else {
           $.send();
         }
-      }
+      };
       $.xhr.addEventListener("load", testHandler, false);
       $.xhr.addEventListener("error", testHandler, false);
 
       // Add data from the query options
-      var url = ""
       var params = [];
       var query = (typeof $.resumableObj.opts.query == "function") ? $.resumableObj.opts.query($.fileObj, $) : $.resumableObj.opts.query;
       $h.each(query, function(k,v){
@@ -302,7 +302,7 @@ var Resumable = function(opts){
         $.xhr.setRequestHeader(k, v);
       });
       $.xhr.send(null);
-    }
+    };
 
     // send() uploads the actual data in a POST call
     $.send = function(){
@@ -383,12 +383,12 @@ var Resumable = function(opts){
      
       $.xhr.open('POST', target); 
       $.xhr.send(data);
-    }
+    };
     $.abort = function(){
       // Abort and reset
       if($.xhr) $.xhr.abort();
       $.xhr = null;
-    }
+    };
     $.status = function(){
       // Returns: 'pending', 'uploading', 'success', 'error'
       if(!$.xhr) {
@@ -410,10 +410,10 @@ var Resumable = function(opts){
           return('pending');
         }
       }
-    }
+    };
     $.message = function(){
       return($.xhr ? $.xhr.responseText : '');
-    }
+    };
     $.progress = function(relative){
       if(typeof(relative)==='undefined') relative = false;
       var factor = (relative ? ($.endByte-$.startByte)/$.fileObjSize : 1);
@@ -427,7 +427,7 @@ var Resumable = function(opts){
       default:
         return($.loaded/($.endByte-$.startByte)*factor);
       }
-    }
+    };
     return(this);
   }
 
@@ -468,8 +468,8 @@ var Resumable = function(opts){
     if(found) return(true);
 
     // The are no more outstanding chunks to upload, check is everything is done
+    var outstanding = false;
     $h.each($.files, function(file){
-        outstanding = false;
         $h.each(file.chunks, function(chunk){
             var status = chunk.status();
             if(status=='pending' || status=='uploading') {
@@ -555,7 +555,7 @@ var Resumable = function(opts){
         if(uploading) return(false);
       });
     return(uploading);
-  }
+  };
   $.upload = function(){
     // Make sure we don't start too many uploads at once
     if($.isUploading()) return;
@@ -617,4 +617,4 @@ var Resumable = function(opts){
     });
   // Return the object
   return(this);
-}
+};

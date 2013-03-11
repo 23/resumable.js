@@ -282,7 +282,7 @@ var Resumable = function(opts){
       // Add data from the query options
       var url = ""
       var params = [];
-      var query = (typeof $.resumableObj.opts.query == "function") ? $.resumableObj.opts.query($.fileObj) : $.resumableObj.opts.query;
+      var query = (typeof $.resumableObj.opts.query == "function") ? $.resumableObj.opts.query($.fileObj, $) : $.resumableObj.opts.query;
       $h.each(query, function(k,v){
           params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
         });
@@ -346,7 +346,7 @@ var Resumable = function(opts){
 
       // Add data from the query options
       var formData = new FormData();
-      var query = (typeof $.resumableObj.opts.query == "function") ? $.resumableObj.opts.query($.fileObj) : $.resumableObj.opts.query;
+      var query = (typeof $.resumableObj.opts.query == "function") ? $.resumableObj.opts.query($.fileObj, $) : $.resumableObj.opts.query;
       $h.each(query, function(k,v){
           formData.append(k,v);
         });

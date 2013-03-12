@@ -1,0 +1,26 @@
+#box {
+    margin: 10px;
+    width: 600px;
+    text-align: center;
+}
+
+#resumable-drop {
+    height: 200px;
+    border: black dashed thin;
+    margin: 15px 0 0 0;
+    padding: 50px 0 0 0;
+    text-align: center;
+}
+
+.menu {
+    padding: 15px;
+}
+
+#imagelist img {
+    max-width: 600px;
+}
+
+.sharedEnhancement, .fileEnhancement{
+    font-size: x-large;
+    cursor: pointer;
+}

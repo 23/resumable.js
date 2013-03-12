@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="style.css" />
+        <meta charset="utf-8" />
+        <title>Image upload</title>
+    </head>
+    <body>
+        <div id="box">
+            <div class="info">
+                <p>
+                    <button id="action">upload</button>
+                </p>
+                <p>
+                    Files: <b id="files">0</b> progress: <b id="percentage">0%</b> <progress id="progress" value="0" max="1"></progress>
+                </p>
+                <div class="menu">
+                    File opts:
+                    <b class="fileEnhancement" data-enhancement="blur">Blur</b>
+                    <b class="fileEnhancement" data-enhancement="wave">Wave</b>
+                    <b class="fileEnhancement" data-enhancement="solarize">Solarize</b>
+                    <b class="fileEnhancement" data-enhancement="sepia">Sepia</b>
+                    <b class="fileEnhancement" data-enhancement="shade">Shade</b>
+                    <b class="fileEnhancement" data-enhancement="oil">Oil</b>
+                    <b class="fileEnhancement" data-enhancement="none">Clear</b>
+                    <br>
+                    <b id="fileActive">NONE</b>
+                </div>
+
+                <div class="menu">
+                    Shared opts:
+                    <b class="sharedEnhancement" data-enhancement="blur">Blur</b>
+                    <b class="sharedEnhancement" data-enhancement="wave">Wave</b>
+                    <b class="sharedEnhancement" data-enhancement="solarize">Solarize</b>
+                    <b class="sharedEnhancement" data-enhancement="sepia">Sepia</b>
+                    <b class="sharedEnhancement" data-enhancement="shade">Shade</b>
+                    <b class="sharedEnhancement" data-enhancement="oil">Oil</b>
+                    <b class="sharedEnhancement" data-enhancement="none">Clear</b>
+                    <br>
+                    <b id="sharedActive">NONE</b>
+                </div>
+            </div>
+
+            <div id="resumable-drop">
+                Drop video files here to upload or <a id="resumable-browse"><u>select from your computer</u></a>
+            </div>
+            <div id="imagelist"></div>
+        </div>
+
+        <script type="text/javascript" src="resumable.js"></script>
+        <script type="text/javascript" src="upload.js"></script>
+    </body>
+</html>

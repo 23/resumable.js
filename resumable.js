@@ -47,11 +47,11 @@ var Resumable = function (opts) {
         maxFilesErrorCallback: function () {
             alert('Please upload at most ' + $.opts.maxFiles + ' file' + ($.opts.maxFiles === 1 ? '' : 's') + ' at a time.');
         },
-        maxFileSizeErrorCallback: function () {         
-            alert('Please upload files less than ' + $.opts.maxFileSize + ' byte' + ($.opts.maxFileSize === 1 ? '' : 's') );
+        maxFileSizeErrorCallback: function (file) {        	
+            alert(file +' is too large, please upload files less than ' + $.opts.maxFileSize + ' byte' + ($.opts.maxFileSize === 1 ? '' : 's') );
         },     
-        minFileSizeErrorCallback: function () {         
-            alert('Please upload files greater than ' + $.opts.minFileSize + ' byte' + ($.opts.minFileSize === 1 ? '' : 's') );
+        minFileSizeErrorCallback: function (file) {         
+            alert(file + ' is too large, please upload files greater than ' + $.opts.minFileSize + ' byte' + ($.opts.minFileSize === 1 ? '' : 's') );
         }
     };
 
@@ -140,12 +140,12 @@ var Resumable = function (opts) {
         $h.each(fileList, function (file) {
             // check for uploading file that's too large
             if(typeof ($.opts.maxFileSize) !== 'undefined' && file.size > $.opts.maxFileSize) {
-                if(typeof($.opts.maxFileSizeErrorCallback) == 'function') $.opts.maxFileSizeErrorCallback(); //First check if the callback is a function
+                if(typeof($.opts.maxFileSizeErrorCallback) == 'function') $.opts.maxFileSizeErrorCallback(file); //First check if the callback is a function
                 return true;
             }
             // check for uploading file that's too small
             if(typeof ($.opts.minFileSize) !== 'undefined' && file.size < $.opts.minFileSize) {
-                if(typeof($.opts.minFileSizeErrorCallback) == 'function') $.opts.minFileSizeErrorCallback(); //First check if the callback is a function
+                if(typeof($.opts.minFileSizeErrorCallback) == 'function') $.opts.minFileSizeErrorCallback(file); //First check if the callback is a function
                 return true;
             }
             // directories have size == 0

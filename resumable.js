@@ -37,6 +37,7 @@ var Resumable = function(opts){
     throttleProgressCallbacks:0.5,
     query:{},
     headers:{},
+    preprocess:null,
     method:'multipart',
     prioritizeFirstAndLastChunk:false,
     target:'/',
@@ -251,6 +252,7 @@ var Resumable = function(opts){
     $.lastProgressCallback = (new Date);
     $.tested = false;
     $.retries = 0;
+    $.preprocessState = 0; // 0 = unprocessed, 1 = processing, 2 = finished
 
     // Computed properties
     $.loaded = 0;
@@ -304,8 +306,20 @@ var Resumable = function(opts){
       $.xhr.send(null);
     }
 
+    $.preprocessFinished = function(){
+      $.preprocessState = 2;
+      $.send();
+    }
+
     // send() uploads the actual data in a POST call
     $.send = function(){
+      if(typeof $.resumableObj.opts.preprocess === 'function') {
+        switch($.preprocessState) {
+          case 0: $.resumableObj.opts.preprocess($); $.preprocessState = 1; return;
+          case 1: return;
+          case 2: break;
+        }
+      }
       if($.resumableObj.opts.testChunks && !$.tested) {
         $.test();
         return;

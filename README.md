@@ -106,6 +106,7 @@ Available configuration options are:
 * `.cancel()` Cancel upload of all `ResumableFile` objects and remove them from the list.
 * `.progress()` Returns a float between 0 and 1 indicating the current upload progress of all files.
 * `.isUploading()` Returns a boolean indicating whether or not the instance is currently uploading anything.
+* `.addFile(file)` Add a HTML5 File object to the list of files.
 * `.removeFile(file)` Cancel upload of a specific `ResumableFile` object on the list from the list.
 * `.getFromUniqueIdentifier(uniqueIdentifier)` Look up a `ResumableFile` object by its unique identifier.
 * `.getSize()` Returns the total size of the upload in bytes.

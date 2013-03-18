@@ -601,6 +601,9 @@ var Resumable = function(opts){
       });
     return(totalSize>0 ? totalDone/totalSize : 0);
   };
+  $.addFile = function(file){
+    appendFilesFromFileList([file]);
+  };
   $.removeFile = function(file){
     var files = [];
     $h.each($.files, function(f,i){

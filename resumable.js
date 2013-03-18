@@ -37,6 +37,7 @@ var Resumable = function(opts){
     throttleProgressCallbacks:0.5,
     query:{},
     headers:{},
+    preprocess:null,
     method:'multipart',
     prioritizeFirstAndLastChunk:false,
     target:'/',
@@ -251,6 +252,7 @@ var Resumable = function(opts){
     $.lastProgressCallback = (new Date);
     $.tested = false;
     $.retries = 0;
+    $.preprocessState = 0; // 0 = unprocessed, 1 = processing, 2 = finished
 
     // Computed properties
     $.loaded = 0;
@@ -304,8 +306,20 @@ var Resumable = function(opts){
       $.xhr.send(null);
     }
 
+    $.preprocessFinished = function(){
+      $.preprocessState = 2;
+      $.send();
+    }
+
     // send() uploads the actual data in a POST call
     $.send = function(){
+      if(typeof $.resumableObj.opts.preprocess === 'function') {
+        switch($.preprocessState) {
+          case 0: $.resumableObj.opts.preprocess($); $.preprocessState = 1; return;
+          case 1: return;
+          case 2: break;
+        }
+      }
       if($.resumableObj.opts.testChunks && !$.tested) {
         $.test();
         return;
@@ -440,12 +454,12 @@ var Resumable = function(opts){
     // metadata and determine if there's even a point in continuing.
     if ($.opts.prioritizeFirstAndLastChunk) {
       $h.each($.files, function(file){
-          if(file.chunks.length && file.chunks[0].status()=='pending') {
+          if(file.chunks.length && file.chunks[0].status()=='pending' && file.chunks[0].preprocessState === 0) {
             file.chunks[0].send();
             found = true;
             return(false);
           }
-          if(file.chunks.length>1 && file.chunks[file.chunks.length-1].status()=='pending') {
+          if(file.chunks.length>1 && file.chunks[file.chunks.length-1].status()=='pending' && file.chunks[0].preprocessState === 0) {
             file.chunks[file.chunks.length-1].send();
             found = true;
             return(false);
@@ -457,7 +471,7 @@ var Resumable = function(opts){
     // Now, simply look for the next, best thing to upload
     $h.each($.files, function(file){
         $h.each(file.chunks, function(chunk){
-            if(chunk.status()=='pending') {
+            if(chunk.status()=='pending' && chunk.preprocessState === 0) {
               chunk.send();
               found = true;
               return(false);
@@ -472,7 +486,7 @@ var Resumable = function(opts){
         outstanding = false;
         $h.each(file.chunks, function(chunk){
             var status = chunk.status();
-            if(status=='pending' || status=='uploading') {
+            if(status=='pending' || status=='uploading' || chunk.preprocessState === 1) {
               outstanding = true;
               return(false);
             }

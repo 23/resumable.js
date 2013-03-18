@@ -78,6 +78,7 @@ Available configuration options are:
 
 * `target` The target URL for the multipart POST request (Default: `/`)
 * `chunkSize` The size in bytes of each uploaded chunk of data (Default: `1*1024*1024`)
+* `forceChunkSize` Force all chunks to be less or equal than chunkSize. Otherwise, the last chunk will be greater or equal chunkSize. (Default: `false`)
 * `simultaneousUploads` Number of simultaneous uploads (Default: `3`)
 * `fileParameterName` The name of the multipart POST parameter to use for the file chunk  (Default: `file`)
 * `query` Extra parameters to include in the multipart POST with data. This can be an object or a function. If a function, it will be passed a ResumableFile and a ResumableChunk object (Default: `{}`)

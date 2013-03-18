@@ -32,6 +32,7 @@ var Resumable = function(opts){
   $.files = [];
   $.defaults = {
     chunkSize:1*1024*1024,
+    forceChunkSize:false,
     simultaneousUploads:3,
     fileParameterName:'file',
     throttleProgressCallbacks:0.5,
@@ -218,7 +219,8 @@ var Resumable = function(opts){
       // Rebuild stack of chunks from file
       $.chunks = [];
       $._prevProgress = 0;
-      for (var offset=0; offset<Math.max(Math.floor($.file.size/$.resumableObj.opts.chunkSize),1); offset++) {
+      var round = $.resumableObj.opts.forceChunkSize ? Math.ceil : Math.floor;
+      for (var offset=0; offset<Math.max(round($.file.size/$.resumableObj.opts.chunkSize),1); offset++) {
         $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
       }
     }
@@ -257,8 +259,8 @@ var Resumable = function(opts){
     // Computed properties
     $.loaded = 0;
     $.startByte = $.offset*$.resumableObj.opts.chunkSize;
-    $.endByte = ($.offset+1)*$.resumableObj.opts.chunkSize;
-    if ($.fileObjSize-$.endByte < $.resumableObj.opts.chunkSize) {
+    $.endByte = Math.min($.fileObjSize, ($.offset+1)*$.resumableObj.opts.chunkSize);
+    if ($.fileObjSize-$.endByte < $.resumableObj.opts.chunkSize && !$.resumableObj.opts.forceChunkSize) {
       // The last chunk will be bigger than the chunk size, but less than 2*chunkSize
       $.endByte = $.fileObjSize;
     }

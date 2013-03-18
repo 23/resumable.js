@@ -42,17 +42,17 @@ var Resumable = function (opts) {
         chunkRetryInterval: undefined,
         permanentErrors: [415, 500, 501],
         maxFiles: undefined, 
-        maxFileSize: undefined, //in bytes
-        minFileSize: undefined, //in bytes //since we have maxFileSize might as well have minFileSize
-        fireFirstError: false, //Allow a flag to fire error only on first erroneous file added everytime files are added
+        maxFileSize: undefined, //in KiB's
+        minFileSize: undefined, //in KiB's //since we have maxFileSize might as well have minFileSize
+        fireOnlyFirstError: false, //Allow a flag to fire error only on first erroneous file added everytime files are added
         maxFilesErrorCallback: function () {
             alert('Please upload at most ' + $.opts.maxFiles + ' file' + ($.opts.maxFiles === 1 ? '' : 's') + ' at a time.');
         },
         maxFileSizeErrorCallback: function (file) {         
-            alert(file +' is too large, please upload files less than ' + $.opts.maxFileSize + ' byte' + ($.opts.maxFileSize === 1 ? '' : 's') );
+            alert(file +' is too large, please upload files less than ' + $.opts.maxFileSize + ' KiB' + ($.opts.maxFileSize === 1 ? '' : '\'s') );
         },     
         minFileSizeErrorCallback: function (file) {         
-            alert(file + ' is too large, please upload files greater than ' + $.opts.minFileSize + ' byte' + ($.opts.minFileSize === 1 ? '' : 's') );
+            alert(file + ' is too large, please upload files greater than ' + $.opts.minFileSize + ' KiB' + ($.opts.minFileSize === 1 ? '' : '\'s') );
         }
     };
 
@@ -143,20 +143,20 @@ var Resumable = function (opts) {
         $h.each(fileList, function (file) {
 
             // check for uploading file that's too large
-            if(typeof ($.opts.maxFileSize) !== 'undefined' && file.size > $.opts.maxFileSize) {
+            if(typeof ($.opts.maxFileSize) !== 'undefined' && !isNaN($.opts.maxFileSize) && file.size > ($.opts.maxFileSize * 1024)) {
                 if(typeof($.opts.maxFileSizeErrorCallback) == 'function' && !errorFired) 
                     $.opts.maxFileSizeErrorCallback(file); //First check if the callback is a function
                 
-                if($.opts.fireFirstError) errorFired = true;
+                if($.opts.fireOnlyFirstError) errorFired = true;
                 return true;
             }
 
             // check for uploading file that's too small
-            if(typeof ($.opts.minFileSize) !== 'undefined' && file.size < $.opts.minFileSize) {
+            if(typeof ($.opts.minFileSize) !== 'undefined' && !isNaN($.opts.maxFileSize) && file.size < ($.opts.minFileSize * 1024)) {
                 if(typeof($.opts.minFileSizeErrorCallback) == 'function' && !errorFired) 
                     $.opts.minFileSizeErrorCallback(file); //First check if the callback is a function
                 
-                if($.opts.fireFirstError) errorFired = true;
+                if($.opts.fireOnlyFirstError) errorFired = true;
                 return true;
             }
 

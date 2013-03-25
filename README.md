@@ -52,18 +52,20 @@ To handle the state of upload chunks, a number of extra parameters are sent alon
 
 You should allow for the same chunk to be uploaded more than once; this isn't standard behaviour, but on an unstable network environment it could happen, and this case is exactly what Resumable.js is designed for.
 
-For every request, you can confirm reception in HTTP status codes:
+For every request, you can confirm reception in HTTP status codes (can be change through the `permanentErrors` option):
 
 * `200`: The chunk was accepted and correct. No need to re-upload.
-* `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload (in fact, any >=400 HTTP status code will trigger this result, [see details](https://twitter.com/#!/guan/status/131056635341844480).
+* `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload. 
 * _Anything else_: Something went wrong, but try reuploading the file.
 
 ## Handling GET (or `test()` requests)
 
-This will allow uploads to be resumed after browser restarts and even across browsers (in theory you could even run the same file upload across multiple tabs or different browsers).  The `POST` data requests listed are required to use Resumable.js to receive data, but you can extend support by implementing a corresponding `GET` request with the same parameters:
+Enabling the `testChunks` option will allow uploads to be resumed after browser restarts and even across browsers (in theory you could even run the same file upload across multiple tabs or different browsers).  The `POST` data requests listed are required to use Resumable.js to receive data, but you can extend support by implementing a corresponding `GET` request with the same parameters:
 
 * If this request returns a `200` HTTP code, the chunks is assumed to have been completed.
 * If the request returns anything else, the chunk will be uploaded in the standard fashion.
+
+After this is done and `testChunks` enabled, an upload can quickly catch up even after a browser restart by simply verifying already uploaded chunks that do not need to be uploaded again.
 
 ## Full documentation
 
@@ -77,8 +79,8 @@ The object is loaded with a configuation hash:
 Available configuration options are:
 
 * `target` The target URL for the multipart POST request (Default: `/`)
-* `chunkSize` The size in bytes of each uploaded chunk of data (Default: `1*1024*1024`)
-* `forceChunkSize` Force all chunks to be less or equal than chunkSize. Otherwise, the last chunk will be greater or equal chunkSize. (Default: `false`)
+* `chunkSize` The size in bytes of each uploaded chunk of data. The last uploaded chunk will be at least this size and up to two the size, see [Issue #51](https://github.com/23/resumable.js/issues/51) for details and reasons. (Default: `1*1024*1024`)
+* `forceChunkSize` Force all chunks to be less or equal than chunkSize. Otherwise, the last chunk will be greater than or equal to `chunkSize`. (Default: `false`)
 * `simultaneousUploads` Number of simultaneous uploads (Default: `3`)
 * `fileParameterName` The name of the multipart POST parameter to use for the file chunk  (Default: `file`)
 * `query` Extra parameters to include in the multipart POST with data. This can be an object or a function. If a function, it will be passed a ResumableFile and a ResumableChunk object (Default: `{}`)

@@ -350,8 +350,8 @@ var Resumable = function(opts){
       var url = ""
       var params = [];
       var customQuery = $.getOpt('query'); 
-      var query = (typeof customQuery == "function") ? customQuery($.fileObj, $) : customQuery;
-      $h.each(query, function(k,v){
+      if(typeof customQuery == "function") customQuery = customQuery($.fileObj, $);
+      $h.each(customQuery, function(k,v){
           params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
         });
       // Add extra data to identify chunk
@@ -426,15 +426,22 @@ var Resumable = function(opts){
       $.xhr.addEventListener("load", doneHandler, false);
       $.xhr.addEventListener("error", doneHandler, false);
 
+      // Set up the basic query data from Resumable
+      var query = {
+        resumableChunkNumber: $.offset+1,
+        resumableChunkSize: $.getOpt('chunkSize'),
+        resumableCurrentChunkSize: $.endByte - $.startByte,
+        resumableTotalSize: $.fileObjSize,
+        resumableIdentifier: $.fileObj.uniqueIdentifier,
+        resumableFilename: $.fileObj.fileName,
+        resumableRelativePath: $.fileObj.relativePath
+      }
+      // Mix in custom data
       var customQuery = $.getOpt('query');
-      var query = (typeof customQuery == "function") ? customQuery($.fileObj, $) : customQuery;
-      query.resumableChunkNumber = $.offset+1;
-      query.resumableChunkSize = $.getOpt('chunkSize');
-      query.resumableCurrentChunkSize = $.endByte - $.startByte;
-      query.resumableTotalSize = $.fileObjSize;
-      query.resumableIdentifier = $.fileObj.uniqueIdentifier;
-      query.resumableFilename = $.fileObj.fileName;
-      query.resumableRelativePath = $.fileObj.relativePath;
+      if(typeof customQuery == "function") customQuery = customQuery($.fileObj, $);
+      $h.each(customQuery, function(k,v){
+        query[k] = v;
+      });
 
       // Add data from header options
       $h.each($.getOpt('headers'), function(k,v) {

@@ -514,7 +514,7 @@ var Resumable = function(opts){
         outstanding = false;
         $h.each(file.chunks, function(chunk){
             var status = chunk.status();
-            if(status=='pending' || status=='uploading' || chunk.preprocessState === 1) {
+            if(status=='pending' || status=='uploading' || chunk.preprocessState === 1) {
               outstanding = true;
               return(false);
             }

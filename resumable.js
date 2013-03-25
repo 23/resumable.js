@@ -52,7 +52,7 @@ var Resumable = function(opts){
       alert('Please upload ' + $.opts.maxFiles + ' file' + ($.opts.maxFiles === 1 ? '' : 's') + ' at a time.');
     }
   };
-
+  $.opts = opts||{};
   $.getOpt = function (o) {
     var $ = this;
     if ($ instanceof ResumableChunk) {
@@ -655,12 +655,5 @@ var Resumable = function(opts){
     return(totalSize);
   };
 
-  // FINALIZE AND RETURN OBJECT
-  // Mix in defaults
-  $.opts = opts||{};
-  /*$h.each($.defaults, function(key,value){
-      if(typeof($.opts[key])==='undefined') $.opts[key] = value;
-    });*/
-  // Return the object
   return(this);
 }

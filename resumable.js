@@ -5,7 +5,8 @@
 * Steffen Tiedemann Christensen, steffen@23company.com
 */
 
-var Resumable = function(opts){
+(function () {
+this.Resumable = function(opts){
   if ( !(this instanceof Resumable ) ) {
     return new Resumable( opts );
   }
@@ -637,3 +638,4 @@ var Resumable = function(opts){
   // Return the object
   return(this);
 }
+}).call(this);

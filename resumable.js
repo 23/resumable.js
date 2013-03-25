@@ -288,17 +288,18 @@ var Resumable = function(opts){
       var url = ""
       var params = [];
       var query = (typeof $.resumableObj.opts.query == "function") ? $.resumableObj.opts.query($.fileObj, $) : $.resumableObj.opts.query;
+      // Set new extra data to identify chunk 
+      query.resumableChunkNumber = $.offset+1;
+      query.resumableChunkSize = $.resumableObj.opts.chunkSize;
+      query.resumableCurrentChunkSize = $.endByte - $.startByte;
+      query.resumableTotalSize = $.fileObjSize;
+      query.resumableIdentifier = $.fileObj.uniqueIdentifier;
+      query.resumableFilename = $.fileObj.fileName;
+      query.resumableRelativePath = $.fileObj.relativePath;
       $h.each(query, function(k,v){
           params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
         });
-      // Add extra data to identify chunk
-      params.push(['resumableChunkNumber', encodeURIComponent($.offset+1)].join('='));
-      params.push(['resumableChunkSize', encodeURIComponent($.resumableObj.opts.chunkSize)].join('='));
-      params.push(['resumableCurrentChunkSize', encodeURIComponent($.endByte - $.startByte)].join('='));
-      params.push(['resumableTotalSize', encodeURIComponent($.fileObjSize)].join('='));
-      params.push(['resumableIdentifier', encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
-      params.push(['resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
-      params.push(['resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
+
       // Append the relevant chunk and send it
       $.xhr.open("GET", $.resumableObj.opts.target + '?' + params.join('&'));
       // Add data from header options
@@ -488,7 +489,7 @@ var Resumable = function(opts){
         outstanding = false;
         $h.each(file.chunks, function(chunk){
             var status = chunk.status();
-            if(status=='pending' || status=='uploading' || chunk.preprocessState === 1) {
+            if(status=='pending' || status=='uploading' || chunk.preprocessState === 1) {
               outstanding = true;
               return(false);
             }

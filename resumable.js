@@ -54,11 +54,11 @@ var Resumable = function(opts){
     },
     minFileSize:undefined,
     minFileSizeErrorCallback:function(file, errorCount) {
-      alert(file.fileName +' is too small, please upload files larger than ' + $h.formatSize($.getOpt('minFileSize')) + ' bytes');
+      alert(file.fileName +' is too small, please upload files larger than ' + $h.formatSize($.getOpt('minFileSize')) + '.');
     },
     maxFileSize:undefined,
     maxFileSizeErrorCallback:function(file, errorCount) {
-      alert(file.fileName +' is too large, please upload files less than ' + $h.formatSize($.getOpt('maxFileSize')) + ' bytes');
+      alert(file.fileName +' is too large, please upload files less than ' + $h.formatSize($.getOpt('maxFileSize')) + '.');
     }
   };
   $.opts = opts||{};

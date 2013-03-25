@@ -120,6 +120,7 @@ Available configuration options are:
 * `.filesAdded(array)` New files were added.
 * `.fileRetry(file)` Something went wrong during upload of a specific file, uploading is being retried.
 * `.fileError(file, message)` An error occured during upload of a specific file.
+* `.uploadStart()` Upload has been started on the Resumable object.
 * `.complete()` Uploading completed.
 * `.progress()` Uploading progress.
 * `.error(message, file)` An error, including fileError, occured.

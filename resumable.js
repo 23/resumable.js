@@ -603,6 +603,7 @@ var Resumable = function(opts){
     // Make sure we don't start too many uploads at once
     if($.isUploading()) return;
     // Kick off the queue
+    $.fire('uploadStart');
     for (var num=1; num<=$.getOpt('simultaneousUploads'); num++) {
       $.uploadNextChunk();
     }

@@ -49,7 +49,7 @@ var Resumable = function(opts){
     permanentErrors:[415, 500, 501],
     maxFiles:undefined,
     maxFilesErrorCallback:function () {
-      alert('Please upload ' + $.opts.maxFiles + ' file' + ($.opts.maxFiles === 1 ? '' : 's') + ' at a time.');
+      alert('Please upload ' + $.getOpt('maxFiles') + ' file' + ($.getOpt('maxFiles') === 1 ? '' : 's') + ' at a time.');
     }
   };
   $.opts = opts||{};

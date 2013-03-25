@@ -54,16 +54,19 @@ var Resumable = function(opts){
   };
 
   $.getOpt = function (o) {
-    var self = this;
-    if (self instanceof ResumableChunk)
-      if (typeof self.opts[o] !== 'undefined') { return self.opts[o]; }
-      else { self = self.fileObj; }
-    if (self instanceof ResumableFile)
-      if (typeof self.opts[o] !== 'undefined') { return self.opts[o]; }
-      else { self = self.resumableObj; }
-    if (self instanceof Resumable)
-      if (typeof self.opts[o] !== 'undefined') { return self.opts[o]; }
-      else { return self.defaults[o]; }
+    var $ = this;
+    if ($ instanceof ResumableChunk) {
+      if (typeof $.opts[o] !== 'undefined') { return $.opts[o]; }
+      else { $ = $.fileObj; }
+    }
+    if ($ instanceof ResumableFile) {
+      if (typeof $.opts[o] !== 'undefined') { return $.opts[o]; }
+      else { $ = $.resumableObj; }
+    }
+    if ($ instanceof Resumable) {
+      if (typeof $.opts[o] !== 'undefined') { return $.opts[o]; }
+      else { return $.defaults[o]; }
+    }
   };
 
   // EVENTS
@@ -109,8 +112,9 @@ var Resumable = function(opts){
       }
     },
     generateUniqueIdentifier:function(file){
-      if(typeof $.getOpt('generateUniqueIdentifier') === 'function') {
-        return $.getOpt('generateUniqueIdentifier')(file);
+      var custom = $.getOpt('generateUniqueIdentifier');
+      if(typeof custom === 'function') {
+        return custom(file);
       }
       var relativePath = file.webkitRelativePath||file.fileName||file.name; // Some confusion in different versions of Firefox
       var size = file.size;
@@ -142,8 +146,9 @@ var Resumable = function(opts){
   // INTERNAL METHODS (both handy and responsible for the heavy load)
   var appendFilesFromFileList = function(fileList){
     // check for uploading too many files
-    if (typeof($.getOpt('maxFiles'))!=='undefined'&&$.getOpt('maxFiles')<(fileList.length+$.files.length)) {
-      $.opts.maxFilesErrorCallback();
+    var maxFiles = $.getOpt('maxFiles');
+    if (typeof(maxFiles)!=='undefined'&&maxFiles<(fileList.length+$.files.length)) {
+      $.getOpt('maxFilesErrorCallback')();
       return false;
     }
     var files = [];
@@ -234,7 +239,7 @@ var Resumable = function(opts){
       $.chunks = [];
       $._prevProgress = 0;
       var round = $.getOpt('forceChunkSize') ? Math.ceil : Math.floor;
-      for (var offset=0; offset<Math.max(round($.file.size/$.resumableObj.opts.chunkSize),1); offset++) {
+      for (var offset=0; offset<Math.max(round($.file.size/$.getOpt('chunkSize')),1); offset++) {
         $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
       }
     }
@@ -273,10 +278,11 @@ var Resumable = function(opts){
     $.preprocessState = 0; // 0 = unprocessed, 1 = processing, 2 = finished
 
     // Computed properties
+    var chunkSize = $.getOpt('chunkSize');
     $.loaded = 0;
-    $.startByte = $.offset*$.getOpt('chunkSize');
-    $.endByte = Math.min($.fileObjSize, ($.offset+1)*$.getOpt('chunkSize'));
-    if ($.fileObjSize-$.endByte < $.getOpt('chunkSize') && !$.getOpt('forceChunkSize')) {
+    $.startByte = $.offset*chunkSize;
+    $.endByte = Math.min($.fileObjSize, ($.offset+1)*chunkSize);
+    if ($.fileObjSize-$.endByte < chunkSize && !$.getOpt('forceChunkSize')) {
       // The last chunk will be bigger than the chunk size, but less than 2*chunkSize
       $.endByte = $.fileObjSize;
     }
@@ -303,7 +309,8 @@ var Resumable = function(opts){
       // Add data from the query options
       var url = ""
       var params = [];
-      var query = (typeof $.getOpt('query') == "function") ? $.getOpt('query')($.fileObj, $) : $.getOpt('query');
+      var customQuery = $.getOpt('query'); 
+      var query = (typeof customQuery == "function") ? customQuery($.fileObj, $) : customQuery;
       $h.each(query, function(k,v){
           params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
         });
@@ -331,9 +338,10 @@ var Resumable = function(opts){
 
     // send() uploads the actual data in a POST call
     $.send = function(){
-      if(typeof $.getOpt('preprocess') === 'function') {
+      var preprocess = $.getOpt('preprocess');
+      if(typeof preprocess === 'function') {
         switch($.preprocessState) {
-          case 0: $.getOpt('preprocess')($); $.preprocessState = 1; return;
+          case 0: preprocess($); $.preprocessState = 1; return;
           case 1: return;
           case 2: break;
         }
@@ -367,8 +375,9 @@ var Resumable = function(opts){
           $.callback('retry', $.message());
           $.abort();
           $.retries++;
-          if($.getOpt('chunkRetryInterval') !== undefined) {
-              setTimeout($.send, $.getOpt('chunkRetryInterval'));
+          var retryInterval = $.getOpt('chunkRetryInterval');
+          if(retryInterval !== undefined) {
+              setTimeout($.send, retryInterval);
           } else {
             $.send();
           }
@@ -377,7 +386,8 @@ var Resumable = function(opts){
       $.xhr.addEventListener("load", doneHandler, false);
       $.xhr.addEventListener("error", doneHandler, false);
 
-      var query = (typeof $.getOpt('query') == "function") ? $.getOpt('query')($.fileObj, $) : $.getOpt('query');
+      var customQuery = $.getOpt('query');
+      var query = (typeof customQuery == "function") ? customQuery($.fileObj, $) : customQuery;
       query.resumableChunkNumber = $.offset+1;
       query.resumableChunkSize = $.getOpt('chunkSize');
       query.resumableCurrentChunkSize = $.endByte - $.startByte;
@@ -542,7 +552,8 @@ var Resumable = function(opts){
             input.style.cursor = 'pointer';
             domNode.appendChild(input);
         }
-        if (typeof($.getOpt('maxFiles'))==='undefined'||$.getOpt('maxFiles')!=1){
+        var maxFiles = $.getOpt('maxFiles');
+        if (typeof(maxFiles)==='undefined'||maxFiles!=1){
           input.setAttribute('multiple', 'multiple');
         } else {
           input.removeAttribute('multiple');

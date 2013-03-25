@@ -48,24 +48,42 @@ var Resumable = function(opts){
     chunkRetryInterval:undefined,
     permanentErrors:[415, 500, 501],
     maxFiles:undefined,
-    maxFilesErrorCallback:function () {
-      alert('Please upload ' + $.getOpt('maxFiles') + ' file' + ($.getOpt('maxFiles') === 1 ? '' : 's') + ' at a time.');
+    maxFilesErrorCallback:function (files, errorCount) {
+      var maxFiles = $.getOpt('maxFiles');
+      alert('Please upload ' + maxFiles + ' file' + (maxFiles === 1 ? '' : 's') + ' at a time.');
+    },
+    minFileSize:undefined,
+    minFileSizeErrorCallback:function(file, errorCount) {
+      alert(file.fileName +' is too small, please upload files larger than ' + $h.formatSize($.getOpt('minFileSize')) + ' bytes');
+    },
+    maxFileSize:undefined,
+    maxFileSizeErrorCallback:function(file, errorCount) {
+      alert(file.fileName +' is too large, please upload files less than ' + $h.formatSize($.getOpt('maxFileSize')) + ' bytes');
     }
   };
   $.opts = opts||{};
-  $.getOpt = function (o) {
-    var $ = this;
-    if ($ instanceof ResumableChunk) {
-      if (typeof $.opts[o] !== 'undefined') { return $.opts[o]; }
-      else { $ = $.fileObj; }
+  $.getOpt = function(o) {
+    var $this = this;
+    // Get multiple option if passed an array
+    if(o instanceof Array) {
+      var options = {};
+      $h.each(o, function(option){
+        options[option] = $this.getOpt(option);
+      });
+      return options;
     }
-    if ($ instanceof ResumableFile) {
-      if (typeof $.opts[o] !== 'undefined') { return $.opts[o]; }
-      else { $ = $.resumableObj; }
+    // Otherwise, just return a simple option
+    if ($this instanceof ResumableChunk) {
+      if (typeof $this.opts[o] !== 'undefined') { return $this.opts[o]; }
+      else { $this = $this.fileObj; }
     }
-    if ($ instanceof Resumable) {
-      if (typeof $.opts[o] !== 'undefined') { return $.opts[o]; }
-      else { return $.defaults[o]; }
+    if ($this instanceof ResumableFile) {
+      if (typeof $this.opts[o] !== 'undefined') { return $this.opts[o]; }
+      else { $this = $this.resumableObj; }
+    }
+    if ($this instanceof Resumable) {
+      if (typeof $this.opts[o] !== 'undefined') { return $this.opts[o]; }
+      else { return $this.defaults[o]; }
     }
   };
 
@@ -132,6 +150,17 @@ var Resumable = function(opts){
       });
 
       return result;
+    },
+    formatSize:function(size){
+      if(size<1024) {
+        return size + ' bytes';
+      } else if(size<1024*1024) {
+        return (size/1024.0).toFixed(0) + ' KB';
+      } else if(size<1024*1024*1024) {
+        return (size/1024.0/1024.0).toFixed(1) + ' MB';
+      } else {
+        return (size/1024.0/1024.0/1024.0).toFixed(1) + ' GB';
+      }
     }
   };
 
@@ -146,13 +175,24 @@ var Resumable = function(opts){
   // INTERNAL METHODS (both handy and responsible for the heavy load)
   var appendFilesFromFileList = function(fileList){
     // check for uploading too many files
-    var maxFiles = $.getOpt('maxFiles');
-    if (typeof(maxFiles)!=='undefined'&&maxFiles<(fileList.length+$.files.length)) {
-      $.getOpt('maxFilesErrorCallback')();
+    var errorCount = 0;
+    var o = $.getOpt(['maxFiles', 'minFileSize', 'maxFileSize', 'maxFilesErrorCallback', 'minFileSizeErrorCallback', 'maxFileSizeErrorCallback']);
+    if (typeof(o.maxFiles)!=='undefined' && o.maxFiles<(fileList.length+$.files.length)) {
+      o.maxFilesErrorCallback(fileList, errorCount++);
       return false;
     }
     var files = [];
     $h.each(fileList, function(file){
+        file.name = file.fileName = file.fileName||file.name; // consistency across browsers for the error message
+        if (typeof(o.minFileSize)!=='undefined' && file.size<o.minFileSize) {
+            o.minFileSizeErrorCallback(file, errorCount++);
+            return false;
+        }
+        if (typeof(o.maxFileSize)!=='undefined' && file.size>o.maxFileSize) {
+            o.maxFileSizeErrorCallback(file, errorCount++);
+            return false;
+        }
+
         // directories have size == 0
         if (file.size > 0 && !$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
           var f = new ResumableFile($, file);

@@ -89,7 +89,7 @@ var Resumable = function(opts){
 
   // EVENTS
   // catchAll(event, ...)
-  // fileSuccess(file), fileProgress(file), fileAdded(file), fileRetry(file), fileError(file, message),
+  // fileSuccess(file), fileProgress(file), fileAdded(file, event), fileRetry(file), fileError(file, message),
   // complete(), progress(), error(message, file), pause()
   $.events = [];
   $.on = function(event,callback){
@@ -164,16 +164,16 @@ var Resumable = function(opts){
     }
   };
 
-  var onDrop = function(e){
-    $h.stopEvent(e);
-    appendFilesFromFileList(e.dataTransfer.files);
+  var onDrop = function(event){
+    $h.stopEvent(event);
+    appendFilesFromFileList(e.dataTransfer.files, event);
   };
   var onDragOver = function(e) {
     e.preventDefault();
   };
 
   // INTERNAL METHODS (both handy and responsible for the heavy load)
-  var appendFilesFromFileList = function(fileList){
+  var appendFilesFromFileList = function(fileList, event){
     // check for uploading too many files
     var errorCount = 0;
     var o = $.getOpt(['maxFiles', 'minFileSize', 'maxFileSize', 'maxFilesErrorCallback', 'minFileSizeErrorCallback', 'maxFileSizeErrorCallback']);
@@ -198,7 +198,7 @@ var Resumable = function(opts){
           var f = new ResumableFile($, file);
           $.files.push(f);
           files.push(f);
-          $.fire('fileAdded', f);
+          $.fire('fileAdded', f, event);
         }
       });
     $.fire('filesAdded', files);

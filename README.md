@@ -27,7 +27,7 @@ To allow files to be either selected and drag-dropped, you'll assign drop target
 
 After this, interaction with Resumable.js is done by listening to events:
 
-    r.on('fileAdded', function(file){
+    r.on('fileAdded', function(file, event){
         ...
       });
     r.on('fileSuccess', function(file,message){
@@ -122,7 +122,7 @@ Available configuration options are:
 
 * `.fileSuccess(file)` A specific file was completed.
 * `.fileProgress(file)` Uploading progressed for a specific file.
-* `.fileAdded(file)` A new file was added.
+* `.fileAdded(file, event)` A new file was added. Optionally, you can use the browser `event` object from when the file was added.
 * `.filesAdded(array)` New files were added.
 * `.fileRetry(file)` Something went wrong during upload of a specific file, uploading is being retried.
 * `.fileError(file, message)` An error occured during upload of a specific file.

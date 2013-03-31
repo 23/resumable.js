@@ -166,7 +166,7 @@ var Resumable = function(opts){
 
   var onDrop = function(event){
     $h.stopEvent(event);
-    appendFilesFromFileList(e.dataTransfer.files, event);
+    appendFilesFromFileList(event.dataTransfer.files, event);
   };
   var onDragOver = function(e) {
     e.preventDefault();

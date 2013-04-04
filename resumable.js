@@ -250,6 +250,7 @@ var Resumable = function(opts){
     $.lastProgressCallback = (new Date);
     $.tested = false;
     $.retries = 0;
+    $.pendingRetry = false;
 
     // Computed properties
     $.loaded = 0;
@@ -322,6 +323,7 @@ var Resumable = function(opts){
           $.loaded=e.loaded||0;
         }, false);
       $.loaded = 0;
+      $.pendingRetry = false;
       $.callback('progress');
 
       // Done (either done, failed or retry)
@@ -335,6 +337,7 @@ var Resumable = function(opts){
           $.abort();
           $.retries++;
           if($.resumableObj.opts.chunkRetryInterval !== undefined) {
+              $.pendingRetry = true;
               setTimeout($.send, $.resumableObj.opts.chunkRetryInterval);
           } else {
             $.send();
@@ -376,7 +379,11 @@ var Resumable = function(opts){
     }
     $.status = function(){
       // Returns: 'pending', 'uploading', 'success', 'error'
-      if(!$.xhr) {
+      if($.pendingRetry) {
+        // if pending retry then that's effectively the same as actively uploading,
+        // there might just be a slight delay before the retry starts
+        return('uploading')
+      } else if(!$.xhr) {
         return('pending');
       } else if($.xhr.readyState<4) {
         // Status is really 'OPENED', 'HEADERS_RECEIVED' or 'LOADING' - meaning that stuff is happening
@@ -402,6 +409,7 @@ var Resumable = function(opts){
     $.progress = function(relative){
       if(typeof(relative)==='undefined') relative = false;
       var factor = (relative ? ($.endByte-$.startByte)/$.fileObjSize : 1);
+      if($.pendingRetry) return(0);
       var s = $.status();
       switch(s){
       case 'success':

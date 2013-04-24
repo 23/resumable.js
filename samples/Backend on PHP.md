@@ -46,7 +46,6 @@ function _log($str) {
     }
 }
 
-
 /**
  * 
  * Delete a directory RECURSIVELY
@@ -69,8 +68,6 @@ function rrmdir($dir) {
         rmdir($dir);
     }
 }
-
-
 
 /**
  *
@@ -101,7 +98,7 @@ function createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize) {
                 fwrite($fp, file_get_contents($temp_dir.'/'.$fileName.'.part'.$i));
                 _log('writing chunk '.$i);
             }
-            fclose($f);
+            fclose($fp);
         } else {
             _log('cannot create the destination file');
             return false;
@@ -139,9 +136,9 @@ if (!empty($_FILES)) foreach ($_FILES as $file) {
     $dest_file = $temp_dir.'/'.$_POST['resumableFilename'].'.part'.$_POST['resumableChunkNumber'];
 
     // create the temporary directory
-    if (!is_dir($dir)) {
-        mkdir($dir, 0777, true);
-    }   
+    if (!is_dir($temp_dir)) {
+        mkdir($temp_dir, 0777, true);
+    }
 
     // move the temporary file
     if (!move_uploaded_file($file['tmp_name'], $dest_file)) {

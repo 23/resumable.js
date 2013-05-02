@@ -96,6 +96,8 @@ Available configuration options are:
 * `minFileSizeErrorCallback(file, errorCount)` A function which displays an error a selected file is smaller than allowed. (Default: displays an alert for every bad file.)
 * `maxFileSize` The maximum allowed file size.  (Default: `undefined`)
 * `maxFileSizeErrorCallback(file, errorCount)` A function which displays an error a selected file is larger than allowed. (Default: displays an alert for every bad file.)
+* `fileType` The file types allowed to upload. An empty array allow any file type. (Default: `[]`)
+* `fileTypeErrorCallback(file, errorCount)` A function which displays an error a selected file has type not allowed. (Default: displays an alert for every bad file.)
 
 #### Properties
 

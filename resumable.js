@@ -59,6 +59,10 @@ var Resumable = function(opts){
     maxFileSize:undefined,
     maxFileSizeErrorCallback:function(file, errorCount) {
       alert(file.fileName +' is too large, please upload files less than ' + $h.formatSize($.getOpt('maxFileSize')) + '.');
+    },
+    fileType: [],
+    fileTypeErrorCallback: function(file, errorCount) {
+      alert(file.fileName +' has type not allowed, please upload files of type ' + $.getOpt('fileType') + '.');
     }
   };
   $.opts = opts||{};
@@ -176,7 +180,7 @@ var Resumable = function(opts){
   var appendFilesFromFileList = function(fileList, event){
     // check for uploading too many files
     var errorCount = 0;
-    var o = $.getOpt(['maxFiles', 'minFileSize', 'maxFileSize', 'maxFilesErrorCallback', 'minFileSizeErrorCallback', 'maxFileSizeErrorCallback']);
+    var o = $.getOpt(['maxFiles', 'minFileSize', 'maxFileSize', 'maxFilesErrorCallback', 'minFileSizeErrorCallback', 'maxFileSizeErrorCallback', 'fileType', 'fileTypeErrorCallback']);
     if (typeof(o.maxFiles)!=='undefined' && o.maxFiles<(fileList.length+$.files.length)) {
       o.maxFilesErrorCallback(fileList, errorCount++);
       return false;
@@ -184,6 +188,12 @@ var Resumable = function(opts){
     var files = [];
     $h.each(fileList, function(file){
         file.name = file.fileName = file.fileName||file.name; // consistency across browsers for the error message
+
+        if (o.fileType.length > 0 && !$h.contains(o.fileType, file.type.split('/')[1])) {
+            o.fileTypeErrorCallback(file, errorCount++);
+            return false;
+        }
+
         if (typeof(o.minFileSize)!=='undefined' && file.size<o.minFileSize) {
             o.minFileSizeErrorCallback(file, errorCount++);
             return false;

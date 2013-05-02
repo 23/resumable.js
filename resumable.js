@@ -62,7 +62,7 @@ var Resumable = function(opts){
     },
     fileType: [],
     fileTypeErrorCallback: function(file, errorCount) {
-      alert(file.fileName +' is an unsupported type, please upload files of type ' + $.getOpt('fileType') + '.');
+      alert(file.fileName +' has type not allowed, please upload files of type ' + $.getOpt('fileType') + '.');
     }
   };
   $.opts = opts||{};

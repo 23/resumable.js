@@ -453,11 +453,6 @@ var Resumable = function(opts){
         query[k] = v;
       });
 
-      // Add data from header options
-      $h.each($.getOpt('headers'), function(k,v) {
-        $.xhr.setRequestHeader(k, v);
-      });
-
       var func   = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice'))),
           bytes  = $.fileObj.file[func]($.startByte,$.endByte), 
           data   = null,
@@ -481,6 +476,10 @@ var Resumable = function(opts){
       }
      
       $.xhr.open('POST', target); 
+      // Add data from header options
+      $h.each($.getOpt('headers'), function(k,v) {
+        $.xhr.setRequestHeader(k, v);
+      });
       $.xhr.send(data);
     }
     $.abort = function(){

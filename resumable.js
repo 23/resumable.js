@@ -182,8 +182,13 @@ var Resumable = function(opts){
     var errorCount = 0;
     var o = $.getOpt(['maxFiles', 'minFileSize', 'maxFileSize', 'maxFilesErrorCallback', 'minFileSizeErrorCallback', 'maxFileSizeErrorCallback', 'fileType', 'fileTypeErrorCallback']);
     if (typeof(o.maxFiles)!=='undefined' && o.maxFiles<(fileList.length+$.files.length)) {
-      o.maxFilesErrorCallback(fileList, errorCount++);
-      return false;
+      // if single-file upload, file is already added, and trying to add 1 new file, simply replace the already-added file 
+      if (o.maxFiles===1 && $.files.length===1 && fileList.length===1) {
+        $.removeFile($.files[0]);
+      } else {
+        o.maxFilesErrorCallback(fileList, errorCount++);
+        return false;
+      }
     }
     var files = [];
     $h.each(fileList, function(file){

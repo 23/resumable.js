@@ -120,6 +120,20 @@ function createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize) {
 // THE SCRIPT
 ////////////////////////////////////////////////////////////////////
 
+//check if request is GET and the requested chunk exists or not. this makes testChunks work
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+
+    $temp_dir = 'temp/'.$_GET['resumableIdentifier'];
+    $chunk_file = $temp_dir.'/'.$_GET['resumableFilename'].'.part'.$_GET['resumableChunkNumber'];
+    if (file_exists($chunk_file)) {
+         header("HTTP/1.0 200 Ok");
+       } else
+       {
+         header("HTTP/1.0 404 Not Found");
+       }
+    }
+
+
 
 // loop through files and move the chunks to a temporarily created directory
 if (!empty($_FILES)) foreach ($_FILES as $file) {

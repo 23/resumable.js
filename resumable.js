@@ -52,7 +52,7 @@ var Resumable = function(opts){
       var maxFiles = $.getOpt('maxFiles');
       alert('Please upload ' + maxFiles + ' file' + (maxFiles === 1 ? '' : 's') + ' at a time.');
     },
-    minFileSize:undefined,
+    minFileSize:1,
     minFileSizeErrorCallback:function(file, errorCount) {
       alert(file.fileName +' is too small, please upload files larger than ' + $h.formatSize($.getOpt('minFileSize')) + '.');
     },
@@ -209,7 +209,7 @@ var Resumable = function(opts){
         }
 
         // directories have size == 0
-        if (file.size > 0 && !$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
+        if (!$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
           var f = new ResumableFile($, file);
           $.files.push(f);
           files.push(f);

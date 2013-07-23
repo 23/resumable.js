@@ -1,3 +1,5 @@
+"use strict";
+
 /*
 * MIT Licensed
 * http://www.23developer.com/opensource
@@ -115,7 +117,7 @@ var Resumable = function(opts){
 
 
   // INTERNAL HELPER METHODS (handy, but ultimately not part of uploading)
-  $h = {
+  var $h = {
     stopEvent: function(e){
       e.stopPropagation();
       e.preventDefault();

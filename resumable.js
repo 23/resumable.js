@@ -571,8 +571,8 @@ var Resumable = function(opts){
     if(found) return(true);
 
     // The are no more outstanding chunks to upload, check is everything is done
+    var outstanding = false;
     $h.each($.files, function(file){
-        outstanding = false;
         $h.each(file.chunks, function(chunk){
             var status = chunk.status();
             if(status=='pending' || status=='uploading' || chunk.preprocessState === 1) {

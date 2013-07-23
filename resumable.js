@@ -720,5 +720,8 @@ var Resumable = function(opts){
   return(this);
 }
 
+
 // Node.js-style export for Node and Component
-module.exports = Resumable;
+if(typeof module != 'undefined') {
+  module.exports = Resumable;
+}

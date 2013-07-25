@@ -314,6 +314,16 @@ var Resumable = function(opts){
       $._prevProgress = ret;
       return(ret);
     };
+    $.isUploading = function(){
+      var uploading = false;
+      $h.each($.chunks, function(chunk){
+        if(chunk.status()=='uploading') {
+          uploading = true;
+          return(false);
+        }
+      });
+      return(uploading);
+    };
 
     // Bootstrap and return
     $.bootstrap();
@@ -651,14 +661,11 @@ var Resumable = function(opts){
   $.isUploading = function(){
     var uploading = false;
     $h.each($.files, function(file){
-        $h.each(file.chunks, function(chunk){
-            if(chunk.status()=='uploading') {
-              uploading = true;
-              return(false);
-            }
-          });
-        if(uploading) return(false);
-      });
+      if (file.isUploading()) {
+        uploading = true;
+        return(false);
+      }
+    });
     return(uploading);
   };
   $.upload = function(){

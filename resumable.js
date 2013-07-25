@@ -698,11 +698,11 @@ var Resumable = function(opts){
     appendFilesFromFileList([file]);
   };
   $.removeFile = function(file){
-    var files = [];
-    $h.each($.files, function(f,i){
-        if(f!==file) files.push(f);
-      });
-    $.files = files;
+    for(var i = $.files.length - 1; i >= 0; i--) {
+      if($.files[i] === file) {
+        $.files.splice(i, 1);
+      }
+    }
   };
   $.getFromUniqueIdentifier = function(uniqueIdentifier){
     var ret = false;

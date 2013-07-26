@@ -259,7 +259,7 @@ var Resumable = function(opts){
         $.resumableObj.fire('fileRetry', $);
         break;
       }
-    }
+    };
 
     // Main code to set up a file object with chunks,
     // packaged to be able to handle retries if needed.
@@ -270,7 +270,7 @@ var Resumable = function(opts){
           if(c.status()=='uploading') c.abort();
         });
       $.resumableObj.fire('fileProgress', $);
-    }
+    };
     $.cancel = function(){
       // Reset this file to be void
       var _chunks = $.chunks;
@@ -284,11 +284,11 @@ var Resumable = function(opts){
         });
       $.resumableObj.removeFile($);
       $.resumableObj.fire('fileProgress', $);
-    },
+    };
     $.retry = function(){
       $.bootstrap();
       $.resumableObj.upload();
-    }
+    };
     $.bootstrap = function(){
       $.abort();
         _error = false;
@@ -299,7 +299,7 @@ var Resumable = function(opts){
       for (var offset=0; offset<Math.max(round($.file.size/$.getOpt('chunkSize')),1); offset++) {
         $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
       }
-    }
+    };
     $.progress = function(){
       if(_error) return(1);
       // Sum up progress across everything
@@ -309,11 +309,21 @@ var Resumable = function(opts){
           if(c.status()=='error') error = true;
           ret += c.progress(true); // get chunk progress relative to entire file
         });
-      ret = (error ? 1 : (ret>0.999 ? 1 : ret))
+      ret = (error ? 1 : (ret>0.999 ? 1 : ret));
       ret = Math.max($._prevProgress, ret); // We don't want to lose percentages when an upload is paused
       $._prevProgress = ret;
       return(ret);
-    }
+    };
+    $.isUploading = function(){
+      var uploading = false;
+      $h.each($.chunks, function(chunk){
+        if(chunk.status()=='uploading') {
+          uploading = true;
+          return(false);
+        }
+      });
+      return(uploading);
+    };
 
     // Bootstrap and return
     $.bootstrap();
@@ -359,12 +369,11 @@ var Resumable = function(opts){
         } else {
           $.send();
         }
-      }
+      };
       $.xhr.addEventListener("load", testHandler, false);
       $.xhr.addEventListener("error", testHandler, false);
 
       // Add data from the query options
-      var url = ""
       var params = [];
       var customQuery = $.getOpt('query'); 
       if(typeof customQuery == "function") customQuery = customQuery($.fileObj, $);
@@ -386,12 +395,12 @@ var Resumable = function(opts){
         $.xhr.setRequestHeader(k, v);
       });
       $.xhr.send(null);
-    }
+    };
 
     $.preprocessFinished = function(){
       $.preprocessState = 2;
       $.send();
-    }
+    };
 
     // send() uploads the actual data in a POST call
     $.send = function(){
@@ -452,7 +461,7 @@ var Resumable = function(opts){
         resumableIdentifier: $.fileObj.uniqueIdentifier,
         resumableFilename: $.fileObj.fileName,
         resumableRelativePath: $.fileObj.relativePath
-      }
+      };
       // Mix in custom data
       var customQuery = $.getOpt('query');
       if(typeof customQuery == "function") customQuery = customQuery($.fileObj, $);
@@ -488,12 +497,12 @@ var Resumable = function(opts){
         $.xhr.setRequestHeader(k, v);
       });
       $.xhr.send(data);
-    }
+    };
     $.abort = function(){
       // Abort and reset
       if($.xhr) $.xhr.abort();
       $.xhr = null;
-    }
+    };
     $.status = function(){
       // Returns: 'pending', 'uploading', 'success', 'error'
       if(!$.xhr) {
@@ -515,10 +524,10 @@ var Resumable = function(opts){
           return('pending');
         }
       }
-    }
+    };
     $.message = function(){
       return($.xhr ? $.xhr.responseText : '');
-    }
+    };
     $.progress = function(relative){
       if(typeof(relative)==='undefined') relative = false;
       var factor = (relative ? ($.endByte-$.startByte)/$.fileObjSize : 1);
@@ -532,7 +541,7 @@ var Resumable = function(opts){
       default:
         return($.loaded/($.endByte-$.startByte)*factor);
       }
-    }
+    };
     return(this);
   }
 
@@ -652,16 +661,13 @@ var Resumable = function(opts){
   $.isUploading = function(){
     var uploading = false;
     $h.each($.files, function(file){
-        $h.each(file.chunks, function(chunk){
-            if(chunk.status()=='uploading') {
-              uploading = true;
-              return(false);
-            }
-          });
-        if(uploading) return(false);
-      });
+      if (file.isUploading()) {
+        uploading = true;
+        return(false);
+      }
+    });
     return(uploading);
-  }
+  };
   $.upload = function(){
     // Make sure we don't start too many uploads at once
     if($.isUploading()) return;
@@ -698,11 +704,11 @@ var Resumable = function(opts){
     appendFilesFromFileList([file]);
   };
   $.removeFile = function(file){
-    var files = [];
-    $h.each($.files, function(f,i){
-        if(f!==file) files.push(f);
-      });
-    $.files = files;
+    for(var i = $.files.length - 1; i >= 0; i--) {
+      if($.files[i] === file) {
+        $.files.splice(i, 1);
+      }
+    }
   };
   $.getFromUniqueIdentifier = function(uniqueIdentifier){
     var ret = false;
@@ -720,7 +726,7 @@ var Resumable = function(opts){
   };
 
   return(this);
-}
+};
 
 
 // Node.js-style export for Node and Component

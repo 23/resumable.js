@@ -324,6 +324,15 @@ var Resumable = function(opts){
       });
       return(uploading);
     };
+    $.uploadedFileSize = function(){
+      var size = 0;
+      $h.each($.chunks, function(chunk){
+        if(chunk.status()=='success') {
+          size += chunk.endByte - chunk.startByte;
+        }
+      });
+      return(size);
+    };
 
     // Bootstrap and return
     $.bootstrap();

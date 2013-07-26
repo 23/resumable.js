@@ -154,7 +154,7 @@ Available configuration options are:
 * `.cancel()` Abort uploading the file and delete it from the list of files to upload.
 * `.retry()` Retry uploading the file.
 * `.bootstrap()` Rebuild the state of a `ResumableFile` object, including reassigning chunks and XMLHttpRequest instances.
-
+* `.isUploading()` Returns a boolean indicating whether file chunks is uploading.
 
 ## Alternatives
 

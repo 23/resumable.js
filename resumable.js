@@ -348,9 +348,17 @@ var Resumable = function(opts){
     $.sizeUploaded = function(){
       var size = 0;
       $h.each($.chunks, function(chunk){
-        size += chunk.loaded;
+        // can't sum only chunk.loaded values, because it is bigger then entire file size
+        if (chunk.status() == 'success') {
+          size += chunk.endByte - chunk.startByte;
+        } else {
+          size += chunk.loaded;
+        }
       });
       return(size);
+    };
+    $.timeRemaining = function(){
+      return (file.size - $.sizeUploaded()) / $.averageSpeed;
     };
 
     // Bootstrap and return

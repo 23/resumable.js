@@ -721,9 +721,9 @@ var Resumable = function(opts){
     $.fire('pause');
   };
   $.cancel = function(){
-    $h.each($.files, function(file){
-        file.cancel();
-      });
+    for(var i = $.files.length - 1; i >= 0; i--) {
+      $.files[i].cancel();
+    }
     $.fire('cancel');
   };
   $.progress = function(){

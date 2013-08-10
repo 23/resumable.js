@@ -194,8 +194,6 @@ var Resumable = function(opts){
     }
     var files = [];
     $h.each(fileList, function(file){
-        file.name = file.fileName = file.fileName||file.name; // consistency across browsers for the error message
-
         if (o.fileType.length > 0 && !$h.contains(o.fileType, file.type.split('/')[1])) {
             o.fileTypeErrorCallback(file, errorCount++);
             return false;

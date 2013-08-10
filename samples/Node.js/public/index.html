@@ -37,6 +37,7 @@
             <td class="progress-pause" nowrap="nowrap">
               <a href="#" onclick="r.upload(); return(false);" class="progress-resume-link"><img src="resume.png" title="Resume upload" /></a>
               <a href="#" onclick="r.pause(); return(false);" class="progress-pause-link"><img src="pause.png" title="Pause upload" /></a>
+              <a href="#" onclick="r.cancel(); return(false);" class="progress-cancel-link"><img src="cancel.png" title="Cancel upload" /></a>
             </td>
           </tr>
         </table>
@@ -96,6 +97,9 @@
               $('.resumable-file-'+file.uniqueIdentifier+' .resumable-file-progress').html(Math.floor(file.progress()*100) + '%');
               $('.progress-bar').css({width:Math.floor(r.progress()*100) + '%'});
             });
+          r.on('cancel', function(){
+            $('.resumable-file-progress').html('canceled');
+          });
           r.on('uploadStart', function(){
               // Show pause, hide resume
               $('.resumable-progress .progress-resume-link').hide();

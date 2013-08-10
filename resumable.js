@@ -24,7 +24,7 @@ var Resumable = function(opts){
                  &&
                  (typeof(FileList)!=='undefined')
                  &&
-                 (!!Blob.prototype.webkitSlice||!!Blob.prototype.mozSlice||Blob.prototype.slice||false)
+                 (!!Blob.prototype.webkitSlice||!!Blob.prototype.mozSlice||!!Blob.prototype.slice||false)
                  );
   if(!this.support) return(false);
 

@@ -43,8 +43,11 @@ app.get('/upload', function(req, res){
 
 app.get('/download/:identifier', function(req, res){
 	resumable.write(req.params.identifier, res);
-
-
-  });
+});
+app.get('/resumable.js', function (req, res) {
+  var fs = require('fs');
+  res.setHeader("content-type", "application/javascript");
+  fs.createReadStream("../../resumable.js").pipe(res);
+});
 
 app.listen(3000);

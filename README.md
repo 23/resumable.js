@@ -44,6 +44,7 @@ Most of the magic for Resumable.js happens in the user's browser, but files stil
 To handle the state of upload chunks, a number of extra parameters are sent along with all requests:
 
 * `resumableChunkNumber`: The index of the chunk in the current upload. First chunk is `1` (no base-0 counting here).
+* `resumableTotalChunks`: The total number of chunks.  
 * `resumableChunkSize`: The general chunk size. Using this value and `resumableTotalSize` you can calculate the total number of chunks. Please note that the size of the data received in the HTTP might be lower than `resumableChunkSize` of this for the last chunk for a file.
 * `resumableTotalSize`: The total file size.
 * `resumableIdentifier`: A unique identifier for the file contained in the request.

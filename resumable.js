@@ -11,6 +11,7 @@ var Resumable = function(opts){
   if ( !(this instanceof Resumable ) ) {
     return new Resumable( opts );
   }
+  this.version = 1.0;
   // SUPPORTED BY BROWSER?
   // Check if these features are support by the browser:
   // - File object type

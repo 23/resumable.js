@@ -460,7 +460,8 @@ var Resumable = function(opts){
         resumableTotalSize: $.fileObjSize,
         resumableIdentifier: $.fileObj.uniqueIdentifier,
         resumableFilename: $.fileObj.fileName,
-        resumableRelativePath: $.fileObj.relativePath
+        resumableRelativePath: $.fileObj.relativePath,
+        resumableTotalChunks: $.fileObj.chunks.length
       };
       // Mix in custom data
       var customQuery = $.getOpt('query');

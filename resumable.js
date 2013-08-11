@@ -25,7 +25,7 @@ var Resumable = function(opts){
                  &&
                  (typeof(FileList)!=='undefined')
                  &&
-                 (!!Blob.prototype.webkitSlice||!!Blob.prototype.mozSlice||Blob.prototype.slice||false)
+                 (!!Blob.prototype.webkitSlice||!!Blob.prototype.mozSlice||!!Blob.prototype.slice||false)
                  );
   if(!this.support) return(false);
 
@@ -462,7 +462,8 @@ var Resumable = function(opts){
         resumableTotalSize: $.fileObjSize,
         resumableIdentifier: $.fileObj.uniqueIdentifier,
         resumableFilename: $.fileObj.fileName,
-        resumableRelativePath: $.fileObj.relativePath
+        resumableRelativePath: $.fileObj.relativePath,
+        resumableTotalChunks: $.fileObj.chunks.length
       };
       // Mix in custom data
       var customQuery = $.getOpt('query');
@@ -692,9 +693,9 @@ var Resumable = function(opts){
     $.fire('pause');
   };
   $.cancel = function(){
-    $h.each($.files, function(file){
-        file.cancel();
-      });
+    for(var i = $.files.length - 1; i >= 0; i--) {
+      $.files[i].cancel();
+    }
     $.fire('cancel');
   };
   $.progress = function(){

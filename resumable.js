@@ -168,6 +168,15 @@ var Resumable = function(opts){
       } else {
         return (size/1024.0/1024.0/1024.0).toFixed(1) + ' GB';
       }
+    },
+    getTarget:function(params){
+        var target = $.getOpt('target');
+        if(target.indexOf('?') < 0) {
+          target += '?';
+        } else {
+          target += '&';
+        }
+        return target + params.join('&');
     }
   };
 
@@ -389,13 +398,7 @@ var Resumable = function(opts){
       params.push(['resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
       params.push(['resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
       // Append the relevant chunk and send it
-      var targetUrl = $.getOpt('target');
-      if(targetUrl.indexOf('?') < 0) {
-        targetUrl += '?';
-      } else {
-        targetUrl += '&';
-      }
-      $.xhr.open("GET", targetUrl + params.join('&'));
+      $.xhr.open("GET", $h.getTarget(params));
       // Add data from header options
       $h.each($.getOpt('headers'), function(k,v) {
         $.xhr.setRequestHeader(k, v);
@@ -490,7 +493,7 @@ var Resumable = function(opts){
         $h.each(query, function(k,v){
           params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
         });
-        target += '?' + params.join('&');
+        target = $h.getTarget(params);
       } else {
         // Add data from the query options
         data = new FormData();

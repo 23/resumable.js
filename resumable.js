@@ -389,7 +389,13 @@ var Resumable = function(opts){
       params.push(['resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
       params.push(['resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
       // Append the relevant chunk and send it
-      $.xhr.open("GET", $.getOpt('target') + '?' + params.join('&'));
+      var targetUrl = $.getOpt('target');
+      if(targetUrl.indexOf('?') < 0) {
+        targetUrl += '?';
+      } else {
+        targetUrl += '&';
+      }
+      $.xhr.open("GET", targetUrl + params.join('&'));
       // Add data from header options
       $h.each($.getOpt('headers'), function(k,v) {
         $.xhr.setRequestHeader(k, v);

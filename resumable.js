@@ -41,12 +41,14 @@ function Resumable(opts) {
 
   /**
    * Library version
+   * @name Resumable.version
    * @type {string}
    */
   this.version = '2.0.0';
 
   /**
    * Supported by browser?
+   * @name Resumable.support
    * @type {boolean}
    */
   this.support = (
@@ -73,12 +75,14 @@ function Resumable(opts) {
 
   /**
    * List of ResumableFile objects
+   * @name Resumable.files
    * @type {Array}
    */
   $.files = [];
 
   /**
    * Default options for resumable.js
+   * @name Resumable.defaults
    * @type {{
    * chunkSize: number,
    * forceChunkSize: boolean,
@@ -106,7 +110,7 @@ function Resumable(opts) {
    * }}
    */
   $.defaults = {
-    chunkSize: 1 * 1024 * 1024,
+    chunkSize: 1024 * 1024,
     forceChunkSize: false,
     simultaneousUploads: 3,
     fileParameterName: 'file',
@@ -130,29 +134,31 @@ function Resumable(opts) {
     },
     minFileSize: 1,
     minFileSizeErrorCallback: function (file, errorCount) {
-      alert(file.fileName + ' is too small, please upload files larger than ' +
+      alert(file.name + ' is too small, please upload files larger than ' +
         $h.formatSize($.getOpt('minFileSize')) + '.');
     },
     maxFileSize: undefined,
     maxFileSizeErrorCallback: function (file, errorCount) {
-      alert(file.fileName + ' is too large, please upload files less than ' +
+      alert(file.name + ' is too large, please upload files less than ' +
         $h.formatSize($.getOpt('maxFileSize')) + '.');
     },
     fileType: [],
     fileTypeErrorCallback: function (file, errorCount) {
-      alert(file.fileName + ' has type not allowed, ' +
+      alert(file.name + ' has type not allowed, ' +
         'please upload files of type ' + $.getOpt('fileType') + '.');
     }
   };
 
   /**
    * Current options
+   * @name Resumable.opts
    * @type {Object}
    */
   $.opts = opts || {};
 
   /**
    * Get subset of current params
+   * @todo remove
    * @param {string|Object|null} o Parameter name, or a list of parameters
    * @returns {*}
    */
@@ -194,6 +200,7 @@ function Resumable(opts) {
    * List of events:
    *  even indexes stand for event names
    *  odd indexes stands for event callbacks
+   * @name Resumable.events
    * @type {Array}
    */
   $.events = [];
@@ -203,6 +210,8 @@ function Resumable(opts) {
    * fileSuccess(file), fileProgress(file), fileAdded(file, event),
    * fileRetry(file), fileError(file, message), complete(),
    * progress(), error(message, file), pause()
+   * @name Resumable.on
+   * @function
    * @param {string} event
    * @param {Function} callback
    */
@@ -212,6 +221,8 @@ function Resumable(opts) {
 
   /**
    * Fire an event
+   * @name Resumable.fire
+   * @function
    * @param {string} event event name
    * @param [...] arguments fo a callback
    */
@@ -248,6 +259,8 @@ function Resumable(opts) {
 
   /**
    * Stop event from propagation and default
+   * @function
+   * @name $h.stopEvent
    * @param e
    */
   $h.stopEvent = function (e) {
@@ -257,6 +270,8 @@ function Resumable(opts) {
 
   /**
    * Iterate each element of an object
+   * @function
+   * @name $h.each
    * @param {Array|Object} o object or an array to iterate
    * @param {Function} callback for array firs argument stands for a value,
    *  for object first arguments stands for a key and second for a value.
@@ -281,6 +296,8 @@ function Resumable(opts) {
 
   /**
    * Generate unique identifier for a file
+   * @function
+   * @name $h.generateUniqueIdentifier
    * @param {ResumableFile} file
    * @returns {string}
    */
@@ -297,6 +314,8 @@ function Resumable(opts) {
 
   /**
    * Check if array contains value
+   * @function
+   * @name $h.contains
    * @param array
    * @param test
    * @returns {boolean}
@@ -315,6 +334,8 @@ function Resumable(opts) {
 
   /**
    * Formats size to human readable format
+   * @function
+   * @name $h.formatSize
    * @param size
    * @returns {string}
    */
@@ -332,6 +353,7 @@ function Resumable(opts) {
 
   /**
    * On drop event
+   * @function
    * @param event
    */
   var onDrop = function (event) {
@@ -341,6 +363,7 @@ function Resumable(opts) {
 
   /**
    * On drag over event
+   * @function
    * @param e
    */
   var onDragOver = function (e) {
@@ -349,6 +372,7 @@ function Resumable(opts) {
 
   /**
    * Append files from file list object
+   * @function
    * @param {FileList} fileList
    * @param {Event} event
    */
@@ -412,7 +436,6 @@ function Resumable(opts) {
      * ResumableFile options
      * @type {{}}
      */
-
     $.opts = {};
 
     /**
@@ -423,39 +446,52 @@ function Resumable(opts) {
 
     /**
      * Reference to parent Resumable instance
+     * @name ResumableFile.resumableObj
      * @type {Resumable}
      */
     $.resumableObj = resumableObj;
 
     /**
      * Reference to file
+     * @name ResumableFile.file
      * @type {File}
      */
     $.file = file;
 
     /**
      * File name. Some confusion in different versions of Firefox
+     * @name ResumableFile.name
      * @type {string}
      */
-    $.fileName = file.fileName || file.name;
+    $.name = file.fileName || file.name;
 
     /**
      * File size
+     * @name ResumableFile.size
      * @type {number}
      */
     $.size = file.size;
 
     /**
      * Relative file path
+     * @name ResumableFile.relativePath
      * @type {string}
      */
-    $.relativePath = file.webkitRelativePath || $.fileName;
+    $.relativePath = file.webkitRelativePath || $.name;
 
     /**
      * File unique identifier
+     * @name ResumableFile.uniqueIdentifier
      * @type {string}
      */
     $.uniqueIdentifier = $h.generateUniqueIdentifier(file);
+
+    /**
+     * List of chunks
+     * @name ResumableFile.chunks
+     * @type {Array.<ResumableChunk>}
+     */
+    $.chunks = [];
 
     /**
      * Holds previous progress
@@ -468,6 +504,7 @@ function Resumable(opts) {
 
     /**
      * Callback when something happens within the chunk
+     * @function
      * @param {string} event can be 'progress', 'success', 'error' or 'retry'
      * @param {string} message
      */
@@ -496,13 +533,9 @@ function Resumable(opts) {
     };
 
     /**
-     * List of chunks
-     * @type {Array.<ResumableChunk>}
-     */
-    $.chunks = [];
-
-    /**
      * Abort current upload
+     * @name ResumableFile.abort
+     * @function
      */
     $.abort = function () {
       $h.each($.chunks, function (c) {
@@ -515,6 +548,8 @@ function Resumable(opts) {
 
     /**
      * Cancel current upload and remove from a list
+     * @name ResumableFile.cancel
+     * @function
      */
     $.cancel = function () {
       // Reset this file to be void
@@ -533,6 +568,8 @@ function Resumable(opts) {
 
     /**
      * Retry aborted file upload
+     * @name ResumableFile.retry
+     * @function
      */
     $.retry = function () {
       $.bootstrap();
@@ -541,6 +578,8 @@ function Resumable(opts) {
 
     /**
      * Clear current chunks and slice file again
+     * @name ResumableFile.bootstrap
+     * @function
      */
     $.bootstrap = function () {
       $.abort();
@@ -560,6 +599,8 @@ function Resumable(opts) {
 
     /**
      * Get current upload progress status
+     * @name ResumableFile.progress
+     * @function
      * @returns {float} from 0 to 1
      */
     $.progress = function () {
@@ -584,6 +625,8 @@ function Resumable(opts) {
 
     /**
      * Indicates if file is being uploaded at the moment
+     * @name ResumableFile.isUploading
+     * @function
      * @returns {boolean}
      */
     $.isUploading = function () {
@@ -770,7 +813,7 @@ function Resumable(opts) {
         encodeURIComponent($.fileObj.uniqueIdentifier)].join('=')
       );
       params.push(['resumableFilename',
-        encodeURIComponent($.fileObj.fileName)].join('=')
+        encodeURIComponent($.fileObj.name)].join('=')
       );
       params.push(['resumableRelativePath',
         encodeURIComponent($.fileObj.relativePath)].join('=')
@@ -859,7 +902,7 @@ function Resumable(opts) {
         resumableCurrentChunkSize: $.endByte - $.startByte,
         resumableTotalSize: $.fileObjSize,
         resumableIdentifier: $.fileObj.uniqueIdentifier,
-        resumableFilename: $.fileObj.fileName,
+        resumableFilename: $.fileObj.name,
         resumableRelativePath: $.fileObj.relativePath,
         resumableTotalChunks: $.fileObj.chunks.length
       };
@@ -984,6 +1027,8 @@ function Resumable(opts) {
 
   /**
    * Upload next chunk from the queue
+   * @function
+   * @name Resumable.uploadNextChunk
    * @returns {boolean}
    * @private
    */
@@ -1057,6 +1102,8 @@ function Resumable(opts) {
 
   /**
    * Assign a browse action to one or more DOM nodes.
+   * @function
+   * @name Resumable.assignBrowse
    * @param {Element|Array.<Element>} domNodes
    * @param {boolean} isDirectory Pass in true to allow directories to
    * be selected (Chrome only).
@@ -1107,6 +1154,8 @@ function Resumable(opts) {
 
   /**
    * Assign one or more DOM nodes as a drop target.
+   * @function
+   * @name Resumable.assignDrop
    * @param {Element|Array.<Element>} domNodes
    */
   $.assignDrop = function (domNodes) {
@@ -1118,6 +1167,13 @@ function Resumable(opts) {
       domNode.addEventListener('drop', onDrop, false);
     });
   };
+
+  /**
+   * Un-assign drop event from DOM nodes
+   * @function
+   * @name Resumable.unAssignDrop
+   * @param domNodes
+   */
   $.unAssignDrop = function (domNodes) {
     if (typeof domNodes.length == 'undefined') {
       domNodes = [domNodes];
@@ -1131,6 +1187,8 @@ function Resumable(opts) {
   /**
    * Returns a boolean indicating whether or not the instance is currently
    * uploading anything.
+   * @function
+   * @name Resumable.isUploading
    * @returns {boolean}
    */
   $.isUploading = function () {
@@ -1146,6 +1204,8 @@ function Resumable(opts) {
 
   /**
    * Start or resume uploading.
+   * @function
+   * @name Resumable.upload
    */
   $.upload = function () {
     // Make sure we don't start too many uploads at once
@@ -1161,6 +1221,8 @@ function Resumable(opts) {
 
   /**
    * Pause uploading.
+   * @function
+   * @name Resumable.pause
    */
   $.pause = function () {
     // Resume all chunks currently being uploaded
@@ -1172,6 +1234,8 @@ function Resumable(opts) {
 
   /**
    * Cancel upload of all ResumableFile objects and remove them from the list.
+   * @function
+   * @name Resumable.cancel
    */
   $.cancel = function () {
     for (var i = $.files.length - 1; i >= 0; i--) {
@@ -1183,6 +1247,8 @@ function Resumable(opts) {
   /**
    * Returns a float between 0 and 1 indicating the current upload progress
    * of all files.
+   * @function
+   * @name Resumable.progress
    * @returns {float}
    */
   $.progress = function () {
@@ -1198,6 +1264,8 @@ function Resumable(opts) {
 
   /**
    * Add a HTML5 File object to the list of files.
+   * @function
+   * @name Resumable.addFile
    * @param {File} file
    */
   $.addFile = function (file) {
@@ -1206,6 +1274,8 @@ function Resumable(opts) {
 
   /**
    * Cancel upload of a specific ResumableFile object from the list.
+   * @function
+   * @name Resumable.removeFile
    * @param {ResumableFile} file
    */
   $.removeFile = function (file) {
@@ -1218,6 +1288,8 @@ function Resumable(opts) {
 
   /**
    * Look up a ResumableFile object by its unique identifier.
+   * @function
+   * @name Resumable.getFromUniqueIdentifier
    * @param {string} uniqueIdentifier
    * @returns {boolean|ResumableFile} false if file was not found
    */
@@ -1233,6 +1305,8 @@ function Resumable(opts) {
 
   /**
    * Returns the total size of all files in bytes.
+   * @function
+   * @name Resumable.getSize
    * @returns {number}
    */
   $.getSize = function () {

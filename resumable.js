@@ -128,24 +128,24 @@ function Resumable(opts) {
     permanentErrors: [415, 500, 501],
     maxFiles: undefined,
     maxFilesErrorCallback: function (files, errorCount) {
-      var maxFiles = $.getOpt('maxFiles');
+      var maxFiles = $.opts.maxFiles;
       alert('Please upload ' + maxFiles +
         ' file' + (maxFiles === 1 ? '' : 's') + ' at a time.');
     },
     minFileSize: 1,
     minFileSizeErrorCallback: function (file, errorCount) {
       alert(file.name + ' is too small, please upload files larger than ' +
-        $h.formatSize($.getOpt('minFileSize')) + '.');
+        $h.formatSize($.opts.minFileSize) + '.');
     },
     maxFileSize: undefined,
     maxFileSizeErrorCallback: function (file, errorCount) {
       alert(file.name + ' is too large, please upload files less than ' +
-        $h.formatSize($.getOpt('maxFileSize')) + '.');
+        $h.formatSize($.opts.maxFileSize) + '.');
     },
     fileType: [],
     fileTypeErrorCallback: function (file, errorCount) {
       alert(file.name + ' has type not allowed, ' +
-        'please upload files of type ' + $.getOpt('fileType') + '.');
+        'please upload files of type ' + $.opts.fileType + '.');
     }
   };
 
@@ -154,47 +154,7 @@ function Resumable(opts) {
    * @name Resumable.opts
    * @type {Object}
    */
-  $.opts = opts || {};
-
-  /**
-   * Get subset of current params
-   * @todo remove
-   * @param {string|Object|null} o Parameter name, or a list of parameters
-   * @returns {*}
-   */
-  $.getOpt = function (o) {
-    var $this = this;
-    // Get multiple option if passed an array
-    if (o instanceof Array) {
-      var options = {};
-      $h.each(o, function (option) {
-        options[option] = $this.getOpt(option);
-      });
-      return options;
-    }
-    // Otherwise, just return a simple option
-    if ($this instanceof ResumableChunk) {
-      if (typeof $this.opts[o] !== 'undefined') {
-        return $this.opts[o];
-      } else {
-        $this = $this.fileObj;
-      }
-    }
-    if ($this instanceof ResumableFile) {
-      if (typeof $this.opts[o] !== 'undefined') {
-        return $this.opts[o];
-      } else {
-        $this = $this.resumableObj;
-      }
-    }
-    if ($this instanceof Resumable) {
-      if (typeof $this.opts[o] !== 'undefined') {
-        return $this.opts[o];
-      } else {
-        return $this.defaults[o];
-      }
-    }
-  };
+  $.opts = {};
 
   /**
    * List of events:
@@ -206,56 +166,29 @@ function Resumable(opts) {
   $.events = [];
 
   /**
-   * Set a callback for an event, possible events:
-   * fileSuccess(file), fileProgress(file), fileAdded(file, event),
-   * fileRetry(file), fileError(file, message), complete(),
-   * progress(), error(message, file), pause()
-   * @name Resumable.on
-   * @function
-   * @param {string} event
-   * @param {Function} callback
-   */
-  $.on = function (event, callback) {
-    $.events.push(event.toLowerCase(), callback);
-  };
-
-  /**
-   * Fire an event
-   * @name Resumable.fire
-   * @function
-   * @param {string} event event name
-   * @param [...] arguments fo a callback
-   */
-  $.fire = function () {
-    // `arguments` is an object, not array, in FF, so:
-    var args = [];
-    var i;
-    for (i = 0; i < arguments.length; i++) {
-      args.push(arguments[i]);
-    }
-    // Find event listeners, and support pseudo-event `catchAll`
-    var event = args[0].toLowerCase();
-    for (i = 0; i <= $.events.length; i += 2) {
-      if ($.events[i] == event) {
-        $.events[i + 1].apply($, args.slice(1));
-      }
-      if ($.events[i] == 'catchall') {
-        $.events[i + 1].apply(null, args);
-      }
-    }
-    if (event == 'fileerror') {
-      $.fire('error', args[2], args[1]);
-    }
-    if (event == 'fileprogress') {
-      $.fire('progress');
-    }
-  };
-
-
-  /**
    * Private helper functions
    */
   var $h = {};
+
+  /**
+   * Extends the destination object `dst` by copying all of the properties from
+   * the `src` object(s) to `dst`. You can specify multiple `src` objects.
+   * @function
+   * @name $h.extend
+   * @param {Object} dst Destination object.
+   * @param {...Object} src Source object(s).
+   * @returns {Object} Reference to `dst`.
+   */
+  $h.extend = function (dst) {
+    $h.each(arguments, function(obj) {
+      if (obj !== dst) {
+        $h.each(obj, function(key, value){
+          dst[key] = value;
+        });
+      }
+    });
+    return dst;
+  };
 
   /**
    * Stop event from propagation and default
@@ -302,7 +235,7 @@ function Resumable(opts) {
    * @returns {string}
    */
   $h.generateUniqueIdentifier = function (file) {
-    var custom = $.getOpt('generateUniqueIdentifier');
+    var custom = $.opts.generateUniqueIdentifier;
     if (typeof custom === 'function') {
       return custom(file);
     }
@@ -379,33 +312,30 @@ function Resumable(opts) {
   var appendFilesFromFileList = function (fileList, event) {
     // check for uploading too many files
     var errorCount = 0;
-    var o = $.getOpt(['maxFiles', 'minFileSize', 'maxFileSize',
-      'maxFilesErrorCallback', 'minFileSizeErrorCallback',
-      'maxFileSizeErrorCallback', 'fileType', 'fileTypeErrorCallback']);
-    if (typeof(o.maxFiles) !== 'undefined'
-      && o.maxFiles < (fileList.length + $.files.length)) {
+    if (typeof($.opts.maxFiles) !== 'undefined'
+      && $.opts.maxFiles < (fileList.length + $.files.length)) {
       // if single-file upload, file is already added,
       // and trying to add 1 new file, simply replace the already-added file
-      if (o.maxFiles === 1 && $.files.length === 1 && fileList.length === 1) {
+      if ($.opts.maxFiles === 1 && $.files.length === 1 && fileList.length === 1) {
         $.removeFile($.files[0]);
       } else {
-        o.maxFilesErrorCallback(fileList, errorCount++);
+        $.opts.maxFilesErrorCallback(fileList, errorCount++);
         return ;
       }
     }
     var files = [];
     $h.each(fileList, function (file) {
-      if (o.fileType.length > 0
-        && !$h.contains(o.fileType, file.type.split('/')[1])) {
-        o.fileTypeErrorCallback(file, errorCount++);
+      if ($.opts.fileType.length > 0
+        && !$h.contains($.opts.fileType, file.type.split('/')[1])) {
+        $.opts.fileTypeErrorCallback(file, errorCount++);
         return false;
       }
-      if (typeof(o.minFileSize) !== 'undefined' && file.size < o.minFileSize) {
-        o.minFileSizeErrorCallback(file, errorCount++);
+      if (typeof($.opts.minFileSize) !== 'undefined' && file.size < $.opts.minFileSize) {
+        $.opts.minFileSizeErrorCallback(file, errorCount++);
         return false;
       }
-      if (typeof(o.maxFileSize) !== 'undefined' && file.size > o.maxFileSize) {
-        o.maxFileSizeErrorCallback(file, errorCount++);
+      if (typeof($.opts.maxFileSize) !== 'undefined' && file.size > $.opts.maxFileSize) {
+        $.opts.maxFileSizeErrorCallback(file, errorCount++);
         return false;
       }
       // directories have size == 0
@@ -431,18 +361,6 @@ function Resumable(opts) {
      * @type {ResumableFile}
      */
     var $ = this;
-
-    /**
-     * ResumableFile options
-     * @type {{}}
-     */
-    $.opts = {};
-
-    /**
-     * Get current options
-     * @type {Resumable.getOpt}
-     */
-    $.getOpt = resumableObj.getOpt;
 
     /**
      * Reference to parent Resumable instance
@@ -587,10 +505,11 @@ function Resumable(opts) {
       // Rebuild stack of chunks from file
       $.chunks = [];
       $._prevProgress = 0;
-      var round = $.getOpt('forceChunkSize') ? Math.ceil : Math.floor;
-      for (var offset = 0;
-           offset < Math.max(round($.file.size / $.getOpt('chunkSize')), 1);
-           offset++) {
+      var round = $.resumableObj.opts.forceChunkSize ? Math.ceil : Math.floor;
+      var chunks = Math.max(
+        round($.file.size / $.resumableObj.opts.chunkSize), 1
+      );
+      for (var offset = 0; offset < chunks; offset++) {
         $.chunks.push(
           new ResumableChunk($.resumableObj, $, offset, chunkEvent)
         );
@@ -659,108 +578,111 @@ function Resumable(opts) {
     var $ = this;
 
     /**
-     * Options for a chunk
-     * @type {{}}
-     */
-    $.opts = {};
-
-    /**
-     * Get current options
-     * @type {Resumable.getOpt}
-     */
-    $.getOpt = resumableObj.getOpt;
-
-    /**
      * Reference to parent resumable object
+     * @name ResumableChunk.resumableObj
      * @type {Resumable}
      */
     $.resumableObj = resumableObj;
 
     /**
      * Reference to parent ResumableFile object
+     * @name ResumableChunk.fileObj
      * @type {ResumableFile}
      */
     $.fileObj = fileObj;
 
     /**
      * File size
+     * @name ResumableChunk.fileObjSize
      * @type {number}
      */
     $.fileObjSize = fileObj.size;
 
     /**
      * File offset
+     * @name ResumableChunk.offset
      * @type {number}
      */
     $.offset = offset;
 
     /**
      * A callback function to report chunk progress
+     * @name ResumableChunk.callback
      * @type {Function}
      */
     $.callback = callback;
 
     /**
      * Date then progress was called last time
+     * @name ResumableChunk.lastProgressCallback
      * @type {number}
      */
     $.lastProgressCallback = Date.now(); // Support from IE 9
 
     /**
      * Indicates if chunk existence was checked on the server
+     * @name ResumableChunk.tested
      * @type {boolean}
      */
     $.tested = false;
 
     /**
      * Number of retries performed
+     * @name ResumableChunk.retries
      * @type {number}
      */
     $.retries = 0;
 
     /**
      * Pending retry
+     * @name ResumableChunk.pendingRetry
      * @type {boolean}
      */
     $.pendingRetry = false;
 
     /**
      * Preprocess state
+     * @name ResumableChunk.preprocessState
      * @type {number} 0 = unprocessed, 1 = processing, 2 = finished
      */
     $.preprocessState = 0;
 
     /**
-     * Size of a chunk
-     * @type {number}
-     */
-    var chunkSize = $.getOpt('chunkSize');
-
-    /**
      * Bytes transferred
+     * @name ResumableChunk.loaded
      * @type {number}
      */
     $.loaded = 0;
 
     /**
+     * Size of a chunk
+     * @type {number}
+     */
+    var chunkSize = $.resumableObj.opts.chunkSize;
+
+    /**
      * Chunk start byte in a file
+     * @name ResumableChunk.startByte
      * @type {number}
      */
     $.startByte = $.offset * chunkSize;
 
     /**
      * Chunk end byte in a file
+     * @name ResumableChunk.endByte
      * @type {number}
      */
     $.endByte = Math.min($.fileObjSize, ($.offset + 1) * chunkSize);
 
     /**
      * XMLHttpRequest
+     * @name ResumableChunk.xhr
      * @type {XMLHttpRequest}
      */
     $.xhr = null;
 
-    if ($.fileObjSize - $.endByte < chunkSize && !$.getOpt('forceChunkSize')) {
+    if ($.fileObjSize - $.endByte < chunkSize
+        && !$.resumableObj.opts.forceChunkSize) {
       // The last chunk will be bigger than the chunk size,
       // but less than 2*chunkSize
       $.endByte = $.fileObjSize;
@@ -789,7 +711,7 @@ function Resumable(opts) {
 
       // Add data from the query options
       var params = [];
-      var customQuery = $.getOpt('query');
+      var customQuery = $.resumableObj.opts.query;
       if (typeof customQuery == "function") {
         customQuery = customQuery($.fileObj, $);
       }
@@ -801,7 +723,7 @@ function Resumable(opts) {
         encodeURIComponent($.offset + 1)].join('=')
       );
       params.push(['resumableChunkSize',
-        encodeURIComponent($.getOpt('chunkSize'))].join('=')
+        encodeURIComponent($.resumableObj.opts.chunkSize)].join('=')
       );
       params.push(['resumableCurrentChunkSize',
         encodeURIComponent($.endByte - $.startByte)].join('=')
@@ -819,9 +741,9 @@ function Resumable(opts) {
         encodeURIComponent($.fileObj.relativePath)].join('=')
       );
       // Append the relevant chunk and send it
-      $.xhr.open("GET", $.getOpt('target') + '?' + params.join('&'));
+      $.xhr.open("GET", $.resumableObj.opts.target + '?' + params.join('&'));
       // Add data from header options
-      $h.each($.getOpt('headers'), function (k, v) {
+      $h.each($.resumableObj.opts.headers, function (k, v) {
         $.xhr.setRequestHeader(k, v);
       });
       $.xhr.send(null);
@@ -839,7 +761,7 @@ function Resumable(opts) {
      * Uploads the actual data in a POST call
      */
     $.send = function () {
-      var preprocess = $.getOpt('preprocess');
+      var preprocess = $.resumableObj.opts.preprocess;
       if (typeof preprocess === 'function') {
         switch ($.preprocessState) {
           case 0:
@@ -852,7 +774,7 @@ function Resumable(opts) {
             break;
         }
       }
-      if ($.getOpt('testChunks') && !$.tested) {
+      if ($.resumableObj.opts.testChunks && !$.tested) {
         $.test();
         return;
       }
@@ -863,7 +785,7 @@ function Resumable(opts) {
       // Progress
       $.xhr.upload.addEventListener("progress", function (e) {
         if (Date.now() - $.lastProgressCallback >
-            $.getOpt('throttleProgressCallbacks') * 1000) {
+            $.resumableObj.opts.throttleProgressCallbacks * 1000) {
           $.callback('progress');
           $.lastProgressCallback = Date.now();
         }
@@ -883,7 +805,7 @@ function Resumable(opts) {
           $.callback('retry', $.message());
           $.abort();
           $.retries++;
-          var retryInterval = $.getOpt('chunkRetryInterval');
+          var retryInterval =  $.resumableObj.opts.chunkRetryInterval;
           if (retryInterval !== undefined) {
             $.pendingRetry = true;
             setTimeout($.send, retryInterval);
@@ -898,7 +820,7 @@ function Resumable(opts) {
       // Set up the basic query data from Resumable
       var query = {
         resumableChunkNumber: $.offset + 1,
-        resumableChunkSize: $.getOpt('chunkSize'),
+        resumableChunkSize: $.resumableObj.opts.chunkSize,
         resumableCurrentChunkSize: $.endByte - $.startByte,
         resumableTotalSize: $.fileObjSize,
         resumableIdentifier: $.fileObj.uniqueIdentifier,
@@ -907,7 +829,7 @@ function Resumable(opts) {
         resumableTotalChunks: $.fileObj.chunks.length
       };
       // Mix in custom data
-      var customQuery = $.getOpt('query');
+      var customQuery = $.resumableObj.opts.query;
       if (typeof customQuery == "function") {
         customQuery = customQuery($.fileObj, $);
       }
@@ -921,9 +843,9 @@ function Resumable(opts) {
             'slice')));
       var bytes = $.fileObj.file[func]($.startByte, $.endByte);
       var data = null;
-      var target = $.getOpt('target');
+      var target = $.resumableObj.opts.target;
 
-      if ($.getOpt('method') === 'octet') {
+      if ($.resumableObj.opts.method === 'octet') {
         // Add data from the query options
         data = bytes;
         var params = [];
@@ -937,12 +859,12 @@ function Resumable(opts) {
         $h.each(query, function (k, v) {
           data.append(k, v);
         });
-        data.append($.getOpt('fileParameterName'), bytes);
+        data.append($.resumableObj.opts.fileParameterName, bytes);
       }
 
       $.xhr.open('POST', target);
       // Add data from header options
-      $h.each($.getOpt('headers'), function (k, v) {
+      $h.each($.resumableObj.opts.headers, function (k, v) {
         $.xhr.setRequestHeader(k, v);
       });
       $.xhr.send(data);
@@ -978,8 +900,8 @@ function Resumable(opts) {
         if ($.xhr.status == 200) {
           // HTTP 200, perfect
           return 'success';
-        } else if ($h.contains($.getOpt('permanentErrors'), $.xhr.status)
-            || $.retries >= $.getOpt('maxChunkRetries')) {
+        } else if ($h.contains($.resumableObj.opts.permanentErrors, $.xhr.status)
+            || $.retries >= $.resumableObj.opts.maxChunkRetries) {
           // HTTP 415/500/501, permanent error
           return 'error';
         } else {
@@ -1025,6 +947,56 @@ function Resumable(opts) {
     };
   }
 
+  //
+  // Public api begin
+  //
+
+  /**
+   * Set a callback for an event, possible events:
+   * fileSuccess(file), fileProgress(file), fileAdded(file, event),
+   * fileRetry(file), fileError(file, message), complete(),
+   * progress(), error(message, file), pause()
+   * @name Resumable.on
+   * @function
+   * @param {string} event
+   * @param {Function} callback
+   */
+  $.on = function (event, callback) {
+    $.events.push(event.toLowerCase(), callback);
+  };
+
+  /**
+   * Fire an event
+   * @name Resumable.fire
+   * @function
+   * @param {string} event event name
+   * @param [...] arguments fo a callback
+   */
+  $.fire = function () {
+    // `arguments` is an object, not array, in FF, so:
+    var args = [];
+    var i;
+    for (i = 0; i < arguments.length; i++) {
+      args.push(arguments[i]);
+    }
+    // Find event listeners, and support pseudo-event `catchAll`
+    var event = args[0].toLowerCase();
+    for (i = 0; i <= $.events.length; i += 2) {
+      if ($.events[i] == event) {
+        $.events[i + 1].apply($, args.slice(1));
+      }
+      if ($.events[i] == 'catchall') {
+        $.events[i + 1].apply(null, args);
+      }
+    }
+    if (event == 'fileerror') {
+      $.fire('error', args[2], args[1]);
+    }
+    if (event == 'fileprogress') {
+      $.fire('progress');
+    }
+  };
+
   /**
    * Upload next chunk from the queue
    * @function
@@ -1038,7 +1010,7 @@ function Resumable(opts) {
     // In some cases (such as videos) it's really handy to upload the first
     // and last chunk of a file quickly; this let's the server check the file's
     // metadata and determine if there's even a point in continuing.
-    if ($.getOpt('prioritizeFirstAndLastChunk')) {
+    if ($.opts.prioritizeFirstAndLastChunk) {
       $h.each($.files, function (file) {
         if (file.chunks.length && file.chunks[0].status() == 'pending'
             && file.chunks[0].preprocessState === 0) {
@@ -1133,7 +1105,7 @@ function Resumable(opts) {
         input.style.cursor = 'pointer';
         domNode.appendChild(input);
       }
-      var maxFiles = $.getOpt('maxFiles');
+      var maxFiles = $.opts.maxFiles;
       if (typeof(maxFiles) === 'undefined' || maxFiles != 1) {
         input.setAttribute('multiple', 'multiple');
       } else {
@@ -1214,7 +1186,7 @@ function Resumable(opts) {
     }
     // Kick off the queue
     $.fire('uploadStart');
-    for (var num = 1; num <= $.getOpt('simultaneousUploads'); num++) {
+    for (var num = 1; num <= $.opts.simultaneousUploads; num++) {
       $.uploadNextChunk();
     }
   };
@@ -1316,6 +1288,8 @@ function Resumable(opts) {
     });
     return totalSize;
   };
+
+  $.opts = $h.extend({}, $.defaults, opts);
 }
 
 // Node.js-style export for Node and Component

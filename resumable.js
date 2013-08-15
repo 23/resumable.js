@@ -285,6 +285,23 @@ function Resumable(opts) {
   };
 
   /**
+   * Get target option with query params
+   * @function
+   * @name $h.getTarget
+   * @param params
+   * @returns {string}
+   */
+  $h.getTarget = function(params){
+    var target = $.opts.target;
+    if(target.indexOf('?') < 0) {
+      target += '?';
+    } else {
+      target += '&';
+    }
+    return target + params.join('&');
+  };
+
+  /**
    * On drop event
    * @function
    * @param event
@@ -689,8 +706,28 @@ function Resumable(opts) {
     }
 
     /**
+     * Get params for a request
+     * @function
+     * @name ResumableChunk.getParams
+     */
+    $.getParams = function () {
+      return {
+        resumableChunkNumber: $.offset + 1,
+        resumableChunkSize: $.resumableObj.opts.chunkSize,
+        resumableCurrentChunkSize: $.endByte - $.startByte,
+        resumableTotalSize: $.fileObjSize,
+        resumableIdentifier: $.fileObj.uniqueIdentifier,
+        resumableFilename: $.fileObj.name,
+        resumableRelativePath: $.fileObj.relativePath,
+        resumableTotalChunks: $.fileObj.chunks.length
+      };
+    };
+
+    /**
      * Makes a GET request without any data to see if the chunk has already
      * been uploaded in a previous session
+     * @function
+     * @name ResumableChunk.test
      */
     $.test = function () {
       // Set up request and listen for event
@@ -711,37 +748,18 @@ function Resumable(opts) {
 
       // Add data from the query options
       var params = [];
-      var customQuery = $.resumableObj.opts.query;
-      if (typeof customQuery == "function") {
-        customQuery = customQuery($.fileObj, $);
+      var query = $.resumableObj.opts.query;
+      if (typeof query == "function") {
+        query = query($.fileObj, $);
       }
-      $h.each(customQuery, function (k, v) {
+      query = $h.extend({}, $.getParams(), query);
+      $h.each(query, function (k, v) {
         params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
       });
-      // Add extra data to identify chunk
-      params.push(['resumableChunkNumber',
-        encodeURIComponent($.offset + 1)].join('=')
-      );
-      params.push(['resumableChunkSize',
-        encodeURIComponent($.resumableObj.opts.chunkSize)].join('=')
-      );
-      params.push(['resumableCurrentChunkSize',
-        encodeURIComponent($.endByte - $.startByte)].join('=')
-      );
-      params.push(['resumableTotalSize',
-        encodeURIComponent($.fileObjSize)].join('=')
-      );
-      params.push(['resumableIdentifier',
-        encodeURIComponent($.fileObj.uniqueIdentifier)].join('=')
-      );
-      params.push(['resumableFilename',
-        encodeURIComponent($.fileObj.name)].join('=')
-      );
-      params.push(['resumableRelativePath',
-        encodeURIComponent($.fileObj.relativePath)].join('=')
-      );
+
       // Append the relevant chunk and send it
-      $.xhr.open("GET", $.resumableObj.opts.target + '?' + params.join('&'));
+      $.xhr.open("GET", $h.getTarget(params));
+
       // Add data from header options
       $h.each($.resumableObj.opts.headers, function (k, v) {
         $.xhr.setRequestHeader(k, v);
@@ -751,6 +769,8 @@ function Resumable(opts) {
 
     /**
      * Finish preprocess state
+     * @function
+     * @name ResumableChunk.preprocessFinished
      */
     $.preprocessFinished = function () {
       $.preprocessState = 2;
@@ -759,6 +779,8 @@ function Resumable(opts) {
 
     /**
      * Uploads the actual data in a POST call
+     * @function
+     * @name ResumableChunk.send
      */
     $.send = function () {
       var preprocess = $.resumableObj.opts.preprocess;
@@ -817,25 +839,12 @@ function Resumable(opts) {
       $.xhr.addEventListener("load", doneHandler, false);
       $.xhr.addEventListener("error", doneHandler, false);
 
-      // Set up the basic query data from Resumable
-      var query = {
-        resumableChunkNumber: $.offset + 1,
-        resumableChunkSize: $.resumableObj.opts.chunkSize,
-        resumableCurrentChunkSize: $.endByte - $.startByte,
-        resumableTotalSize: $.fileObjSize,
-        resumableIdentifier: $.fileObj.uniqueIdentifier,
-        resumableFilename: $.fileObj.name,
-        resumableRelativePath: $.fileObj.relativePath,
-        resumableTotalChunks: $.fileObj.chunks.length
-      };
       // Mix in custom data
       var customQuery = $.resumableObj.opts.query;
       if (typeof customQuery == "function") {
         customQuery = customQuery($.fileObj, $);
       }
-      $h.each(customQuery, function (k, v) {
-        query[k] = v;
-      });
+      var query = $h.extend({}, $.getParams(), customQuery);
 
       var func = ($.fileObj.file.slice ? 'slice' :
           ($.fileObj.file.mozSlice ? 'mozSlice' :
@@ -852,7 +861,7 @@ function Resumable(opts) {
         $h.each(query, function (k, v) {
           params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
         });
-        target += '?' + params.join('&');
+        target = $h.getTarget(params);
       } else {
         // Add data from the query options
         data = new FormData();
@@ -872,6 +881,8 @@ function Resumable(opts) {
 
     /**
      * Abort current xhr request
+     * @function
+     * @name ResumableChunk.abort
      */
     $.abort = function () {
       // Abort and reset
@@ -883,6 +894,8 @@ function Resumable(opts) {
 
     /**
      * Retrieve current chunk upload status
+     * @function
+     * @name ResumableChunk.status
      * @returns {string} 'pending', 'uploading', 'success', 'error'
      */
     $.status = function () {
@@ -915,6 +928,8 @@ function Resumable(opts) {
 
     /**
      * Get response from xhr request
+     * @function
+     * @name ResumableChunk.message
      * @returns {String}
      */
     $.message = function () {
@@ -923,6 +938,8 @@ function Resumable(opts) {
 
     /**
      * Get upload progress
+     * @function
+     * @name ResumableChunk.progress
      * @param {boolean} relative
      * @returns {float}
      */

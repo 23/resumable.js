@@ -3,6 +3,7 @@
 ## Features
 
  - All code follows Google javascript style guide
+ - Target url can be provided with query string
 
 ## Breaking Changes
 

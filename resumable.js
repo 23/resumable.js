@@ -51,6 +51,7 @@ var Resumable = function(opts){
     chunkRetryInterval:undefined,
     permanentErrors:[415, 500, 501],
     maxFiles:undefined,
+	withCredentials:false,
     maxFilesErrorCallback:function (files, errorCount) {
       var maxFiles = $.getOpt('maxFiles');
       alert('Please upload ' + maxFiles + ' file' + (maxFiles === 1 ? '' : 's') + ' at a time.');
@@ -399,6 +400,7 @@ var Resumable = function(opts){
       params.push(['resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
       // Append the relevant chunk and send it
       $.xhr.open("GET", $h.getTarget(params));
+      $.xhr.withCredentials = $.getOpt('withCredentials');
       // Add data from header options
       $h.each($.getOpt('headers'), function(k,v) {
         $.xhr.setRequestHeader(k, v);
@@ -503,7 +505,8 @@ var Resumable = function(opts){
         data.append($.getOpt('fileParameterName'), bytes);
       }
      
-      $.xhr.open('POST', target); 
+      $.xhr.open('POST', target);
+      $.xhr.withCredentials = $.getOpt('withCredentials');
       // Add data from header options
       $h.each($.getOpt('headers'), function(k,v) {
         $.xhr.setRequestHeader(k, v);

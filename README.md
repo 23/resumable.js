@@ -99,6 +99,7 @@ Available configuration options are:
 * `maxFileSizeErrorCallback(file, errorCount)` A function which displays an error a selected file is larger than allowed. (Default: displays an alert for every bad file.)
 * `fileType` The file types allowed to upload. An empty array allow any file type. (Default: `[]`)
 * `fileTypeErrorCallback(file, errorCount)` A function which displays an error a selected file has type not allowed. (Default: displays an alert for every bad file.)
+* `withCredentials` Standard CORS requests do not send or set any cookies by default. In order to include cookies as part of the request, you need to set the `withCredentials` property to true. (Default: `false`)
 
 #### Properties
 

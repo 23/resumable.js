@@ -1,0 +1,13 @@
+{
+  "name": "resumable.js",
+  "version": "2.0.0",
+  "main": "src/resumable.js",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "samples"
+  ]
+}

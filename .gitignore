@@ -1,4 +1,11 @@
 *~
-samples/Node.js/node_modules/
 
+# Node
+/build
+/node_modules
+
+# Samples
+/samples/Node.js/node_modules/
+
+# Editors
 .idea

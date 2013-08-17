@@ -35,6 +35,10 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-karma');
 
   // Tasks.
+
+  // Default task.
+  grunt.registerTask('default', ['test']);
+
   grunt.registerTask('min', ['uglify']);
 
   grunt.registerTask('test', 'Run tests on singleRun karma server', function() {

@@ -1,0 +1,10 @@
+language: node_js
+ node_js:
+   - 0.10
+
+ before_script:
+  - sh -e /etc/init.d/xvfb start
+  - npm install --quiet -g grunt-cli karma
+  - npm install
+
+ script: grunt

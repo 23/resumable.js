@@ -89,7 +89,7 @@ module.exports = function(config) {
       sl_ie10: {
         base: 'SauceLabs',
         browserName: 'internet explorer',
-        platform: 'Windows 7',
+        platform: 'Windows 8',
         version: '10'
       },
       sl_chorme: {

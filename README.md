@@ -156,6 +156,7 @@ Available configuration options are:
 * `.retry()` Retry uploading the file.
 * `.bootstrap()` Rebuild the state of a `ResumableFile` object, including reassigning chunks and XMLHttpRequest instances.
 * `.isUploading()` Returns a boolean indicating whether file chunks is uploading.
+* `.isComplete()` Returns a boolean indicating whether the file has completed uploading and received a server response.
 
 ## Alternatives
 

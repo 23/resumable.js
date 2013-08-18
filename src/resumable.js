@@ -1254,9 +1254,21 @@ function Resumable(opts) {
    * @function
    * @name Resumable.addFile
    * @param {File} file
+   * @param {Event} [event] event is optional
    */
-  $.addFile = function (file) {
-    appendFilesFromFileList([file]);
+  $.addFile = function (file, event) {
+    appendFilesFromFileList([file], event);
+  };
+
+  /**
+   * Add a HTML5 File object to the list of files.
+   * @function
+   * @name Resumable.addFiles
+   * @param {FileList|Array} files
+   * @param {Event} [event] event is optional
+   */
+  $.addFiles = function (files, event) {
+    appendFilesFromFileList(files, event);
   };
 
   /**

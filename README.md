@@ -8,7 +8,6 @@ Resumable.js does not have any external dependencies other than the `HTML5 File 
 
 Samples and examples are available in the `samples/` folder. Please push your own as Markdown to help document the project.
 
-
 ## How can I use it?
 
 A new `Resumable` object is created with information of what and where to post:
@@ -194,10 +193,10 @@ tests on Chrome run:
     
 To re-run tests just change any source or test file.
 
+Automated tests is running after every commit at travis-ci, current build status: [![Build Status](https://travis-ci.org/AidasK/resumable.js.png?branch=Next)](https://travis-ci.org/AidasK/resumable.js)
 
 ## Alternatives
 
 This library is explicitly designed for modern browsers supporting advanced HTML5 file features, and the motivation has been to provide stable and resumable support for large files (allowing uploads of several GB files through HTTP in a predictable fashion). 
 
 If your aim is just to support progress indications during upload/uploading multiple files at once, Resumable.js isn't for you. In those cases, [SWFUpload](http://swfupload.org/) and [Plupload](http://plupload.com/) provides the same features with wider browser support.
-

@@ -304,10 +304,10 @@ function Resumable(opts) {
   /**
    * On drag over event
    * @function
-   * @param {MouseEvent}
+   * @param {MouseEvent} event
    */
-  var onDragOver = function (e) {
-    e.preventDefault();
+  var onDragOver = function (event) {
+    event.preventDefault();
   };
 
   /**
@@ -437,16 +437,19 @@ function Resumable(opts) {
       switch (event) {
         case 'progress':
           $.resumableObj.fire('fileProgress', $);
+          $.resumableObj.fire('progress');
           break;
         case 'error':
           $.abort();
           _error = true;
           $.chunks = [];
           $.resumableObj.fire('fileError', $, message);
+          $.resumableObj.fire('error', message, $);
           break;
         case 'success':
           if (_error) return;
           $.resumableObj.fire('fileProgress', $); // it's at least progress
+          $.resumableObj.fire('progress');
           if ($.isComplete()) {
             $.resumableObj.fire('fileSuccess', $, message);
           }
@@ -469,6 +472,7 @@ function Resumable(opts) {
         }
       });
       $.resumableObj.fire('fileProgress', $);
+      $.resumableObj.fire('progress');
     };
 
     /**
@@ -489,6 +493,7 @@ function Resumable(opts) {
       });
       $.resumableObj.removeFile($);
       $.resumableObj.fire('fileProgress', $);
+      $.resumableObj.fire('progress');
     };
 
     /**
@@ -1000,28 +1005,18 @@ function Resumable(opts) {
    * @param {string} event event name
    * @param [...] arguments fo a callback
    */
-  $.fire = function () {
+  $.fire = function (event) {
     // `arguments` is an object, not array, in FF, so:
-    var args = [];
-    var i;
-    for (i = 0; i < arguments.length; i++) {
-      args.push(arguments[i]);
-    }
+    var args = Array.prototype.slice.call(arguments);
     // Find event listeners, and support pseudo-event `catchAll`
-    var event = args[0].toLowerCase();
-    for (i = 0; i <= $.events.length; i += 2) {
+    event = event.toLowerCase();
+    for (var i = 0; i <= $.events.length; i += 2) {
       if ($.events[i] == event) {
         $.events[i + 1].apply($, args.slice(1));
       }
       if ($.events[i] == 'catchall') {
         $.events[i + 1].apply(null, args);
       }
-    }
-    if (event == 'fileerror') {
-      $.fire('error', args[2], args[1]);
-    }
-    if (event == 'fileprogress') {
-      $.fire('progress');
     }
   };
 

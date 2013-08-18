@@ -7,5 +7,5 @@
 
 ## Breaking Changes
 
- - **ResumableFile.fileName** parameter renamed to **ResumableFile.file**
+ - **ResumableFile.fileName** parameter renamed to **ResumableFile.name**
  - **Resumable.getOpt** method dropped, use Resumable.opts parameter instead if needed.

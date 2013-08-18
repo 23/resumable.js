@@ -5,9 +5,13 @@ node_js:
 env:
   global:
   - secure: |-
-      TXMriyfSPDxLgoxxAH+g6EtVc+T6FOJBxxR9wONieCr/BsaljlFhmWw2RoyZ698lE6KqJ5g8tJik/Woopqs57xquOZB58w3aVpi/01Z0KYHZMhzUH0/HjrqxBlt/rjR4f/bq/Uz1FvauqfNHwq1jWkb6Pa3AaYAMUP3vSPI/dtc=
+      cJDMLiB+2YgDKiP1omLz3q5NdVSEQ+tYbIourw9yYUp/s0kUzsHxHBtrrLPAhMpPWH2woZdbDcFEetK4
+      LPvM6K3eju+9Gol1u+GRmRmQ8cQMdWlMTHHkvflqzzCkUyumQBjXfq3sLBaKKwMuCBX5fy8HeM4ai6nb
+      +W3LlvCPXKg=
   - secure: |-
-      NSoYrVLlF0wBVM47JsPSlpvMQovwD6I8oZn0tcWcbbljmlp/iqifQPqPZFokexgRR80Ih5VCAWKRV/DvBj48AkC9yccWglPhDRo8zQzxpVXifhWAepAReyU68yGceHLiW7J5UL0fSyA5If7ezwlMXGfHNh2dq+gzUcZCOCYQkJM=
+      bSn7SXgjPSAJxMJUreIMvHNPFMGuYXKULvMp8I7aWa7UUp/2noUho8k6JYO0ZFq2ZAYt0+x1C5bKWk4Z
+      JFSHjuTRbV6aIHPL1nq2vAxDaCAoQAdQpQcEWd2X9WFs8+j5JCZhMmIIj9VcbAJiUVm9nzgu0+0uxU6o
+      w4+kWxBf8uY=
 
 before_script:
   - sh -e /etc/init.d/xvfb start

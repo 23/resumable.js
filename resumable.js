@@ -259,7 +259,7 @@ var Resumable = function(opts){
       case 'success':
         if(_error) return;
         $.resumableObj.fire('fileProgress', $); // it's at least progress
-        if($.progress()==1) {
+        if($.isComplete()) {
           $.resumableObj.fire('fileSuccess', $, message);
         }
         break;
@@ -331,7 +331,19 @@ var Resumable = function(opts){
         }
       });
       return(uploading);
+    };    
+    $.isComplete = function(){
+      var outstanding = false;
+      $h.each($.chunks, function(chunk){
+        var status = chunk.status();
+        if(status=='pending' || status=='uploading' || chunk.preprocessState === 1) {
+          outstanding = true;
+          return(false);
+        }
+      });
+      return(!outstanding);
     };
+
 
     // Bootstrap and return
     $.bootstrap();
@@ -601,14 +613,10 @@ var Resumable = function(opts){
     // The are no more outstanding chunks to upload, check is everything is done
     var outstanding = false;
     $h.each($.files, function(file){
-        $h.each(file.chunks, function(chunk){
-            var status = chunk.status();
-            if(status=='pending' || status=='uploading' || chunk.preprocessState === 1) {
-              outstanding = true;
-              return(false);
-            }
-          });
-        if(outstanding) return(false);
+        if(!file.isComplete()) {
+            outstanding = true;
+            return(false);
+        }
       });
     if(!outstanding) {
       // All chunks have been uploaded, complete

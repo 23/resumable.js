@@ -4,7 +4,7 @@ Resumable.js is a JavaScript library providing multiple simultaneous, stable and
 
 The library is designed to introduce fault-tolerance into the upload of large files through HTTP. This is done by splitting each file into small chunks. Then, whenever the upload of a chunk fails, uploading is retried until the procedure completes. This allows uploads to automatically resume uploading after a network connection is lost either locally or to the server. Additionally, it allows for users to pause, resume and even recover uploads without losing state because only the currently uploading chunks will be aborted, not the entire upload.
 
-Resumable.js does not have any external dependencies other than the `HTML5 File API`. This is relied on for the ability to chunk files into smaller pieces. Currently, this means that support is limited to Firefox 4+, Chrome 11+ and Safari 6+.
+Resumable.js does not have any external dependencies other than the `HTML5 File API`. This is relied on for the ability to chunk files into smaller pieces. Currently, this means that support is limited to Firefox 4+, Chrome 11+, Safari 6+ and Internet Explorer 10+.
 
 Samples and examples are available in the `samples/` folder. Please push your own as Markdown to help document the project.
 
@@ -157,6 +157,43 @@ Available configuration options are:
 * `.bootstrap()` Rebuild the state of a `ResumableFile` object, including reassigning chunks and XMLHttpRequest instances.
 * `.isUploading()` Returns a boolean indicating whether file chunks is uploading.
 * `.isComplete()` Returns a boolean indicating whether the file has completed uploading and received a server response.
+
+## Contribution
+
+To ensure consistency throughout the source code, keep these rules in mind as you are working:
+
+* All features or bug fixes must be tested by one or more specs.
+
+* With the exceptions listed below, we follow the rules contained in [Google's JavaScript Style Guide](http://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml):
+
+  * Wrap all code at 100 characters.
+
+  * Instead of complex inheritance hierarchies, we prefer simple objects. We use prototypical
+inheritance only when absolutely necessary.
+
+
+## Installation Dependencies
+1. To clone your Github repository, run:
+
+        git clone git@github.com:<github username>/resumable.js.git
+
+2. To go to the Resumable.js directory, run:
+
+        cd resumable.js
+
+3. To add node.js dependencies
+
+        npm install
+
+## Testing
+
+Our unit and integration tests are written with Jasmine and executed with Karma. To run all of the
+tests on Chrome run:
+
+    grunt karma:watch
+    
+To re-run tests just change any source or test file.
+
 
 ## Alternatives
 

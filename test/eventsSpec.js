@@ -5,12 +5,17 @@ describe('events', function() {
   var resumable;
 
   beforeEach(function () {
-    resumable = new Resumable();
+    resumable = new Resumable({
+      generateUniqueIdentifier: function (file) {
+        return file.size;
+      }
+    });
   });
 
   it('should catch all events', function() {
     var valid = false;
-    resumable.on('catchall', function () {
+    resumable.on('catchall', function (event) {
+      expect(event).toBe('test');
       valid = true;
     });
     resumable.fire('test');
@@ -39,5 +44,26 @@ describe('events', function() {
     });
     resumable.fire('test', argumentOne, argumentTwo);
     expect(valid).toBeTruthy();
+  });
+
+  it('should call fileAdded event', function() {
+    var valid = false;
+    resumable.on('fileAdded', function () {
+      valid = true;
+    });
+    resumable.addFile(new Blob(['file part']));
+    expect(valid).toBeTruthy();
+  });
+
+  it('should call filesAdded event', function() {
+    var count = 0;
+    resumable.on('filesAdded', function (files) {
+      count = files.length;
+    });
+    resumable.addFiles([
+      new Blob(['file part']),
+      new Blob(['file 2 part'])
+    ]);
+    expect(count).toBe(2);
   });
 });

@@ -71,7 +71,7 @@ module.exports = function(config) {
       sl_opera: {
         base: 'SauceLabs',
         browserName: "opera",
-        platform: "Windows 2008",
+        platform: 'Windows 7',
         version: "12"
       },
       sl_iphone: {
@@ -89,7 +89,7 @@ module.exports = function(config) {
       sl_ie10: {
         base: 'SauceLabs',
         browserName: 'internet explorer',
-        platform: 'Windows 8',
+        platform: 'Windows 7',
         version: '10'
       },
       sl_chorme: {

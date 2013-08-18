@@ -9,3 +9,6 @@
 
 # Editors
 .idea
+
+# Tests
+sauce_connect.log

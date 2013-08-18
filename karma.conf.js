@@ -64,6 +64,45 @@ module.exports = function(config) {
 
     // Continuous Integration mode
     // if true, it capture browsers, run tests and exit
-    singleRun: false
+    singleRun: false,
+
+    // define SL browsers
+    customLaunchers: {
+      sl_opera: {
+        base: 'SauceLabs',
+        browserName: "opera",
+        platform: "Windows 2008",
+        version: "12"
+      },
+      sl_iphone: {
+        base: 'SauceLabs',
+        browserName: 'iphone',
+        platform: 'OS X 10.8',
+        version: '6'
+      },
+      sl_safari: {
+        base: 'SauceLabs',
+        browserName: 'safari',
+        platform: 'OS X 10.8',
+        version: '6'
+      },
+      sl_ie10: {
+        base: 'SauceLabs',
+        browserName: 'internet explorer',
+        platform: 'Windows 8',
+        version: '10'
+      },
+      sl_chorme: {
+        base: 'SauceLabs',
+        browserName: 'chrome',
+        platform: 'Windows 7'
+      },
+      sl_firefox: {
+        base: 'SauceLabs',
+        browserName: 'firefox',
+        platform: 'Windows 7',
+        version: '21'
+      }
+    }
   });
 };

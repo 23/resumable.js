@@ -12,6 +12,7 @@ module.exports = function(grunt) {
         dest: 'build/resumable.min.js'
       }
     },
+    watch: {},
     karma: {
       options: {
         configFile: 'karma.conf.js'
@@ -25,29 +26,27 @@ module.exports = function(grunt) {
       },
       travis: {
         singleRun: true,
-        browsers: ['Firefox']
+        browsers: ['sl_chorme', 'sl_firefox'],//, 'sl_opera', 'sl_safari', 'sl_ie10', 'sl_iphone'
+        // global config for SauceLabs
+        sauceLabs: {
+          username: process.env.SAUCE_USERNAME,
+          accessKey: process.env.SAUCE_ACCESS_KEY,
+          startConnect: true,
+          testName: 'Resumable.js'
+        }
       }
     }
   });
 
-  // Packages
-  grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-karma');
-
-  // Tasks.
+  // Loading dependencies
+  for (var key in grunt.file.readJSON("package.json").devDependencies) {
+    if (key !== "grunt" && key.indexOf("grunt") === 0) grunt.loadNpmTasks(key);
+  }
 
   // Default task.
   grunt.registerTask('default', ['test']);
-
+  // Release tasks
   grunt.registerTask('min', ['uglify']);
-
-  grunt.registerTask('test', 'Run tests on singleRun karma server', function() {
-    //this task can be executed in 2 different environments: local and Travis-CI
-    //we need to take settings for each one into account
-    if (process.env.TRAVIS) {
-      grunt.task.run('karma:travis');
-    } else {
-      grunt.task.run('karma:continuous');
-    }
-  });
+  //Development
+  grunt.registerTask("test", ["karma:travis"]);
 };

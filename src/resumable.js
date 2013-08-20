@@ -10,30 +10,30 @@
  * Resumable is a library providing multiple simultaneous, stable and
  * resumable uploads via the HTML5 File API.
  * @param {{
-   * chunkSize: number,
-   * forceChunkSize: boolean,
-   * simultaneousUploads: number,
-   * fileParameterName: string,
-   * throttleProgressCallbacks: number,
-   * query: {},
-   * headers: {},
-   * preprocess: null,
-   * method: string,
-   * prioritizeFirstAndLastChunk: boolean,
-   * target: string, testChunks: boolean,
-   * generateUniqueIdentifier: null,
-   * maxChunkRetries: undefined,
-   * chunkRetryInterval: undefined,
-   * permanentErrors: Array,
-   * maxFiles: undefined,
-   * maxFilesErrorCallback: Function,
-   * minFileSize: number,
-   * minFileSizeErrorCallback: Function,
-   * maxFileSize: undefined,
-   * maxFileSizeErrorCallback: Function,
-   * fileType: Array,
-   * fileTypeErrorCallback: Function
-   * }} opts options
+ *  chunkSize: number,
+ *  forceChunkSize: boolean,
+ *  simultaneousUploads: number,
+ *  fileParameterName: string,
+ *  throttleProgressCallbacks: number,
+ *  query: {},
+ *  headers: {},
+ *  preprocess: null,
+ *  method: string,
+ *  prioritizeFirstAndLastChunk: boolean,
+ *  target: string, testChunks: boolean,
+ *  generateUniqueIdentifier: null,
+ *  maxChunkRetries: undefined,
+ *  chunkRetryInterval: undefined,
+ *  permanentErrors: Array,
+ *  maxFiles: undefined,
+ *  maxFilesErrorCallback: Function,
+ *  minFileSize: number,
+ *  minFileSizeErrorCallback: Function,
+ *  maxFileSize: undefined,
+ *  maxFileSizeErrorCallback: Function,
+ *  fileType: Array,
+ *  fileTypeErrorCallback: Function
+ * }} opts options
  * @constructor
  */
 function Resumable(opts) {
@@ -84,29 +84,29 @@ function Resumable(opts) {
    * Default options for resumable.js
    * @name Resumable.defaults
    * @type {{
-   * chunkSize: number,
-   * forceChunkSize: boolean,
-   * simultaneousUploads: number,
-   * fileParameterName: string,
-   * throttleProgressCallbacks: number,
-   * query: {},
-   * headers: {},
-   * preprocess: null,
-   * method: string,
-   * prioritizeFirstAndLastChunk: boolean,
-   * target: string, testChunks: boolean,
-   * generateUniqueIdentifier: null,
-   * maxChunkRetries: undefined,
-   * chunkRetryInterval: undefined,
-   * permanentErrors: Array,
-   * maxFiles: undefined,
-   * maxFilesErrorCallback: Function,
-   * minFileSize: number,
-   * minFileSizeErrorCallback: Function,
-   * maxFileSize: undefined,
-   * maxFileSizeErrorCallback: Function,
-   * fileType: Array,
-   * fileTypeErrorCallback: Function
+   *  chunkSize: number,
+   *  forceChunkSize: boolean,
+   *  simultaneousUploads: number,
+   *  fileParameterName: string,
+   *  throttleProgressCallbacks: number,
+   *  query: {},
+   *  headers: {},
+   *  preprocess: null,
+   *  method: string,
+   *  prioritizeFirstAndLastChunk: boolean,
+   *  target: string, testChunks: boolean,
+   *  generateUniqueIdentifier: null,
+   *  maxChunkRetries: undefined,
+   *  chunkRetryInterval: undefined,
+   *  permanentErrors: Array,
+   *  maxFiles: undefined,
+   *  maxFilesErrorCallback: Function,
+   *  minFileSize: number,
+   *  minFileSizeErrorCallback: Function,
+   *  maxFileSize: undefined,
+   *  maxFileSizeErrorCallback: Function,
+   *  fileType: Array,
+   *  fileTypeErrorCallback: Function
    * }}
    */
   $.defaults = {
@@ -1316,6 +1316,11 @@ function Resumable(opts) {
     return totalSize;
   };
 
+  /**
+   * Current options
+   * @name Resumable.opts
+   * @type {Object}
+   */
   $.opts = $h.extend({}, $.defaults, opts || {});
 }
 

@@ -527,7 +527,7 @@ function Resumable(opts) {
      * @returns {string}
      */
     $.getExtension = function () {
-      return $.name.split('.').pop();
+      return $.name.substr((~-$.name.lastIndexOf(".") >>> 0) + 2).toLowerCase();
     };
 
     $.bootstrap();

@@ -5,11 +5,7 @@ describe('events', function() {
   var resumable;
 
   beforeEach(function () {
-    resumable = new Resumable({
-      generateUniqueIdentifier: function (file) {
-        return file.size;
-      }
-    });
+    resumable = new Resumable();
   });
 
   it('should catch all events', function() {
@@ -46,24 +42,15 @@ describe('events', function() {
     expect(valid).toBeTruthy();
   });
 
-  it('should call fileAdded event', function() {
-    var valid = false;
-    resumable.on('fileAdded', function () {
-      valid = true;
+  it('should return event value', function() {
+    resumable.on('false', function () {
+      return false;
     });
-    resumable.addFile(new Blob(['file part']));
-    expect(valid).toBeTruthy();
-  });
+    resumable.on('true', function () {
 
-  it('should call filesAdded event', function() {
-    var count = 0;
-    resumable.on('filesAdded', function (files) {
-      count = files.length;
     });
-    resumable.addFiles([
-      new Blob(['file part']),
-      new Blob(['file 2 part'])
-    ]);
-    expect(count).toBe(2);
+    expect(resumable.fire('true')).toBeTruthy();
+    expect(resumable.fire('not existant')).toBeTruthy();
+    expect(resumable.fire('false')).toBeFalsy();
   });
 });

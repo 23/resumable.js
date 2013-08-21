@@ -14,6 +14,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
+      'node_modules/sinon/pkg/sinon-1.7.3.js',
       'src/*.js',
       'test/*Spec.js'
     ],

@@ -42,6 +42,7 @@
     "grunt-saucelabs": "~4.0.4",
     "grunt-contrib-connect": "~0.3.0",
     "grunt-contrib-watch": "~0.5.2",
-    "karma-sauce-launcher": "~0.1.0"
+    "karma-sauce-launcher": "~0.1.0",
+    "sinon": "~1.7.3"
   }
 }

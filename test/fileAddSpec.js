@@ -1,4 +1,4 @@
-describe('events', function() {
+describe('fileAdd event', function() {
   /**
    * @type {Resumable}
    */
@@ -14,7 +14,8 @@ describe('events', function() {
 
   it('should call fileAdded event', function() {
     var valid = false;
-    resumable.on('fileAdded', function () {
+    resumable.on('fileAdded', function (file) {
+      expect(file.file instanceof Blob).toBeTruthy();
       valid = true;
     });
     resumable.addFile(new Blob(['file part']));

@@ -9,31 +9,22 @@
 /**
  * Resumable is a library providing multiple simultaneous, stable and
  * resumable uploads via the HTML5 File API.
- * @param {{
- *  chunkSize: number,
- *  forceChunkSize: boolean,
- *  simultaneousUploads: number,
- *  fileParameterName: string,
- *  throttleProgressCallbacks: number,
- *  query: {},
- *  headers: {},
- *  preprocess: null,
- *  method: string,
- *  prioritizeFirstAndLastChunk: boolean,
- *  target: string, testChunks: boolean,
- *  generateUniqueIdentifier: null,
- *  maxChunkRetries: undefined,
- *  chunkRetryInterval: undefined,
- *  permanentErrors: Array,
- *  maxFiles: undefined,
- *  maxFilesErrorCallback: Function,
- *  minFileSize: number,
- *  minFileSizeErrorCallback: Function,
- *  maxFileSize: undefined,
- *  maxFileSizeErrorCallback: Function,
- *  fileType: Array,
- *  fileTypeErrorCallback: Function
- * }} opts options
+ * @param [opts]
+ * @param {number} [opts.chunkSize]
+ * @param {bool} [opts.forceChunkSize]
+ * @param {number} [opts.simultaneousUploads]
+ * @param {string} [opts.fileParameterName]
+ * @param {float} [opts.throttleProgressCallbacks]
+ * @param {Object|Function} [opts.query]
+ * @param {Object} [opts.headers]
+ * @param {Function} [opts.preprocess]
+ * @param {string} [opts.method]
+ * @param {bool} [opts.prioritizeFirstAndLastChunk]
+ * @param {string} [opts.target]
+ * @param {number} [opts.maxChunkRetries]
+ * @param {number} [opts.chunkRetryInterval]
+ * @param {Array} [opts.permanentErrors]
+ * @param {Function} [opts.generateUniqueIdentifier]
  * @constructor
  */
 function Resumable(opts) {
@@ -98,15 +89,7 @@ function Resumable(opts) {
    *  generateUniqueIdentifier: null,
    *  maxChunkRetries: undefined,
    *  chunkRetryInterval: undefined,
-   *  permanentErrors: Array,
-   *  maxFiles: undefined,
-   *  maxFilesErrorCallback: Function,
-   *  minFileSize: number,
-   *  minFileSizeErrorCallback: Function,
-   *  maxFileSize: undefined,
-   *  maxFileSizeErrorCallback: Function,
-   *  fileType: Array,
-   *  fileTypeErrorCallback: Function
+   *  permanentErrors: Array
    * }}
    */
   $.defaults = {
@@ -125,28 +108,7 @@ function Resumable(opts) {
     generateUniqueIdentifier: null,
     maxChunkRetries: undefined,
     chunkRetryInterval: undefined,
-    permanentErrors: [415, 500, 501],
-    maxFiles: undefined,
-    maxFilesErrorCallback: function (files, errorCount) {
-      var maxFiles = $.opts.maxFiles;
-      alert('Please upload ' + maxFiles +
-        ' file' + (maxFiles === 1 ? '' : 's') + ' at a time.');
-    },
-    minFileSize: 1,
-    minFileSizeErrorCallback: function (file, errorCount) {
-      alert(file.name + ' is too small, please upload files larger than ' +
-        $h.formatSize($.opts.minFileSize) + '.');
-    },
-    maxFileSize: undefined,
-    maxFileSizeErrorCallback: function (file, errorCount) {
-      alert(file.name + ' is too large, please upload files less than ' +
-        $h.formatSize($.opts.maxFileSize) + '.');
-    },
-    fileType: [],
-    fileTypeErrorCallback: function (file, errorCount) {
-      alert(file.name + ' has type not allowed, ' +
-        'please upload files of type ' + $.opts.fileType + '.');
-    }
+    permanentErrors: [415, 500, 501]
   };
 
   /**
@@ -255,25 +217,6 @@ function Resumable(opts) {
   };
 
   /**
-   * Formats size to human readable format
-   * @function
-   * @name $h.formatSize
-   * @param size
-   * @returns {string}
-   */
-  $h.formatSize = function (size) {
-    if (size < 1024) {
-      return size + ' bytes';
-    } else if (size < 1024 * 1024) {
-      return (size / 1024.0).toFixed(0) + ' KB';
-    } else if (size < 1024 * 1024 * 1024) {
-      return (size / 1024.0 / 1024.0).toFixed(1) + ' MB';
-    } else {
-      return (size / 1024.0 / 1024.0 / 1024.0).toFixed(1) + ' GB';
-    }
-  };
-
-  /**
    * Get target option with query params
    * @function
    * @name $h.getTarget
@@ -317,43 +260,21 @@ function Resumable(opts) {
    * @param {Event} [event] event is optional
    */
   var appendFilesFromFileList = function (fileList, event) {
-    // check for uploading too many files
-    var errorCount = 0;
-    if (typeof($.opts.maxFiles) !== 'undefined'
-      && $.opts.maxFiles < (fileList.length + $.files.length)) {
-      // if single-file upload, file is already added,
-      // and trying to add 1 new file, simply replace the already-added file
-      if ($.opts.maxFiles === 1 && $.files.length === 1 && fileList.length === 1) {
-        $.removeFile($.files[0]);
-      } else {
-        $.opts.maxFilesErrorCallback(fileList, errorCount++);
-        return ;
-      }
-    }
     var files = [];
     $h.each(fileList, function (file) {
-      if ($.opts.fileType.length > 0
-        && !$h.contains($.opts.fileType, file.type.split('/')[1])) {
-        $.opts.fileTypeErrorCallback(file, errorCount++);
-        return false;
-      }
-      if (typeof($.opts.minFileSize) !== 'undefined' && file.size < $.opts.minFileSize) {
-        $.opts.minFileSizeErrorCallback(file, errorCount++);
-        return false;
-      }
-      if (typeof($.opts.maxFileSize) !== 'undefined' && file.size > $.opts.maxFileSize) {
-        $.opts.maxFileSizeErrorCallback(file, errorCount++);
-        return false;
-      }
       // directories have size == 0
       if (!$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
         var f = new ResumableFile($, file);
-        $.files.push(f);
-        files.push(f);
-        $.fire('fileAdded', f, event);
+        if ($.fire('fileAdded', f, event)) {
+          files.push(f);
+        }
       }
     });
-    $.fire('filesAdded', files);
+    if ($.fire('filesAdded', files)) {
+      $h.each(files, function (file) {
+        $.files.push(file);
+      });
+    }
   };
 
   /**
@@ -1004,20 +925,24 @@ function Resumable(opts) {
    * @function
    * @param {string} event event name
    * @param [...] arguments fo a callback
+   * @return {bool} value is false if at least one of the event handlers which handled this event
+   * returned false. Otherwise it returns true.
    */
   $.fire = function (event) {
     // `arguments` is an object, not array, in FF, so:
     var args = Array.prototype.slice.call(arguments);
     // Find event listeners, and support pseudo-event `catchAll`
     event = event.toLowerCase();
+    var preventDefault = false;
     for (var i = 0; i <= $.events.length; i += 2) {
       if ($.events[i] == event) {
-        $.events[i + 1].apply($, args.slice(1));
+        preventDefault = $.events[i + 1].apply($, args.slice(1)) === false;
       }
       if ($.events[i] == 'catchall') {
-        $.events[i + 1].apply(null, args);
+        preventDefault = $.events[i + 1].apply(null, args) === false;
       }
     }
+    return !preventDefault;
   };
 
   /**

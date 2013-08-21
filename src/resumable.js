@@ -512,6 +512,23 @@ function Resumable(opts) {
       return !outstanding;
     };
 
+    /**
+     * Get file type
+     * @name ResumableFile.getType
+     * @returns {string}
+     */
+    $.getType = function () {
+      return $.file.type && $.file.type.split('/')[1];
+    };
+
+    /**
+     * Get file extension
+     * @name ResumableFile.getExtension
+     * @returns {string}
+     */
+    $.getExtension = function () {
+      return $.name.split('.').pop();
+    };
 
     $.bootstrap();
   }

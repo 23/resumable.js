@@ -1259,6 +1259,18 @@ function Resumable(opts) {
   };
 
   /**
+   * ResumableFile constructor
+   * @type {ResumableFile}
+   */
+  $.ResumableFile = ResumableFile;
+
+  /**
+   * ResumableFile constructor
+   * @type {ResumableChunk}
+   */
+  $.ResumableChunk = ResumableChunk;
+
+  /**
    * Current options
    * @name Resumable.opts
    * @type {Object}

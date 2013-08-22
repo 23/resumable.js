@@ -953,10 +953,10 @@ function Resumable(opts) {
     var preventDefault = false;
     for (var i = 0; i <= $.events.length; i += 2) {
       if ($.events[i] == event) {
-        preventDefault = $.events[i + 1].apply($, args.slice(1)) === false;
+        preventDefault = $.events[i + 1].apply($, args.slice(1)) === false || preventDefault;
       }
       if ($.events[i] == 'catchall') {
-        preventDefault = $.events[i + 1].apply(null, args) === false;
+        preventDefault = $.events[i + 1].apply(null, args) === false || preventDefault;
       }
     }
     return !preventDefault;

@@ -29,7 +29,9 @@ describe('ResumableFile helper functions', function() {
     expect(file.getExtension()).toBe('jpg');
     file.name = '';
     expect(file.getExtension()).toBe('');
-    file.name = '.dwq.dq.wd.qdw.e';
+    file.name = 'image';
+    expect(file.getExtension()).toBe('');
+    file.name = '.dwq.dq.wd.qdw.E';
     expect(file.getExtension()).toBe('e');
   });
 });

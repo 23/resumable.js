@@ -53,4 +53,22 @@ describe('events', function() {
     expect(resumable.fire('not existant')).toBeTruthy();
     expect(resumable.fire('false')).toBeFalsy();
   });
+
+  it('should return multiple event value', function() {
+    resumable.on('maybe', function () {
+      return false;
+    });
+    resumable.on('maybe', function () {
+
+    });
+    expect(resumable.fire('maybe')).toBeFalsy();
+
+    resumable.on('maybe2', function () {
+
+    });
+    resumable.on('maybe2', function () {
+      return false;
+    });
+    expect(resumable.fire('maybe2')).toBeFalsy();
+  });
 });

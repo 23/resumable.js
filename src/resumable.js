@@ -515,6 +515,7 @@ function Resumable(opts) {
     /**
      * Get file type
      * @name ResumableFile.getType
+     * @function
      * @returns {string}
      */
     $.getType = function () {
@@ -524,6 +525,7 @@ function Resumable(opts) {
     /**
      * Get file extension
      * @name ResumableFile.getExtension
+     * @function
      * @returns {string}
      */
     $.getExtension = function () {

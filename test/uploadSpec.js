@@ -88,22 +88,23 @@ describe('upload file', function() {
     expect(file.chunks.length).toBe(2);
     resumable.upload();
     // Sync events
-    expect(events.length).toBe(3);
+    expect(events.length).toBe(4);
     expect(events[0]).toBe('fileAdded');
     expect(events[1]).toBe('filesAdded');
-    expect(events[2]).toBe('uploadStart');
+    expect(events[2]).toBe('afterFilesAdded');
+    expect(events[3]).toBe('uploadStart');
     // Async
     requests[0].respond(200);
-    expect(events.length).toBe(5);
-    expect(events[3]).toBe('fileProgress');
-    expect(events[4]).toBe('progress');
+    expect(events.length).toBe(6);
+    expect(events[4]).toBe('fileProgress');
+    expect(events[5]).toBe('progress');
     requests[1].respond(200);
-    expect(events.length).toBe(9);
-    expect(events[5]).toBe('fileProgress');
-    expect(events[6]).toBe('progress');
-    expect(events[7]).toBe('fileSuccess');
+    expect(events.length).toBe(10);
+    expect(events[6]).toBe('fileProgress');
+    expect(events[7]).toBe('progress');
+    expect(events[8]).toBe('fileSuccess');
     // Can be sync and async
-    expect(events[8]).toBe('complete');
+    expect(events[9]).toBe('complete');
   });
 
   it('should pause and resume file', function () {

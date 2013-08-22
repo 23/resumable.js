@@ -16,3 +16,4 @@
  - **Resumable.maxFiles**, **Resumable.minFileSize**, **Resumable.maxFileSize**,
  **Resumable.fileType** validators dropped. Use **fileAdded** and **filesAdded** events for
  custom validation.
+ - **fileProgress** and **progress** events are not thrown on ResumableFile.abort() and ResumableFile.cancel() methods execution.

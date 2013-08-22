@@ -368,8 +368,10 @@ function Resumable(opts) {
           $.resumableObj.fire('error', message, $);
           break;
         case 'success':
-          if (_error) return;
-          $.resumableObj.fire('fileProgress', $); // it's at least progress
+          if (_error) {
+            return;
+          }
+          $.resumableObj.fire('fileProgress', $);
           $.resumableObj.fire('progress');
           if ($.isComplete()) {
             $.resumableObj.fire('fileSuccess', $, message);
@@ -392,8 +394,6 @@ function Resumable(opts) {
           c.abort();
         }
       });
-      $.resumableObj.fire('fileProgress', $);
-      $.resumableObj.fire('progress');
     };
 
     /**
@@ -413,8 +413,6 @@ function Resumable(opts) {
         }
       });
       $.resumableObj.removeFile($);
-      $.resumableObj.fire('fileProgress', $);
-      $.resumableObj.fire('progress');
     };
 
     /**

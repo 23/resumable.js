@@ -279,6 +279,7 @@ function Resumable(opts) {
 
   /**
    * ResumableFile class
+   * @name ResumableFile
    * @param {Resumable} resumableObj
    * @param {File} file
    * @constructor
@@ -340,13 +341,26 @@ function Resumable(opts) {
     $.chunks = [];
 
     /**
+     * Indicated if file is paused
+     * @name ResumableFile.paused
+     * @type {boolean}
+     */
+    $.paused = false;
+
+    /**
+     * Indicated if file has encountered an error
+     * @name ResumableFile.error
+     * @type {boolean}
+     */
+    $.error = false;
+
+    /**
      * Holds previous progress
+     * @name ResumableFile._prevProgress
      * @type {number}
      * @private
      */
     $._prevProgress = 0;
-
-    var _error = false;
 
     /**
      * Callback when something happens within the chunk
@@ -361,14 +375,14 @@ function Resumable(opts) {
           $.resumableObj.fire('progress');
           break;
         case 'error':
+          $.error = true;
           $.abort();
-          _error = true;
           $.chunks = [];
           $.resumableObj.fire('fileError', $, message);
           $.resumableObj.fire('error', message, $);
           break;
         case 'success':
-          if (_error) {
+          if ($.error) {
             return;
           }
           $.resumableObj.fire('fileProgress', $);
@@ -384,6 +398,26 @@ function Resumable(opts) {
     };
 
     /**
+     * Pause file upload
+     * @name ResumableFile.pause
+     * @function
+     */
+    $.pause = function() {
+      $.paused = true;
+      $.abort();
+    };
+
+    /**
+     * Resume file upload
+     * @name ResumableFile.resume
+     * @function
+     */
+    $.resume = function() {
+      $.paused = false;
+      $.resumableObj.upload();
+    };
+
+    /**
      * Abort current upload
      * @name ResumableFile.abort
      * @function
@@ -392,6 +426,7 @@ function Resumable(opts) {
       $h.each($.chunks, function (c) {
         if (c.status() == 'uploading') {
           c.abort();
+          $.resumableObj.uploadNextChunk();
         }
       });
     };
@@ -402,16 +437,6 @@ function Resumable(opts) {
      * @function
      */
     $.cancel = function () {
-      // Reset this file to be void
-      var _chunks = $.chunks;
-      $.chunks = [];
-      // Stop current uploads
-      $h.each(_chunks, function (c) {
-        if (c.status() == 'uploading') {
-          c.abort();
-          $.resumableObj.uploadNextChunk();
-        }
-      });
       $.resumableObj.removeFile($);
     };
 
@@ -432,7 +457,7 @@ function Resumable(opts) {
      */
     $.bootstrap = function () {
       $.abort();
-      _error = false;
+      $.error = false;
       // Rebuild stack of chunks from file
       $.chunks = [];
       $._prevProgress = 0;
@@ -454,7 +479,7 @@ function Resumable(opts) {
      * @returns {float} from 0 to 1
      */
     $.progress = function () {
-      if (_error) {
+      if ($.error) {
         return 1;
       }
       // Sum up progress across everything
@@ -535,6 +560,7 @@ function Resumable(opts) {
 
   /**
    * Class for storing a single chunk
+   * @name ResumableChunk
    * @param {Resumable} resumableObj
    * @param {ResumableFile} fileObj
    * @param {number} offset
@@ -688,12 +714,14 @@ function Resumable(opts) {
       $.xhr = new XMLHttpRequest();
 
       var testHandler = function (e) {
-        $.tested = true;
+        if (!$.fileObj.paused) {
+          $.tested = true;// Error might be caused by file pause method
+        }
         var status = $.status();
         if (status == 'success') {
           $.callback(status, $.message());
           $.resumableObj.uploadNextChunk();
-        } else {
+        } else if (!$.fileObj.paused) {
           $.send();
         }
       };
@@ -840,10 +868,11 @@ function Resumable(opts) {
      */
     $.abort = function () {
       // Abort and reset
-      if ($.xhr) {
-        $.xhr.abort();
-      }
+      var xhr = $.xhr;
       $.xhr = null;
+      if (xhr) {
+        xhr.abort();
+      }
     };
 
     /**
@@ -977,13 +1006,14 @@ function Resumable(opts) {
     // metadata and determine if there's even a point in continuing.
     if ($.opts.prioritizeFirstAndLastChunk) {
       $h.each($.files, function (file) {
-        if (file.chunks.length && file.chunks[0].status() == 'pending'
+        if (!file.paused && file.chunks.length
+            && file.chunks[0].status() == 'pending'
             && file.chunks[0].preprocessState === 0) {
           file.chunks[0].send();
           found = true;
           return false;
         }
-        if (file.chunks.length > 1
+        if (!file.paused && file.chunks.length > 1
             && file.chunks[file.chunks.length - 1].status() == 'pending'
             && file.chunks[0].preprocessState === 0) {
           file.chunks[file.chunks.length - 1].send();
@@ -998,7 +1028,7 @@ function Resumable(opts) {
 
     // Now, simply look for the next, best thing to upload
     $h.each($.files, function (file) {
-      $h.each(file.chunks, function (chunk) {
+      file.paused || $h.each(file.chunks, function (chunk) {
         if (chunk.status() == 'pending' && chunk.preprocessState === 0) {
           chunk.send();
           found = true;
@@ -1156,7 +1186,7 @@ function Resumable(opts) {
   $.pause = function () {
     // Resume all chunks currently being uploaded
     $h.each($.files, function (file) {
-      file.abort();
+      file.pause();
     });
     $.fire('pause');
   };
@@ -1223,6 +1253,7 @@ function Resumable(opts) {
     for (var i = $.files.length - 1; i >= 0; i--) {
       if ($.files[i] === file) {
         $.files.splice(i, 1);
+        file.abort();
       }
     }
   };

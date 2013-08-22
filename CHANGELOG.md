@@ -8,6 +8,9 @@
  returning false. Custom validators can be ran here.
  - **ResumableFile.getType()** and **ResumableFile.getExtension()** helper methods added. Can be
  used for custom validation.
+ - **fileProgress** and **progress** events are always asynchronous.
+ - **ResumableFile.pause()** and **ResumableFile.resume()** methods for single file pausing and
+ resuming.
 
 ## Breaking Changes
 

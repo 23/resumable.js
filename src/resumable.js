@@ -14,7 +14,7 @@
  * @param {bool} [opts.forceChunkSize]
  * @param {number} [opts.simultaneousUploads]
  * @param {string} [opts.fileParameterName]
- * @param {float} [opts.throttleProgressCallbacks]
+ * @param {number} [opts.throttleProgressCallbacks]
  * @param {Object|Function} [opts.query]
  * @param {Object} [opts.headers]
  * @param {Function} [opts.preprocess]
@@ -239,6 +239,7 @@ function Resumable(opts) {
         $.files.push(file);
       });
     }
+    $.fire('afterFilesAdded', files);
   };
 
   /**
@@ -440,7 +441,7 @@ function Resumable(opts) {
      * Get current upload progress status
      * @name ResumableFile.progress
      * @function
-     * @returns {float} from 0 to 1
+     * @returns {number} from 0 to 1
      */
     $.progress = function () {
       if ($.error) {
@@ -888,7 +889,7 @@ function Resumable(opts) {
      * @function
      * @name ResumableChunk.progress
      * @param {boolean} relative
-     * @returns {float}
+     * @returns {number}
      */
     $.progress = function (relative) {
       if (typeof(relative) === 'undefined') {
@@ -1177,11 +1178,11 @@ function Resumable(opts) {
   };
 
   /**
-   * Returns a float between 0 and 1 indicating the current upload progress
+   * Returns a number between 0 and 1 indicating the current upload progress
    * of all files.
    * @function
    * @name Resumable.progress
-   * @returns {float}
+   * @returns {number}
    */
   $.progress = function () {
     var totalDone = 0;
@@ -1264,12 +1265,14 @@ function Resumable(opts) {
 
   /**
    * ResumableFile constructor
+   * @name Resumable.ResumableFile
    * @type {ResumableFile}
    */
   $.ResumableFile = ResumableFile;
 
   /**
    * ResumableFile constructor
+   * @name Resumable.ResumableChunk
    * @type {ResumableChunk}
    */
   $.ResumableChunk = ResumableChunk;

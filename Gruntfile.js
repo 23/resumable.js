@@ -1,5 +1,5 @@
 module.exports = function(grunt) {
-  var browsers = grunt.option('browsers') && grunt.option('browsers').split(',') || ['Chrome'];
+  var browsers = grunt.option('browsers') && grunt.option('browsers').split(',');
   // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -16,7 +16,7 @@ module.exports = function(grunt) {
     karma: {
       options: {
         configFile: 'karma.conf.js',
-        browsers: browsers
+        browsers: browsers || ['Chrome']
       },
       watch: {
         autoWatch: true,
@@ -27,13 +27,13 @@ module.exports = function(grunt) {
       },
       travis: {
         singleRun: true,
-        // Two buggiest browsers
-//        browsers: ['sl_opera', 'sl_ie10'],
+        // Buggiest browser
+        browsers: browsers || ['sl_ie10'],
         // global config for SauceLabs
         sauceLabs: {
-          username: process.env.SAUCE_USERNAME,
-          accessKey: process.env.SAUCE_ACCESS_KEY,
-          startConnect: true,
+          username: grunt.option('sauce-username') || process.env.SAUCE_USERNAME,
+          accessKey: grunt.option('sauce-access-key') || process.env.SAUCE_ACCESS_KEY,
+          startConnect: grunt.option('sauce-local') ? false : true ,
           testName: 'Resumable.js'
         }
       }
@@ -50,13 +50,5 @@ module.exports = function(grunt) {
   // Release tasks
   grunt.registerTask('min', ['uglify']);
   // Development
-  grunt.registerTask('test', 'Run tests on travis.', function() {
-    var list = ['sl_opera', 'sl_ie10', 'sl_safari', 'sl_chorme', 'sl_firefox'];
-    list.forEach(function (browser) {
-      var config = grunt.config('karma.travis');
-      config.browsers = [browser];
-      grunt.config('karma.travis', config);
-      grunt.task.run(["karma:travis"]);
-    });
-  });
+  grunt.registerTask('test', ["karma:travis"]);
 };

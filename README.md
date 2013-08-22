@@ -197,13 +197,20 @@ tests on Chrome run:
 
 Or choose other browser
 
-   grunt karma:watch --browsers=Firefox,Chrome
+    grunt karma:watch --browsers=Firefox,Chrome
 
 Browsers should be comma separated and case sensitive.
-    
+
 To re-run tests just change any source or test file.
 
 Automated tests is running after every commit at travis-ci, current build status: [![Build Status](https://travis-ci.org/AidasK/resumable.js.png?branch=Next)](https://travis-ci.org/AidasK/resumable.js)
+
+### Running test on sauceLabs
+
+1. Connect to sauce labs https://saucelabs.com/docs/connect
+2. `grunt  test --sauce-local=true --sauce-username=**** --sauce-access-key=***`
+
+other browsers can be used with `--browsers` flag, available browsers: sl_opera,sl_iphone,sl_safari,sl_ie10,sl_chorme,sl_firefox
 
 ## Alternatives
 

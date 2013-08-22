@@ -23,7 +23,7 @@
  * @param {string} [opts.target]
  * @param {number} [opts.maxChunkRetries]
  * @param {number} [opts.chunkRetryInterval]
- * @param {Array} [opts.permanentErrors]
+ * @param {Array.<number>} [opts.permanentErrors]
  * @param {Function} [opts.generateUniqueIdentifier]
  * @constructor
  */
@@ -74,23 +74,7 @@ function Resumable(opts) {
   /**
    * Default options for resumable.js
    * @name Resumable.defaults
-   * @type {{
-   *  chunkSize: number,
-   *  forceChunkSize: boolean,
-   *  simultaneousUploads: number,
-   *  fileParameterName: string,
-   *  throttleProgressCallbacks: number,
-   *  query: {},
-   *  headers: {},
-   *  preprocess: null,
-   *  method: string,
-   *  prioritizeFirstAndLastChunk: boolean,
-   *  target: string, testChunks: boolean,
-   *  generateUniqueIdentifier: null,
-   *  maxChunkRetries: undefined,
-   *  chunkRetryInterval: undefined,
-   *  permanentErrors: Array
-   * }}
+   * @type {Object}
    */
   $.defaults = {
     chunkSize: 1024 * 1024,
@@ -194,26 +178,6 @@ function Resumable(opts) {
     var relativePath = file.webkitRelativePath || file.fileName || file.name;
     var size = file.size;
     return size + '-' + relativePath.replace(/[^0-9a-zA-Z_-]/img, '');
-  };
-
-  /**
-   * Check if array contains value
-   * @function
-   * @name $h.contains
-   * @param array
-   * @param test
-   * @returns {boolean}
-   */
-  $h.contains = function (array, test) {
-    var result = false;
-    $h.each(array, function (value) {
-      if (value == test) {
-        result = true;
-        return false;
-      }
-      return true;
-    });
-    return result;
   };
 
   /**
@@ -896,7 +860,7 @@ function Resumable(opts) {
         if ($.xhr.status == 200) {
           // HTTP 200, perfect
           return 'success';
-        } else if ($h.contains($.resumableObj.opts.permanentErrors, $.xhr.status)
+        } else if ($.resumableObj.opts.permanentErrors.indexOf($.xhr.status) > -1
             || $.retries >= $.resumableObj.opts.maxChunkRetries) {
           // HTTP 415/500/501, permanent error
           return 'error';
@@ -1179,6 +1143,17 @@ function Resumable(opts) {
   };
 
   /**
+   * Resume uploading.
+   * @function
+   * @name Resumable.resume
+   */
+  $.resume = function () {
+    $h.each($.files, function (file) {
+      file.resume();
+    });
+  };
+
+  /**
    * Pause uploading.
    * @function
    * @name Resumable.pause
@@ -1188,7 +1163,6 @@ function Resumable(opts) {
     $h.each($.files, function (file) {
       file.pause();
     });
-    $.fire('pause');
   };
 
   /**
@@ -1200,7 +1174,6 @@ function Resumable(opts) {
     for (var i = $.files.length - 1; i >= 0; i--) {
       $.files[i].cancel();
     }
-    $.fire('cancel');
   };
 
   /**

@@ -49,7 +49,7 @@ var Resumable = function(opts){
     generateUniqueIdentifier:null,
     maxChunkRetries:undefined,
     chunkRetryInterval:undefined,
-    permanentErrors:[415, 500, 501],
+    permanentErrors:[404, 415, 500, 501],
     maxFiles:undefined,
     maxFilesErrorCallback:function (files, errorCount) {
       var maxFiles = $.getOpt('maxFiles');

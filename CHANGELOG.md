@@ -15,6 +15,10 @@
  added to queue.
  - **progressCallbacksInterval** parameter added. Minimum interval between callbacks execution in
   milliseconds.
+ - **averageSpeed** and **currentSpeed** parameters added for `ResumableFile`. These params
+ accuracy can be adjusted with `speedSmoothingFactor` and `progressCallbacksInterval` parameters.
+ - **timeRemaining** method added for `ResumableFile`. Returns remaining time to upload in seconds. Accuracy is based on average speed.
+ - **sizeUploaded** method added for `ResumableFile`. Returns size uploaded in bytes.
 
 ## Breaking Changes
 

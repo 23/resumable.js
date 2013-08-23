@@ -55,7 +55,7 @@ You should allow for the same chunk to be uploaded more than once; this isn't st
 For every request, you can confirm reception in HTTP status codes (can be change through the `permanentErrors` option):
 
 * `200`: The chunk was accepted and correct. No need to re-upload.
-* `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload. 
+* `404`, `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload.
 * _Anything else_: Something went wrong, but try reuploading the file.
 
 ## Handling GET (or `test()` requests)
@@ -97,6 +97,10 @@ Available configuration options are:
 * `chunkRetryInterval` The number of milliseconds to wait before retrying a chunk on a non-permanent error.  Valid values are any positive integer and `undefined` for immediate retry. (Default: `undefined`)
 * `progressCallbacksInterval` The time interval in milliseconds between progress reports. Set it
 to 0 to handle each progress callback. (Default: `500`)
+* `speedSmoothingFactor` Used for calculating average upload speed. Number from 1 to 0. Set to 1
+and average upload speed wil be equal to current upload speed. For longer file uploads it is
+better set this number to 0.02, because time remaining estimation will be more accurate. This
+parameter must be adjusted together with `progressCallbacksInterval` parameter. (Default 0.1)
 
 
 #### Properties
@@ -149,6 +153,8 @@ added.
 * `.relativePath` The relative path to the file (defaults to file name if relative path doesn't exist)
 * `.size` Size in bytes of the file.
 * `.uniqueIdentifier` A unique identifier assigned to this file object. This value is included in uploads to the server for reference, but can also be used in CSS classes etc when building your upload UI.
+* `.averageSpeed` Average upload speed, bytes per second.
+* `.currentSpeed` Current upload speed, bytes per second.
 * `.chunks` An array of `ResumableChunk` items. You shouldn't need to dig into these.
 * `.paused` Indicated if file is paused.
 * `.error` Indicated if file has encountered an error.
@@ -163,6 +169,9 @@ added.
 * `.bootstrap()` Rebuild the state of a `ResumableFile` object, including reassigning chunks and XMLHttpRequest instances.
 * `.isUploading()` Returns a boolean indicating whether file chunks is uploading.
 * `.isComplete()` Returns a boolean indicating whether the file has completed uploading and received a server response.
+* `.sizeUploaded()` Returns size uploaded in bytes.
+* `.timeRemaining()` Returns remaining time to upload in seconds. Accuracy is based on average
+speed.
 * `.getExtension()` Returns file extension in lowercase.
 * `.getType()` Returns file type.
 

@@ -28,7 +28,7 @@ module.exports = function(grunt) {
       travis: {
         singleRun: true,
         // Buggiest browser
-        browsers: browsers || ['sl_ie10'],
+        browsers: browsers || ['sl_chorme'],
         // global config for SauceLabs
         sauceLabs: {
           username: grunt.option('sauce-username') || process.env.SAUCE_USERNAME,

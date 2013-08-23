@@ -17,6 +17,7 @@
  * @param {number} [opts.throttleProgressCallbacks]
  * @param {Object|Function} [opts.query]
  * @param {Object} [opts.headers]
+ * @param {bool} [opts.withCredentials]
  * @param {Function} [opts.preprocess]
  * @param {string} [opts.method]
  * @param {bool} [opts.prioritizeFirstAndLastChunk]
@@ -84,6 +85,7 @@ function Resumable(opts) {
     throttleProgressCallbacks: 0.5,
     query: {},
     headers: {},
+    withCredentials: false,
     preprocess: null,
     method: 'multipart',
     prioritizeFirstAndLastChunk: false,
@@ -706,6 +708,7 @@ function Resumable(opts) {
 
       // Append the relevant chunk and send it
       $.xhr.open("GET", $h.getTarget(params));
+      $.xhr.withCredentials = $.resumableObj.opts.withCredentials;
 
       // Add data from header options
       $h.each($.resumableObj.opts.headers, function (k, v) {
@@ -819,6 +822,7 @@ function Resumable(opts) {
       }
 
       $.xhr.open('POST', target);
+      $.xhr.withCredentials = $.resumableObj.opts.withCredentials;
       // Add data from header options
       $h.each($.resumableObj.opts.headers, function (k, v) {
         $.xhr.setRequestHeader(k, v);

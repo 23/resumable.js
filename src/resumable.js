@@ -232,8 +232,10 @@ function Resumable(opts) {
   var appendFilesFromFileList = function (fileList, event) {
     var files = [];
     $h.each(fileList, function (file) {
-      // directories have size == 0
-      if (!$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
+      // Directories have size `0` and name `.`
+      // Ignore already added files
+      if (!(!file.size && (file.name == '.' || file.fileName == '.')) &&
+          !$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
         var f = new ResumableFile($, file);
         if ($.fire('fileAdded', f, event)) {
           files.push(f);

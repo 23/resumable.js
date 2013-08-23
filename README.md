@@ -56,7 +56,7 @@ You should allow for the same chunk to be uploaded more than once; this isn't st
 For every request, you can confirm reception in HTTP status codes (can be change through the `permanentErrors` option):
 
 * `200`: The chunk was accepted and correct. No need to re-upload.
-* `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload. 
+* `404`, `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload. 
 * _Anything else_: Something went wrong, but try reuploading the file.
 
 ## Handling GET (or `test()` requests)

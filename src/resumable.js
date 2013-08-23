@@ -840,13 +840,12 @@ function Resumable(opts) {
       $.xhr = new XMLHttpRequest();
 
       // Progress
-      $.xhr.upload.addEventListener("progress", function (e) {
+      $.xhr.upload.addEventListener('progress', function (e) {
         $.callback('progress');
         $.loaded = e.loaded || 0;
       }, false);
       $.loaded = 0;
       $.pendingRetry = false;
-      $.callback('progress');
 
       // Done (either done, failed or retry)
       var doneHandler = function (e) {

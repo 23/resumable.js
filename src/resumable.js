@@ -15,6 +15,7 @@
  * @param {number} [opts.simultaneousUploads]
  * @param {string} [opts.fileParameterName]
  * @param {number} [opts.progressCallbacksInterval]
+ * @param {number} [opts.speedSmoothingFactor]
  * @param {Object|Function} [opts.query]
  * @param {Object} [opts.headers]
  * @param {bool} [opts.withCredentials]
@@ -68,7 +69,7 @@ function Resumable(opts) {
   /**
    * List of ResumableFile objects
    * @name Resumable.files
-   * @type {Array}
+   * @type {Array.<ResumableFile>}
    */
   $.files = [];
 
@@ -83,6 +84,7 @@ function Resumable(opts) {
     simultaneousUploads: 3,
     fileParameterName: 'file',
     progressCallbacksInterval: 500,
+    speedSmoothingFactor: 0.1,
     query: {},
     headers: {},
     withCredentials: false,
@@ -94,7 +96,7 @@ function Resumable(opts) {
     generateUniqueIdentifier: null,
     maxChunkRetries: undefined,
     chunkRetryInterval: undefined,
-    permanentErrors: [415, 500, 501]
+    permanentErrors: [404, 415, 500, 501]
   };
 
   /**
@@ -322,6 +324,36 @@ function Resumable(opts) {
     $.error = false;
 
     /**
+     * Average upload speed
+     * @name ResumableFile.averageSpeed
+     * @type {number}
+     */
+    $.averageSpeed = 0;
+
+    /**
+     * Current upload speed
+     * @name ResumableFile.currentSpeed
+     * @type {number}
+     */
+    $.currentSpeed = 0;
+
+    /**
+     * Date then progress was called last time
+     * @name ResumableFile._lastProgressCallback
+     * @type {number}
+     * @private
+     */
+    $._lastProgressCallback = Date.now();
+
+    /**
+     * Previously uploaded file size
+     * @name ResumableFile._prevUploadedSize
+     * @type {number}
+     * @private
+     */
+    $._prevUploadedSize = 0;
+
+    /**
      * Holds previous progress
      * @name ResumableFile._prevProgress
      * @type {number}
@@ -329,17 +361,39 @@ function Resumable(opts) {
      */
     $._prevProgress = 0;
 
+
+    /**
+     * Update speed parameters
+     * @link http://stackoverflow.com/questions/2779600/how-to-estimate-download-time-remaining-accurately
+     * @function
+     */
+    function measureSpeed() {
+      var smoothingFactor = $.resumableObj.opts.speedSmoothingFactor;
+      var timeSpan = Date.now() - $._lastProgressCallback;
+      var uploaded = $.sizeUploaded();
+      // Prevent negative upload speed after file upload resume
+      $.currentSpeed = Math.max((uploaded - $._prevUploadedSize) / timeSpan * 1000, 0);
+      $.averageSpeed = smoothingFactor * $.currentSpeed + (1 - smoothingFactor) * $.averageSpeed;
+      $._prevUploadedSize = uploaded;
+    }
+
     /**
      * Callback when something happens within the chunk
      * @function
      * @param {string} event can be 'progress', 'success', 'error' or 'retry'
      * @param {string} message
      */
-    var chunkEvent = function (event, message) {
+    function chunkEvent(event, message) {
       switch (event) {
         case 'progress':
+          if (Date.now() - $._lastProgressCallback <
+              $.resumableObj.opts.progressCallbacksInterval) {
+            break;
+          }
+          measureSpeed();
           $.resumableObj.fire('fileProgress', $);
           $.resumableObj.fire('progress');
+          $._lastProgressCallback = Date.now();
           break;
         case 'error':
           $.error = true;
@@ -362,7 +416,7 @@ function Resumable(opts) {
           $.resumableObj.fire('fileRetry', $);
           break;
       }
-    };
+    }
 
     /**
      * Pause file upload
@@ -503,6 +557,38 @@ function Resumable(opts) {
     };
 
     /**
+     * Count total size uploaded
+     * @name ResumableFile.sizeUploaded
+     * @function
+     * @returns {number}
+     */
+    $.sizeUploaded = function () {
+      var size = 0;
+      $h.each($.chunks, function (chunk) {
+        // can't sum only chunk.loaded values, because it is bigger than chunk size
+        if (chunk.status() == 'success') {
+          size += chunk.endByte - chunk.startByte;
+        } else {
+          size += chunk.loaded;
+        }
+      });
+      return size;
+    };
+
+    /**
+     * Time remaining in seconds
+     * @name ResumableFile.timeRemaining
+     * @function
+     * @returns {number}
+     */
+    $.timeRemaining = function () {
+      if (!$.averageSpeed) {
+        return 0;
+      }
+      return Math.floor(Math.max(file.size - $.sizeUploaded(), 0) / $.averageSpeed);
+    };
+
+    /**
      * Get file type
      * @name ResumableFile.getType
      * @function
@@ -575,13 +661,6 @@ function Resumable(opts) {
      * @type {Function}
      */
     $.callback = callback;
-
-    /**
-     * Date then progress was called last time
-     * @name ResumableChunk.lastProgressCallback
-     * @type {number}
-     */
-    $.lastProgressCallback = Date.now(); // Support from IE 9
 
     /**
      * Indicates if chunk existence was checked on the server
@@ -755,10 +834,7 @@ function Resumable(opts) {
 
       // Progress
       $.xhr.upload.addEventListener("progress", function (e) {
-        if (Date.now() - $.lastProgressCallback > $.resumableObj.opts.progressCallbacksInterval) {
-          $.callback('progress');
-          $.lastProgressCallback = Date.now();
-        }
+        $.callback('progress');
         $.loaded = e.loaded || 0;
       }, false);
       $.loaded = 0;

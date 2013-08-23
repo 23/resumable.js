@@ -855,11 +855,11 @@ function Resumable(opts) {
           $.resumableObj.uploadNextChunk();
         } else {
           $.callback('retry', $.message());
+          $.pendingRetry = true;
           $.abort();
           $.retries++;
-          var retryInterval =  $.resumableObj.opts.chunkRetryInterval;
+          var retryInterval = $.resumableObj.opts.chunkRetryInterval;
           if (retryInterval !== undefined) {
-            $.pendingRetry = true;
             setTimeout($.send, retryInterval);
           } else {
             $.send();

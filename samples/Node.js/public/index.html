@@ -48,9 +48,9 @@
       <script>
         (function () {
           var r = new Resumable({
-            target:'/upload',
-            chunkSize:1024*1024,
-            testChunks:false
+            target: '/upload',
+            chunkSize: 1024*1024,
+            testChunks: false
           });
           // Resumable.js isn't supported, fall back on a different method
           if (!r.support) {
@@ -70,6 +70,7 @@
             $('.resumable-list').append(
               '<li class="resumable-file resumable-file-'+file.uniqueIdentifier+'">' +
               'Uploading <span class="resumable-file-name"></span> ' +
+              '<span class="resumable-file-size"></span> ' +
               '<span class="resumable-file-progress"></span>' +
               '<span class="resumable-file-pause">' +
               ' <img src="pause.png" title="Pause upload" />' +
@@ -83,6 +84,7 @@
             );
             var $self = $('.resumable-file-'+file.uniqueIdentifier);
             $self.find('.resumable-file-name').text(file.name);
+            $self.find('.resumable-file-size').text(readablizeBytes(file.size));
             $self.find('.resumable-file-pause').on('click', function () {
               file.pause();
               $self.find('.resumable-file-pause').hide();
@@ -98,7 +100,7 @@
               $self.remove();
             });
           });
-          r.on('afterFilesAdded', function(file) {
+          r.on('filesSubmitted', function(file) {
             r.upload();
           });
           r.on('complete', function(){
@@ -119,7 +121,10 @@
           });
           r.on('fileProgress', function(file){
             // Handle progress for both the file and the overall upload
-            $('.resumable-file-'+file.uniqueIdentifier+' .resumable-file-progress').html(Math.floor(file.progress()*100) + '%');
+            $('.resumable-file-'+file.uniqueIdentifier+' .resumable-file-progress')
+              .html(Math.floor(file.progress()*100) + '% '
+                + readablizeBytes(file.averageSpeed) + '/s '
+                + secondsToStr(file.timeRemaining()) + ' remaining') ;
             $('.progress-bar').css({width:Math.floor(r.progress()*100) + '%'});
           });
           r.on('uploadStart', function(){
@@ -151,6 +156,35 @@
             resumable: r
           };
         })();
+
+        function readablizeBytes(bytes) {
+          var s = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB'];
+          var e = Math.floor(Math.log(bytes) / Math.log(1024));
+          return (bytes / Math.pow(1024, e)).toFixed(2) + " " + s[e];
+        }
+        function secondsToStr (temp) {
+          function numberEnding (number) {
+            return (number > 1) ? 's' : '';
+          }
+          var years = Math.floor(temp / 31536000);
+          if (years) {
+            return years + ' year' + numberEnding(years);
+          }
+          var days = Math.floor((temp %= 31536000) / 86400);
+          if (days) {
+            return days + ' day' + numberEnding(days);
+          }
+          var hours = Math.floor((temp %= 86400) / 3600);
+          if (hours) {
+            return hours + ' hour' + numberEnding(hours);
+          }
+          var minutes = Math.floor((temp %= 3600) / 60);
+          if (minutes) {
+            return minutes + ' minute' + numberEnding(minutes);
+          }
+          var seconds = temp % 60;
+          return seconds + ' second' + numberEnding(seconds);
+        }
       </script>
 
     </div>

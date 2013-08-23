@@ -13,6 +13,7 @@
  * @param {number} [opts.chunkSize]
  * @param {bool} [opts.forceChunkSize]
  * @param {number} [opts.simultaneousUploads]
+ * @param {bool} [opts.singleFile]
  * @param {string} [opts.fileParameterName]
  * @param {number} [opts.progressCallbacksInterval]
  * @param {number} [opts.speedSmoothingFactor]
@@ -82,6 +83,7 @@ function Resumable(opts) {
     chunkSize: 1024 * 1024,
     forceChunkSize: false,
     simultaneousUploads: 3,
+    singleFile: false,
     fileParameterName: 'file',
     progressCallbacksInterval: 500,
     speedSmoothingFactor: 0.1,
@@ -240,6 +242,9 @@ function Resumable(opts) {
     });
     if ($.fire('filesAdded', files)) {
       $h.each(files, function (file) {
+        if ($.opts.singleFile && $.files.length > 0) {
+          $.removeFile($.files[0]);
+        }
         $.files.push(file);
       });
     }
@@ -1108,9 +1113,10 @@ function Resumable(opts) {
    * @name Resumable.assignBrowse
    * @param {Element|Array.<Element>} domNodes
    * @param {boolean} isDirectory Pass in true to allow directories to
+   * @param {boolean} singleFile prevent multi file upload
    * be selected (Chrome only).
    */
-  $.assignBrowse = function (domNodes, isDirectory) {
+  $.assignBrowse = function (domNodes, isDirectory, singleFile) {
     if (typeof domNodes.length == 'undefined') domNodes = [domNodes];
 
     // We will create an <input> and overlay it on the domNode
@@ -1135,16 +1141,11 @@ function Resumable(opts) {
         input.style.cursor = 'pointer';
         domNode.appendChild(input);
       }
-      var maxFiles = $.opts.maxFiles;
-      if (typeof(maxFiles) === 'undefined' || maxFiles != 1) {
+      if (!$.opts.singleFile && !singleFile) {
         input.setAttribute('multiple', 'multiple');
-      } else {
-        input.removeAttribute('multiple');
       }
       if (isDirectory) {
         input.setAttribute('webkitdirectory', 'webkitdirectory');
-      } else {
-        input.removeAttribute('webkitdirectory');
       }
       // When new files are added, simply append them to the overall list
       input.addEventListener('change', function (e) {

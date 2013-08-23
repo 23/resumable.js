@@ -19,6 +19,7 @@
  accuracy can be adjusted with `speedSmoothingFactor` and `progressCallbacksInterval` parameters.
  - **timeRemaining** method added for `ResumableFile`. Returns remaining time to upload in seconds. Accuracy is based on average speed.
  - **sizeUploaded** method added for `ResumableFile`. Returns size uploaded in bytes.
+ - **singleFile** parameter added. Then enabled, uploaded file will replace current one.
 
 ## Breaking Changes
 

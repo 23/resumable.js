@@ -78,7 +78,8 @@ The object is loaded with a configuation hash:
     
 Available configuration options are:
 
-* `target` The target URL for the multipart POST request (Default: `/`)
+* `target` The target URL for the multipart POST request. (Default: `/`)
+* `singleFile` Enable multi file upload. (Default: false)
 * `chunkSize` The size in bytes of each uploaded chunk of data. The last uploaded chunk will be at least this size and up to two the size, see [Issue #51](https://github.com/23/resumable.js/issues/51) for details and reasons. (Default: `1*1024*1024`)
 * `forceChunkSize` Force all chunks to be less or equal than chunkSize. Otherwise, the last chunk will be greater than or equal to `chunkSize`. (Default: `false`)
 * `simultaneousUploads` Number of simultaneous uploads (Default: `3`)
@@ -111,7 +112,8 @@ parameter must be adjusted together with `progressCallbacksInterval` parameter. 
 
 #### Methods
 
-* `.assignBrowse(domNodes, isDirectory)` Assign a browse action to one or more DOM nodes.  Pass in `true` to allow directories to be selected (Chrome only).
+* `.assignBrowse(domNodes, isDirectory, singleFile)` Assign a browse action to one or more DOM nodes.  Pass in `true` to allow directories to be selected (Chrome only). To prevent multiple file uploads
+set singleFile to true.
 * `.assignDrop(domNodes)` Assign one or more DOM nodes as a drop target.
 * `.on(event, callback)` Listen for event from Resumable.js (see below)
 * `.upload()` Start or resume uploading.

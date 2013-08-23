@@ -242,7 +242,7 @@ function Resumable(opts) {
         }
       }
     });
-    if ($.fire('filesAdded', files)) {
+    if ($.fire('filesAdded', files, event)) {
       $h.each(files, function (file) {
         if ($.opts.singleFile && $.files.length > 0) {
           $.removeFile($.files[0]);
@@ -250,7 +250,7 @@ function Resumable(opts) {
         $.files.push(file);
       });
     }
-    $.fire('filesSubmitted', files);
+    $.fire('filesSubmitted', files, event);
   };
 
   /**
@@ -1150,7 +1150,7 @@ function Resumable(opts) {
       }
       // When new files are added, simply append them to the overall list
       input.addEventListener('change', function (e) {
-        appendFilesFromFileList(e.target.files);
+        appendFilesFromFileList(e.target.files, e);
         e.target.value = '';
       }, false);
     });

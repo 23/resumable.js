@@ -13,6 +13,8 @@
  resuming.
  - **filesSubmitted** event added. Can be used to start file upload. Event is thrown then files are
  added to queue.
+ - **progressCallbacksInterval** parameter added. Minimum interval between callbacks execution in
+  milliseconds.
 
 ## Breaking Changes
 
@@ -26,3 +28,5 @@
  - **fileAdded**, **filesAdded** events are thrown before file is added to upload queue. This means
  that calling **Resumable.upload()** method in these events will not start uploading current
  files. To start upload use **filesSubmitted** event instead.
+ - **throttleProgressCallbacks** parameter was replaced with **progressCallbacksInterval** and it
+  is now measured in milliseconds.

@@ -14,7 +14,7 @@
  * @param {bool} [opts.forceChunkSize]
  * @param {number} [opts.simultaneousUploads]
  * @param {string} [opts.fileParameterName]
- * @param {number} [opts.throttleProgressCallbacks]
+ * @param {number} [opts.progressCallbacksInterval]
  * @param {Object|Function} [opts.query]
  * @param {Object} [opts.headers]
  * @param {bool} [opts.withCredentials]
@@ -82,7 +82,7 @@ function Resumable(opts) {
     forceChunkSize: false,
     simultaneousUploads: 3,
     fileParameterName: 'file',
-    throttleProgressCallbacks: 0.5,
+    progressCallbacksInterval: 500,
     query: {},
     headers: {},
     withCredentials: false,
@@ -681,14 +681,13 @@ function Resumable(opts) {
       $.xhr = new XMLHttpRequest();
 
       var testHandler = function (e) {
-        if (!$.fileObj.paused) {
-          $.tested = true;// Error might be caused by file pause method
-        }
         var status = $.status();
         if (status == 'success') {
+          $.tested = true;
           $.callback(status, $.message());
           $.resumableObj.uploadNextChunk();
-        } else if (!$.fileObj.paused) {
+        } else if (!$.fileObj.paused) {// Error might be caused by file pause method
+          $.tested = true;
           $.send();
         }
       };
@@ -756,8 +755,7 @@ function Resumable(opts) {
 
       // Progress
       $.xhr.upload.addEventListener("progress", function (e) {
-        if (Date.now() - $.lastProgressCallback >
-            $.resumableObj.opts.throttleProgressCallbacks * 1000) {
+        if (Date.now() - $.lastProgressCallback > $.resumableObj.opts.progressCallbacksInterval) {
           $.callback('progress');
           $.lastProgressCallback = Date.now();
         }

@@ -239,7 +239,7 @@ function Resumable(opts) {
         $.files.push(file);
       });
     }
-    $.fire('afterFilesAdded', files);
+    $.fire('filesSubmitted', files);
   };
 
   /**

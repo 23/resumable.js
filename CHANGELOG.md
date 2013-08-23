@@ -11,7 +11,8 @@
  - **fileProgress** and **progress** events are always asynchronous.
  - **ResumableFile.pause()** and **ResumableFile.resume()** methods for single file pausing and
  resuming.
- - **afterFilesAdded** event added. Can be used to start automatically file upload.
+ - **filesSubmitted** event added. Can be used to start file upload. Event is thrown then files are
+ added to queue.
 
 ## Breaking Changes
 
@@ -24,4 +25,4 @@
  - **cancel** event was removed. Event was always called after **Resumable.cancel()** function.
  - **fileAdded**, **filesAdded** events are thrown before file is added to upload queue. This means
  that calling **Resumable.upload()** method in these events will not start uploading current
- files. To start upload use **afterFilesAdded** event instead.
+ files. To start upload use **filesSubmitted** event instead.

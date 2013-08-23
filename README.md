@@ -126,7 +126,7 @@ this means that calling `Resumable.upload()` function will not start current fil
 Optionally, you can use the browser `event` object from when the file was
 added.
 * `.filesAdded(array)` Same as fileAdded, but used for multiple file validation.
-* `.afterFilesAdded(array)` Can be used to start upload of currently added files.
+* `.filesSubmitted(array)` Can be used to start upload of currently added files.
 * `.fileRetry(file)` Something went wrong during upload of a specific file, uploading is being retried.
 * `.fileError(file, message)` An error occured during upload of a specific file.
 * `.uploadStart()` Upload has been started on the Resumable object.

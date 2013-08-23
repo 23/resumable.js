@@ -91,7 +91,7 @@ describe('upload file', function() {
     expect(events.length).toBe(4);
     expect(events[0]).toBe('fileAdded');
     expect(events[1]).toBe('filesAdded');
-    expect(events[2]).toBe('afterFilesAdded');
+    expect(events[2]).toBe('filesSubmitted');
     expect(events[3]).toBe('uploadStart');
     // Async
     requests[0].respond(200);

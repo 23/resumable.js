@@ -13,3 +13,4 @@
 
 # Tests
 sauce_connect.log
+/coverage

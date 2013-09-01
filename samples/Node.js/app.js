@@ -12,7 +12,7 @@ app.use(express.bodyParser());
 app.post('/upload', function(req, res){
   resumable.post(req, function(status, filename, original_filename, identifier){
     console.log('POST', status, original_filename, identifier);
-    res.send(status, {
+    res.send(200, {
       // NOTE: Uncomment this funciton to enable cross-domain request.
       //'Access-Control-Allow-Origin': '*'
     });
@@ -34,7 +34,7 @@ app.post('/upload', function(req, res){
 app.get('/upload', function(req, res){
   resumable.get(req, function(status, filename, original_filename, identifier){
     console.log('GET', status);
-    res.send(status, (status == 'found' ? 200 : 404));
+    res.send(200, (status == 'found' ? 200 : 404));
   });
 });
 

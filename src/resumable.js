@@ -385,12 +385,14 @@ function Resumable(opts) {
     }
 
     /**
-     * Callback when something happens within the chunk
+     * For internal usage only.
+     * Callback when something happens within the chunk.
+     * @name ResumableFile.chunkEvent
      * @function
      * @param {string} event can be 'progress', 'success', 'error' or 'retry'
      * @param {string} message
      */
-    function chunkEvent(event, message) {
+    $.chunkEvent = function (event, message) {
       switch (event) {
         case 'progress':
           if (Date.now() - $._lastProgressCallback <
@@ -423,7 +425,7 @@ function Resumable(opts) {
           $.resumableObj.fire('fileRetry', $);
           break;
       }
-    }
+    };
 
     /**
      * Pause file upload
@@ -495,7 +497,7 @@ function Resumable(opts) {
       );
       for (var offset = 0; offset < chunks; offset++) {
         $.chunks.push(
-          new ResumableChunk($.resumableObj, $, offset, chunkEvent)
+          new ResumableChunk($.resumableObj, $, offset)
         );
       }
     };
@@ -511,19 +513,14 @@ function Resumable(opts) {
         return 1;
       }
       // Sum up progress across everything
-      var ret = 0;
-      var error = false;
+      var bytesLoaded = 0;
       $h.each($.chunks, function (c) {
-        if (c.status() == 'error') {
-          error = true;
-        }
-        ret += c.progress(true); // get chunk progress relative to entire file
+        bytesLoaded += c.progress(); // get chunk progress relative to entire file
       });
-      ret = (error ? 1 : (ret > 0.999 ? 1 : ret));
+      var percent = bytesLoaded / $.size;
       // We don't want to lose percentages when an upload is paused
-      ret = Math.max($._prevProgress, ret);
-      $._prevProgress = ret;
-      return ret;
+      $._prevProgress = Math.max($._prevProgress, percent > 0.999 ? 1 : percent);
+      return $._prevProgress;
     };
 
     /**
@@ -624,10 +621,9 @@ function Resumable(opts) {
    * @param {Resumable} resumableObj
    * @param {ResumableFile} fileObj
    * @param {number} offset
-   * @param {Function} callback
    * @constructor
    */
-  function ResumableChunk(resumableObj, fileObj, offset, callback) {
+  function ResumableChunk(resumableObj, fileObj, offset) {
     /**
      * Alias for this
      * @type {ResumableChunk}
@@ -663,13 +659,6 @@ function Resumable(opts) {
     $.offset = offset;
 
     /**
-     * A callback function to report chunk progress
-     * @name ResumableChunk.callback
-     * @type {Function}
-     */
-    $.callback = callback;
-
-    /**
      * Indicates if chunk existence was checked on the server
      * @name ResumableChunk.tested
      * @type {boolean}
@@ -698,11 +687,18 @@ function Resumable(opts) {
     $.preprocessState = 0;
 
     /**
-     * Bytes transferred
+     * Bytes transferred from total request size
      * @name ResumableChunk.loaded
      * @type {number}
      */
     $.loaded = 0;
+
+    /**
+     * Total request size
+     * @name ResumableChunk.total
+     * @type {number}
+     */
+    $.total = 0;
 
     /**
      * Size of a chunk
@@ -765,41 +761,10 @@ function Resumable(opts) {
     $.test = function () {
       // Set up request and listen for event
       $.xhr = new XMLHttpRequest();
-
-      var testHandler = function (e) {
-        var status = $.status();
-        if (status == 'success') {
-          $.tested = true;
-          $.callback(status, $.message());
-          $.resumableObj.uploadNextChunk();
-        } else if (!$.fileObj.paused) {// Error might be caused by file pause method
-          $.tested = true;
-          $.send();
-        }
-      };
       $.xhr.addEventListener("load", testHandler, false);
       $.xhr.addEventListener("error", testHandler, false);
-
-      // Add data from the query options
-      var params = [];
-      var query = $.resumableObj.opts.query;
-      if (typeof query == "function") {
-        query = query($.fileObj, $);
-      }
-      query = $h.extend({}, $.getParams(), query);
-      $h.each(query, function (k, v) {
-        params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
-      });
-
-      // Append the relevant chunk and send it
-      $.xhr.open("GET", $h.getTarget(params));
-      $.xhr.withCredentials = $.resumableObj.opts.withCredentials;
-
-      // Add data from header options
-      $h.each($.resumableObj.opts.headers, function (k, v) {
-        $.xhr.setRequestHeader(k, v);
-      });
-      $.xhr.send(null);
+      var data = prepareXhrRequest('GET');
+      $.xhr.send(data);
     };
 
     /**
@@ -836,77 +801,24 @@ function Resumable(opts) {
         return;
       }
 
-      // Set up request and listen for event
-      $.xhr = new XMLHttpRequest();
-
-      // Progress
-      $.xhr.upload.addEventListener('progress', function (e) {
-        $.callback('progress');
-        $.loaded = e.loaded || 0;
-      }, false);
       $.loaded = 0;
+      $.total = 0;
       $.pendingRetry = false;
 
-      // Done (either done, failed or retry)
-      var doneHandler = function (e) {
-        var status = $.status();
-        if (status == 'success' || status == 'error') {
-          $.callback(status, $.message());
-          $.resumableObj.uploadNextChunk();
-        } else {
-          $.callback('retry', $.message());
-          $.pendingRetry = true;
-          $.abort();
-          $.retries++;
-          var retryInterval = $.resumableObj.opts.chunkRetryInterval;
-          if (retryInterval !== undefined) {
-            setTimeout($.send, retryInterval);
-          } else {
-            $.send();
-          }
-        }
-      };
-      $.xhr.addEventListener("load", doneHandler, false);
-      $.xhr.addEventListener("error", doneHandler, false);
-
-      // Mix in custom data
-      var customQuery = $.resumableObj.opts.query;
-      if (typeof customQuery == "function") {
-        customQuery = customQuery($.fileObj, $);
-      }
-      var query = $h.extend({}, $.getParams(), customQuery);
-
       var func = ($.fileObj.file.slice ? 'slice' :
-          ($.fileObj.file.mozSlice ? 'mozSlice' :
+        ($.fileObj.file.mozSlice ? 'mozSlice' :
           ($.fileObj.file.webkitSlice ? 'webkitSlice' :
             'slice')));
       var bytes = $.fileObj.file[func]($.startByte, $.endByte);
-      var data = null;
-      var target = $.resumableObj.opts.target;
 
-      if ($.resumableObj.opts.method === 'octet') {
-        // Add data from the query options
-        data = bytes;
-        var params = [];
-        $h.each(query, function (k, v) {
-          params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
-        });
-        target = $h.getTarget(params);
-      } else {
-        // Add data from the query options
-        data = new FormData();
-        $h.each(query, function (k, v) {
-          data.append(k, v);
-        });
-        data.append($.resumableObj.opts.fileParameterName, bytes);
-      }
+      // Set up request and listen for event
+      $.xhr = new XMLHttpRequest();
+      $.xhr.upload.addEventListener('progress', progressHandler, false);
+      $.xhr.addEventListener("load", doneHandler, false);
+      $.xhr.addEventListener("error", doneHandler, false);
 
-      $.xhr.open('POST', target);
-      $.xhr.withCredentials = $.resumableObj.opts.withCredentials;
-      // Add data from header options
-      $h.each($.resumableObj.opts.headers, function (k, v) {
-        $.xhr.setRequestHeader(k, v);
-      });
+      var data = prepareXhrRequest('POST', $.resumableObj.opts.method, bytes);
+
       $.xhr.send(data);
     };
 
@@ -972,14 +884,9 @@ function Resumable(opts) {
      * Get upload progress
      * @function
      * @name ResumableChunk.progress
-     * @param {boolean} relative
      * @returns {number}
      */
-    $.progress = function (relative) {
-      if (typeof(relative) === 'undefined') {
-        relative = false;
-      }
-      var factor = (relative ? ($.endByte - $.startByte) / $.fileObjSize : 1);
+    $.progress = function () {
       if ($.pendingRetry) {
         return 0;
       }
@@ -987,13 +894,109 @@ function Resumable(opts) {
       switch (s) {
         case 'success':
         case 'error':
-          return factor;
+          return 1;
         case 'pending':
           return 0;
         default:
-          return $.loaded / ($.endByte - $.startByte) * factor;
+          return $.total > 0 ? $.loaded / $.total : 0;
       }
     };
+
+    /**
+     * Prepare Xhr request. Set query, headers and data
+     * @param {string} method GET or POST
+     * @param {string} [paramsMethod] octet or form
+     * @param {Blob} [blob] to send
+     * @returns {FormData|Blob|Null} data to send
+     */
+    function prepareXhrRequest(method, paramsMethod, blob) {
+      // Add data from the query options
+      var query = $.resumableObj.opts.query;
+      if (typeof query == "function") {
+        query = query($.fileObj, $);
+      }
+      query = $h.extend($.getParams(), query);
+
+      var target = $.resumableObj.opts.target;
+      var data = null;
+      if (method == 'GET' || paramsMethod == 'octet') {
+        // Add data from the query options
+        var params = [];
+        $h.each(query, function (k, v) {
+          params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
+        });
+        target = $h.getTarget(params);
+        data = blob || null;
+      } else {
+        // Add data from the query options
+        data = new FormData();
+        $h.each(query, function (k, v) {
+          data.append(k, v);
+        });
+        data.append($.resumableObj.opts.fileParameterName, blob);
+      }
+
+      $.xhr.open(method, target);
+      $.xhr.withCredentials = $.resumableObj.opts.withCredentials;
+
+      // Add data from header options
+      $h.each($.resumableObj.opts.headers, function (k, v) {
+        $.xhr.setRequestHeader(k, v);
+      });
+
+      return data;
+    }
+
+    /**
+     * Catch progress event
+     * @param {ProgressEvent} event
+     */
+    function progressHandler(event) {
+      if (event.lengthComputable) {
+        $.loaded = event.loaded ;
+        $.total = event.total;
+      }
+      $.fileObj.chunkEvent('progress');
+    }
+
+    /**
+     * Catch test event
+     * @param {Event} event
+     */
+    function testHandler(event) {
+      var status = $.status();
+      if (status == 'success') {
+        $.tested = true;
+        $.fileObj.chunkEvent(status, $.message());
+        $.resumableObj.uploadNextChunk();
+      } else if (!$.fileObj.paused) {// Error might be caused by file pause method
+        $.tested = true;
+        $.send();
+      }
+    }
+
+    /**
+     * Upload has stopped
+     * @param {Event} event
+     */
+    function doneHandler(event) {
+      var status = $.status();
+      if (status == 'success' || status == 'error') {
+        $.fileObj.chunkEvent(status, $.message());
+        $.resumableObj.uploadNextChunk();
+      } else {
+        $.fileObj.chunkEvent('retry', $.message());
+        $.pendingRetry = true;
+        $.abort();
+        $.retries++;
+        var retryInterval = $.resumableObj.opts.chunkRetryInterval;
+        if (retryInterval !== undefined) {
+          setTimeout($.send, retryInterval);
+        } else {
+          $.send();
+        }
+      }
+    }
   }
 
   //

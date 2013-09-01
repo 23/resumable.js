@@ -1,4 +1,4 @@
-describe('ResumableFile helper functions', function() {
+describe('ResumableFile functions', function() {
 
   /**
    * @type {Resumable}

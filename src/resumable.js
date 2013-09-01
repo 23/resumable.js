@@ -453,6 +453,8 @@ function Resumable(opts) {
      * @function
      */
     $.abort = function () {
+      $.currentSpeed = 0;
+      $.averageSpeed = 0;
       $h.each($.chunks, function (c) {
         if (c.status() == 'uploading') {
           c.abort();

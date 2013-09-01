@@ -25,6 +25,13 @@ module.exports = function(grunt) {
       continuous: {
         singleRun: true
       },
+      coverage: {
+        singleRun: true,
+        reporters: ['progress', 'coverage'],
+        preprocessors: {
+          'src/*.js': 'coverage'
+        }
+      },
       travis: {
         singleRun: true,
         // Buggiest browser

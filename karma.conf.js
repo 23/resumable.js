@@ -68,6 +68,7 @@ module.exports = function(config) {
     // if true, it capture browsers, run tests and exit
     singleRun: false,
 
+
     // define SL browsers
     customLaunchers: {
       sl_opera: {
@@ -105,6 +106,12 @@ module.exports = function(config) {
         platform: 'Windows 7',
         version: '21'
       }
+    },
+
+
+    coverageReporter: {
+      type : 'html',
+      dir : 'coverage/'
     }
   });
 };

@@ -12,7 +12,6 @@ module.exports = function(grunt) {
         dest: 'build/resumable.min.js'
       }
     },
-    watch: {},
     karma: {
       options: {
         configFile: 'karma.conf.js',

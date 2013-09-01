@@ -45,6 +45,8 @@ describe('upload file', function() {
     requests[0].respond(200);
     expect(file.isComplete()).toBeTruthy();
     expect(file.isUploading()).toBeFalsy();
+    expect(file.progress()).toBe(1);
+    expect(resumable.progress()).toBe(1);
   });
 
   it('should track file upload status with lots of chunks', function() {
@@ -71,6 +73,7 @@ describe('upload file', function() {
     expect(file.isComplete()).toBeTruthy();
     expect(file.isUploading()).toBeFalsy();
     expect(file.progress()).toBe(1);
+    expect(resumable.progress()).toBe(1);
   });
 
   it('should throw expected events', function () {
@@ -155,8 +158,11 @@ describe('upload file', function() {
     // Upload finished
     expect(files[0].isUploading()).toBeFalsy();
     expect(files[0].isComplete()).toBeTruthy();
+    expect(files[0].progress()).toBe(1);
     expect(files[1].isUploading()).toBeFalsy();
     expect(files[1].isComplete()).toBeTruthy();
+    expect(files[1].progress()).toBe(1);
+    expect(resumable.progress()).toBe(1);
   });
 
   it('should retry file', function () {

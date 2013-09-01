@@ -517,7 +517,7 @@ function Resumable(opts) {
       // Sum up progress across everything
       var bytesLoaded = 0;
       $h.each($.chunks, function (c) {
-        bytesLoaded += c.progress(); // get chunk progress relative to entire file
+        bytesLoaded += c.progress() * (c.endByte - c.startByte); // get chunk progress relative to entire file
       });
       var percent = bytesLoaded / $.size;
       // We don't want to lose percentages when an upload is paused

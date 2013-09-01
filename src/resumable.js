@@ -96,8 +96,8 @@ function Resumable(opts) {
     target: '/',
     testChunks: true,
     generateUniqueIdentifier: null,
-    maxChunkRetries: undefined,
-    chunkRetryInterval: undefined,
+    maxChunkRetries: 0,
+    chunkRetryInterval: null,
     permanentErrors: [404, 415, 500, 501]
   };
 
@@ -992,7 +992,7 @@ function Resumable(opts) {
         $.abort();
         $.retries++;
         var retryInterval = $.resumableObj.opts.chunkRetryInterval;
-        if (retryInterval !== undefined) {
+        if (retryInterval !== null) {
           setTimeout($.send, retryInterval);
         } else {
           $.send();

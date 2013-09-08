@@ -1,3 +1,6 @@
+# Resumable.js has moved to [resumable2](https://github.com/resumable2/) organization. Watch further library development at https://github.com/resumable2/resumable.js.
+
+
 ## Resumable.js v2
 
 Resumable.js is a JavaScript library providing multiple simultaneous, stable and resumable uploads via the HTML5 File API. 

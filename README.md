@@ -1,4 +1,5 @@
-# Resumable.js has moved to [resumable2](https://github.com/resumable2/) organization. Watch further library development at https://github.com/resumable2/resumable.js.
+# Resumable.js v2 has moved to [resumable2](https://github.com/resumable2/) organization. Watch further library development at [resumable2/resumable.js](https://github.com/resumable2/resumable.js).
+
 
 
 ## Resumable.js v2

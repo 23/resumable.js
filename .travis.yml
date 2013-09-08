@@ -1,0 +1,21 @@
+language: node_js
+node_js:
+  - 0.10
+
+env:
+  global:
+  - secure: |-
+      cJDMLiB+2YgDKiP1omLz3q5NdVSEQ+tYbIourw9yYUp/s0kUzsHxHBtrrLPAhMpPWH2woZdbDcFEetK4
+      LPvM6K3eju+9Gol1u+GRmRmQ8cQMdWlMTHHkvflqzzCkUyumQBjXfq3sLBaKKwMuCBX5fy8HeM4ai6nb
+      +W3LlvCPXKg=
+  - secure: |-
+      bSn7SXgjPSAJxMJUreIMvHNPFMGuYXKULvMp8I7aWa7UUp/2noUho8k6JYO0ZFq2ZAYt0+x1C5bKWk4Z
+      JFSHjuTRbV6aIHPL1nq2vAxDaCAoQAdQpQcEWd2X9WFs8+j5JCZhMmIIj9VcbAJiUVm9nzgu0+0uxU6o
+      w4+kWxBf8uY=
+
+before_script:
+  - sh -e /etc/init.d/xvfb start
+  - npm install --quiet -g grunt-cli karma
+  - npm install
+
+script: grunt

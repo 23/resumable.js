@@ -1,0 +1,43 @@
+{
+  "name": "resumable.js",
+  "version": "2.0.0",
+  "description": "Resumable.js is a JavaScript library providing multiple simultaneous, stable and resumable uploads via the HTML5 File API",
+  "main": "resumable.js",
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/AidasK/resumable.js.git"
+  },
+  "keywords": [
+    "resumable.js",
+    "file upload",
+    "resumable upload",
+    "chunk upload",
+    "html5 upload",
+    "javascript upload",
+    "upload"
+  ],
+  "author": "",
+  "license": "MIT",
+  "gitHead": "75d9526a46767454ca304ad257d0cef448815f1a",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/AidasK/resumable.js/issues"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-uglify": "~0.2.2",
+    "karma-chrome-launcher": "~0.1.0",
+    "karma-firefox-launcher": "~0.1.0",
+    "karma-ie-launcher": "~0.1.1",
+    "karma-jasmine": "~0.1.0",
+    "karma": "~0.10.1",
+    "grunt-karma": "~0.6.1",
+    "grunt-saucelabs": "~4.0.4",
+    "karma-sauce-launcher": "~0.1.0",
+    "sinon": "~1.7.3",
+    "karma-coverage": "~0.1.0"
+  }
+}

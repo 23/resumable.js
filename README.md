@@ -1,13 +1,16 @@
-## What is Resumable.js
+# Resumable.js v2 has moved to [resumable2](https://github.com/resumable2/) organization. Watch further library development at [resumable2/resumable.js](https://github.com/resumable2/resumable.js).
+
+
+
+## Resumable.js v2
 
 Resumable.js is a JavaScript library providing multiple simultaneous, stable and resumable uploads via the HTML5 File API. 
 
 The library is designed to introduce fault-tolerance into the upload of large files through HTTP. This is done by splitting each file into small chunks. Then, whenever the upload of a chunk fails, uploading is retried until the procedure completes. This allows uploads to automatically resume uploading after a network connection is lost either locally or to the server. Additionally, it allows for users to pause, resume and even recover uploads without losing state because only the currently uploading chunks will be aborted, not the entire upload.
 
-Resumable.js does not have any external dependencies other than the `HTML5 File API`. This is relied on for the ability to chunk files into smaller pieces. Currently, this means that support is limited to Firefox 4+, Chrome 11+ and Safari 6+.
+Resumable.js does not have any external dependencies other than the `HTML5 File API`. This is relied on for the ability to chunk files into smaller pieces. Currently, this means that support is limited to Firefox 4+, Chrome 11+, Safari 6+ and Internet Explorer 10+.
 
 Samples and examples are available in the `samples/` folder. Please push your own as Markdown to help document the project.
-
 
 ## How can I use it?
 
@@ -56,7 +59,7 @@ You should allow for the same chunk to be uploaded more than once; this isn't st
 For every request, you can confirm reception in HTTP status codes (can be change through the `permanentErrors` option):
 
 * `200`: The chunk was accepted and correct. No need to re-upload.
-* `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload. 
+* `404`, `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload.
 * _Anything else_: Something went wrong, but try reuploading the file.
 
 ## Handling GET (or `test()` requests)
@@ -79,26 +82,31 @@ The object is loaded with a configuation hash:
     
 Available configuration options are:
 
-* `target` The target URL for the multipart POST request (Default: `/`)
+* `target` The target URL for the multipart POST request. (Default: `/`)
+* `singleFile` Enable multi file upload. (Default: false)
 * `chunkSize` The size in bytes of each uploaded chunk of data. The last uploaded chunk will be at least this size and up to two the size, see [Issue #51](https://github.com/23/resumable.js/issues/51) for details and reasons. (Default: `1*1024*1024`)
 * `forceChunkSize` Force all chunks to be less or equal than chunkSize. Otherwise, the last chunk will be greater than or equal to `chunkSize`. (Default: `false`)
 * `simultaneousUploads` Number of simultaneous uploads (Default: `3`)
 * `fileParameterName` The name of the multipart POST parameter to use for the file chunk  (Default: `file`)
 * `query` Extra parameters to include in the multipart POST with data. This can be an object or a function. If a function, it will be passed a ResumableFile and a ResumableChunk object (Default: `{}`)
 * `headers` Extra headers to include in the multipart POST with data (Default: `{}`)
+* `withCredentials` Standard CORS requests do not send or set any cookies by default. In order to
+ include cookies as part of the request, you need to set the `withCredentials` property to true.
+(Default: `false`)
 * `method` Method to use when POSTing chunks to the server (`multipart` or `octet`) (Default: `multipart`)
 * `prioritizeFirstAndLastChunk` Prioritize first and last chunks of all files. This can be handy if you can determine if a file is valid for your service from only the first or last chunk. For example, photo or video meta data is usually located in the first part of a file, making it easy to test support from only the first chunk. (Default: `false`)
 * `testChunks` Make a GET request to the server for each chunks to see if it already exists. If implemented on the server-side, this will allow for upload resumes even after a browser crash or even a computer restart. (Default: `true`)
 * `preprocess` Optional function to process each chunk before testing & sending. Function is passed the chunk as parameter, and should call the `preprocessFinished` method on the chunk when finished. (Default: `null`)
 * `generateUniqueIdentifier` Override the function that generates unique identifiers for each file.  (Default: `null`)
-* `maxFiles` Indicates how many files can be uploaded in a single session. Valid values are any positive integer and `undefined` for no limit. (Default: `undefined`)
-* `maxFilesErrorCallback(files, errorCount)` A function which displays the *please upload n file(s) at a time* message. (Default: displays an alert box with the message *Please n one file(s) at a time.*)
-* `minFileSize` The minimum allowed file size.  (Default: `undefined`)
-* `minFileSizeErrorCallback(file, errorCount)` A function which displays an error a selected file is smaller than allowed. (Default: displays an alert for every bad file.)
-* `maxFileSize` The maximum allowed file size.  (Default: `undefined`)
-* `maxFileSizeErrorCallback(file, errorCount)` A function which displays an error a selected file is larger than allowed. (Default: displays an alert for every bad file.)
-* `fileType` The file types allowed to upload. An empty array allow any file type. (Default: `[]`)
-* `fileTypeErrorCallback(file, errorCount)` A function which displays an error a selected file has type not allowed. (Default: displays an alert for every bad file.)
+* `maxChunkRetries` The maximum number of retries for a chunk before the upload is failed. Valid values are any positive integer and `undefined` for no limit. (Default: `undefined`)
+* `chunkRetryInterval` The number of milliseconds to wait before retrying a chunk on a non-permanent error.  Valid values are any positive integer and `undefined` for immediate retry. (Default: `undefined`)
+* `progressCallbacksInterval` The time interval in milliseconds between progress reports. Set it
+to 0 to handle each progress callback. (Default: `500`)
+* `speedSmoothingFactor` Used for calculating average upload speed. Number from 1 to 0. Set to 1
+and average upload speed wil be equal to current upload speed. For longer file uploads it is
+better set this number to 0.02, because time remaining estimation will be more accurate. This
+parameter must be adjusted together with `progressCallbacksInterval` parameter. (Default 0.1)
+
 
 #### Properties
 
@@ -108,11 +116,13 @@ Available configuration options are:
 
 #### Methods
 
-* `.assignBrowse(domNodes, isDirectory)` Assign a browse action to one or more DOM nodes.  Pass in `true` to allow directories to be selected (Chrome only).
+* `.assignBrowse(domNodes, isDirectory, singleFile)` Assign a browse action to one or more DOM nodes.  Pass in `true` to allow directories to be selected (Chrome only). To prevent multiple file uploads
+set singleFile to true.
 * `.assignDrop(domNodes)` Assign one or more DOM nodes as a drop target.
 * `.on(event, callback)` Listen for event from Resumable.js (see below)
 * `.upload()` Start or resume uploading.
 * `.pause()` Pause uploading.
+* `.resume()` Resume uploading.
 * `.cancel()` Cancel upload of all `ResumableFile` objects and remove them from the list.
 * `.progress()` Returns a float between 0 and 1 indicating the current upload progress of all files.
 * `.isUploading()` Returns a boolean indicating whether or not the instance is currently uploading anything.
@@ -125,16 +135,19 @@ Available configuration options are:
 
 * `.fileSuccess(file)` A specific file was completed.
 * `.fileProgress(file)` Uploading progressed for a specific file.
-* `.fileAdded(file, event)` A new file was added. Optionally, you can use the browser `event` object from when the file was added.
-* `.filesAdded(array)` New files were added.
+* `.fileAdded(file, event)` This event is used for file validation. To reject this file return false.
+This event is also called before file is added to upload queue,
+this means that calling `Resumable.upload()` function will not start current file upload.
+Optionally, you can use the browser `event` object from when the file was
+added.
+* `.filesAdded(array, event)` Same as fileAdded, but used for multiple file validation.
+* `.filesSubmitted(array, event)` Can be used to start upload of currently added files.
 * `.fileRetry(file)` Something went wrong during upload of a specific file, uploading is being retried.
 * `.fileError(file, message)` An error occured during upload of a specific file.
 * `.uploadStart()` Upload has been started on the Resumable object.
 * `.complete()` Uploading completed.
 * `.progress()` Uploading progress.
 * `.error(message, file)` An error, including fileError, occured.
-* `.pause()` Uploading was paused.
-* `.cancel()` Uploading was canceled.
 * `.catchAll(event, ...)` Listen to all the events listed above with the same callback function.
 
 ### ResumableFile
@@ -146,20 +159,81 @@ Available configuration options are:
 * `.relativePath` The relative path to the file (defaults to file name if relative path doesn't exist)
 * `.size` Size in bytes of the file.
 * `.uniqueIdentifier` A unique identifier assigned to this file object. This value is included in uploads to the server for reference, but can also be used in CSS classes etc when building your upload UI.
+* `.averageSpeed` Average upload speed, bytes per second.
+* `.currentSpeed` Current upload speed, bytes per second.
 * `.chunks` An array of `ResumableChunk` items. You shouldn't need to dig into these.
+* `.paused` Indicated if file is paused.
+* `.error` Indicated if file has encountered an error.
 
 #### Methods
 
 * `.progress(relative)` Returns a float between 0 and 1 indicating the current upload progress of the file. If `relative` is `true`, the value is returned relative to all files in the Resumable.js instance.
-* `.abort()` Abort uploading the file.
+* `.pause()` Pause uploading the file.
+* `.resume()` Resume uploading the file.
 * `.cancel()` Abort uploading the file and delete it from the list of files to upload.
 * `.retry()` Retry uploading the file.
 * `.bootstrap()` Rebuild the state of a `ResumableFile` object, including reassigning chunks and XMLHttpRequest instances.
 * `.isUploading()` Returns a boolean indicating whether file chunks is uploading.
+* `.isComplete()` Returns a boolean indicating whether the file has completed uploading and received a server response.
+* `.sizeUploaded()` Returns size uploaded in bytes.
+* `.timeRemaining()` Returns remaining time to upload in seconds. Accuracy is based on average
+speed.
+* `.getExtension()` Returns file extension in lowercase.
+* `.getType()` Returns file type.
+
+## Contribution
+
+To ensure consistency throughout the source code, keep these rules in mind as you are working:
+
+* All features or bug fixes must be tested by one or more specs.
+
+* With the exceptions listed below, we follow the rules contained in [Google's JavaScript Style Guide](http://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml):
+
+  * Wrap all code at 100 characters.
+
+  * Instead of complex inheritance hierarchies, we prefer simple objects. We use prototypical
+inheritance only when absolutely necessary.
+
+
+## Installation Dependencies
+1. To clone your Github repository, run:
+
+        git clone git@github.com:<github username>/resumable.js.git
+
+2. To go to the Resumable.js directory, run:
+
+        cd resumable.js
+
+3. To add node.js dependencies
+
+        npm install
+
+## Testing
+
+Our unit and integration tests are written with Jasmine and executed with Karma. To run all of the
+tests on Chrome run:
+
+    grunt karma:watch
+
+Or choose other browser
+
+    grunt karma:watch --browsers=Firefox,Chrome
+
+Browsers should be comma separated and case sensitive.
+
+To re-run tests just change any source or test file.
+
+Automated tests is running after every commit at travis-ci, current build status: [![Build Status](https://travis-ci.org/AidasK/resumable.js.png?branch=Next)](https://travis-ci.org/AidasK/resumable.js)
+
+### Running test on sauceLabs
+
+1. Connect to sauce labs https://saucelabs.com/docs/connect
+2. `grunt  test --sauce-local=true --sauce-username=**** --sauce-access-key=***`
+
+other browsers can be used with `--browsers` flag, available browsers: sl_opera,sl_iphone,sl_safari,sl_ie10,sl_chorme,sl_firefox
 
 ## Alternatives
 
 This library is explicitly designed for modern browsers supporting advanced HTML5 file features, and the motivation has been to provide stable and resumable support for large files (allowing uploads of several GB files through HTTP in a predictable fashion). 
 
 If your aim is just to support progress indications during upload/uploading multiple files at once, Resumable.js isn't for you. In those cases, [SWFUpload](http://swfupload.org/) and [Plupload](http://plupload.com/) provides the same features with wider browser support.
-

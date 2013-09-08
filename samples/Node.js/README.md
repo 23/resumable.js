@@ -10,6 +10,7 @@ To install and run:
 
 Then browse to [localhost:3000](http://localhost:3000).
 
+File chunks will be uploaded to samples/Node.js/tmp directory.
 
 ## Enabling Cross-domain Uploads
 

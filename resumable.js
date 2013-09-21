@@ -358,6 +358,7 @@ var Resumable = function(opts){
     $.resumableObj = resumableObj;
     $.fileObj = fileObj;
     $.fileObjSize = fileObj.size;
+    $.fileObjType = fileObj.file.type;
     $.offset = offset;
     $.callback = callback;
     $.lastProgressCallback = (new Date);
@@ -407,6 +408,7 @@ var Resumable = function(opts){
       params.push(['resumableChunkSize', encodeURIComponent($.getOpt('chunkSize'))].join('='));
       params.push(['resumableCurrentChunkSize', encodeURIComponent($.endByte - $.startByte)].join('='));
       params.push(['resumableTotalSize', encodeURIComponent($.fileObjSize)].join('='));
+      params.push(['resumableType', encodeURIComponent($.fileObjType)].join('='));
       params.push(['resumableIdentifier', encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
       params.push(['resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
       params.push(['resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
@@ -483,6 +485,7 @@ var Resumable = function(opts){
         resumableChunkSize: $.getOpt('chunkSize'),
         resumableCurrentChunkSize: $.endByte - $.startByte,
         resumableTotalSize: $.fileObjSize,
+        resumableType: $.fileObjType,
         resumableIdentifier: $.fileObj.uniqueIdentifier,
         resumableFilename: $.fileObj.fileName,
         resumableRelativePath: $.fileObj.relativePath,

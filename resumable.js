@@ -203,9 +203,12 @@ var Resumable = function(opts){
         return false;
       }
     }
-    var files = [];
+    var files = [], fileName = '', fileType = '';
     $h.each(fileList, function(file){
-        if (o.fileType.length > 0 && !$h.contains(o.fileType, file.type.split('/')[1])) {
+    	fileName = file.name.split('.');
+    	fileType = fileName[fileName.length-1];
+    	
+        if (o.fileType.length > 0 && !$h.contains(o.fileType, fileType)) {
             o.fileTypeErrorCallback(file, errorCount++);
             return false;
         }

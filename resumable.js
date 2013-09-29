@@ -206,7 +206,7 @@ var Resumable = function(opts){
     var files = [], fileName = '', fileType = '';
     $h.each(fileList, function(file){
     	fileName = file.name.split('.');
-    	fileType = fileName[fileName.length-1];
+    	fileType = fileName[fileName.length-1].toLowerCase();
     	
         if (o.fileType.length > 0 && !$h.contains(o.fileType, fileType)) {
             o.fileTypeErrorCallback(file, errorCount++);

@@ -278,11 +278,15 @@ var Resumable = function(opts){
     $.chunks = [];
     $.abort = function(){
       // Stop current uploads
+      var abortCount = 0;
       $h.each($.chunks, function(c){
-          if(c.status()=='uploading') c.abort();
-        });
-      $.resumableObj.fire('fileProgress', $);
-    };
+        if(c.status()=='uploading') {
+          c.abort();
+          abortCount++;
+        }
+      });
+      if(abortCount>0) $.resumableObj.fire('fileProgress', $);
+    }
     $.cancel = function(){
       // Reset this file to be void
       var _chunks = $.chunks;

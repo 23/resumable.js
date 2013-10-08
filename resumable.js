@@ -1,11 +1,12 @@
-"use strict";
-
 /*
 * MIT Licensed
 * http://www.23developer.com/opensource
 * http://github.com/23/resumable.js
 * Steffen Tiedemann Christensen, steffen@23company.com
 */
+
+(function(){
+"use strict";
 
 var Resumable = function(opts){
   if ( !(this instanceof Resumable ) ) {
@@ -768,6 +769,17 @@ var Resumable = function(opts){
 
 
 // Node.js-style export for Node and Component
-if(typeof module != 'undefined') {
+if (typeof module != 'undefined') {
   module.exports = Resumable;
 }
+// AMD/requirejs: Define the module
+else if (typeof define !== 'undefined') {
+  define(function(){
+    return Resumable;
+  });
+}
+// Browser: Expose to window
+else {
+  window.Resumable = Resumable;
+}
+})();

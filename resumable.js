@@ -660,6 +660,9 @@ var Resumable = function(opts){
             input.style.position = 'absolute';
             input.style.top = input.style.left = input.style.bottom = input.style.right = 0;
             input.style.opacity = 0;
+            //IE10 file input buttons hover right. 
+            //This makes the input field as wide as the assigned node for browseButton
+            input.style.width = domNode.clientWidth + 'px';
             input.style.cursor = 'pointer';
             domNode.appendChild(input);
         }

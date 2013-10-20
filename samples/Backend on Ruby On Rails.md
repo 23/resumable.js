@@ -1,6 +1,6 @@
 # Sample server implementation in Ruby on Rails 
 
-[Bert Sinnema](https://attaching.it) has provided this sample implementation for Ruby on Rails. 
+[Bert Sinnema](https://github.com/bertsinnema) has provided this sample implementation for Ruby on Rails. 
 
 This is a sample backend controller for Ruby on Rails (3.2)
 
@@ -16,7 +16,7 @@ resource :chunk, :only => [:create, :show]
 Add a chunks controller
 
 ```ruby
-	
+
 	class ChunksController < ApplicationController
 	  layout nil
 	  
@@ -35,7 +35,7 @@ Add a chunks controller
 	      render :nothing => true, :status => 404    
 	    end
 	    
-	 end
+	  end
 	
 	  #POST /chunk
 	  def create
@@ -44,7 +44,6 @@ Add a chunks controller
 	    dir = "/tmp/#{params[:resumableIdentifier]}"
 	    #chunk path based on the parameters
 	    chunk = "#{dir}/#{params[:resumableFilename]}.part#{params[:resumableChunkNumber]}"
-	
 	
 	    #Create chunks directory when not present on system
 	    if !File.directory?(dir)
@@ -59,16 +58,45 @@ Add a chunks controller
 	    currentSize = params[:resumableChunkNumber].to_i * params[:resumableChunkSize].to_i
 	    filesize = params[:resumableTotalSize].to_i
 	
+	    #When all chunks are uploaded
 	    if (currentSize + params[:resumableCurrentChunkSize].to_i) >= filesize
-	      target = File.new()
-	      for i in 1..params[:resumableChunkNumber].to_i
-	         puts "Value of local variable is #{i}"
-	      end      
+	      
+	      #Create a target file
+	      File.open("#{dir}/#{params[:resumableFilename]}","a") do |target|
+	        #Loop trough the chunks
+	        for i in 1..params[:resumableChunkNumber].to_i
+	          #Select the chunk
+	          chunk = File.open("#{dir}/#{params[:resumableFilename]}.part#{i}", 'r').read
+	          
+	          #Write chunk into target file
+	          chunk.each_line do |line|
+	            target << line
+	          end
+	          
+	          #Deleting chunk
+	          FileUtils.rm "#{dir}/#{params[:resumableFilename]}.part#{i}", :force => true 
+	        end
+	        puts "File saved to #{dir}/#{params[:resumableFilename]}"
+	      end
 	    end
-	
-	
 	
 	    render :nothing => true, :status => 200
 	  end  
+	
 	end
+```
+
+###### Resumable.js configuration
+Ruby on Rails needs X-CSRF-Token headers. You can pass this is in the headers option. The token should be in a meta tag of the application layout file. In this example is used coffeescript.
+
+```coffeescript
+	
+	jQuery ->  
+	  r = new Resumable
+	    target: "/chunk"
+	    headers:
+	      'X-CSRF-Token' : $('meta[name="csrf-token"]').attr('content')
+	
+	  if !r.support
+	    alert('No Support!!!!!')
 ```

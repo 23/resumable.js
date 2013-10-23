@@ -1,6 +1,6 @@
 ## What is Resumable.js
 
-Resumable.js is a JavaScript library providing multiple simultaneous, stable and resumable uploads via the [HTML5 File API](http://www.w3.org/TR/FileAPI/). 
+Resumable.js is a JavaScript library providing multiple simultaneous, stable and resumable uploads via the [`HTML5 File API`](http://www.w3.org/TR/FileAPI/). 
 
 The library is designed to introduce fault-tolerance into the upload of large files through HTTP. This is done by splitting each file into small chunks. Then, whenever the upload of a chunk fails, uploading is retried until the procedure completes. This allows uploads to automatically resume uploading after a network connection is lost either locally or to the server. Additionally, it allows for users to pause, resume and even recover uploads without losing state because only the currently uploading chunks will be aborted, not the entire upload.
 
@@ -20,7 +20,7 @@ A new `Resumable` object is created with information of what and where to post:
     // Resumable.js isn't supported, fall back on a different method
     if(!r.support) location.href = '/some-old-crappy-uploader';
   
-To allow files to be either selected and drag-dropped, you'll assign drop target and a DOM item to be clicked for browsing:
+To allow files to be selected and drag-dropped, you need to assign a drop target and a DOM item to be clicked for browsing:
 
     r.assignBrowse(document.getElementById('browseButton'));
     r.assignDrop(document.getElementById('dropTarget'));
@@ -30,7 +30,7 @@ After this, interaction with Resumable.js is done by listening to events:
     r.on('fileAdded', function(file, event){
         ...
       });
-    r.on('fileSuccess', function(file,message){
+    r.on('fileSuccess', function(file, message){
         ...
       });
     r.on('fileError', function(file, message){

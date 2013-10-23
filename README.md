@@ -39,7 +39,7 @@ After this, interaction with Resumable.js is done by listening to events:
 
 ## How do I set it up with my server?
 
-Most of the magic for Resumable.js happens in the user's browser, but files still need to be reassembled from chunks on the server side. This should be a fairly simple task and can be achieved in any web framework or language, which is able to receive file uploads.
+Most of the magic for Resumable.js happens in the user's browser, but files still need to be reassembled from chunks on the server side. This should be a fairly simple task, which and can be achieved using any web framework or language that is capable of handling file uploads.
 
 To handle the state of upload chunks, a number of extra parameters are sent along with all requests:
 

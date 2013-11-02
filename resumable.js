@@ -774,7 +774,7 @@
   // Node.js-style export for Node and Component
   if (typeof module != 'undefined') {
     module.exports = Resumable;
-  } else if (typeof define !== 'undefined') {
+  } else if (typeof define === "function" && define.amd) {
     // AMD/requirejs: Define the module
     define(function(){
       return Resumable;

@@ -53,6 +53,7 @@
       permanentErrors:[404, 415, 500, 501],
       maxFiles:undefined,
       withCredentials:false,
+      xhrTimeout:0,
       maxFilesErrorCallback:function (files, errorCount) {
         var maxFiles = $.getOpt('maxFiles');
         alert('Please upload ' + maxFiles + ' file' + (maxFiles === 1 ? '' : 's') + ' at a time.');
@@ -422,6 +423,7 @@
         params.push(['resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
         // Append the relevant chunk and send it
         $.xhr.open('GET', $h.getTarget(params));
+        $.xhr.timeout = $.getOpt('xhrTimeout');
         $.xhr.withCredentials = $.getOpt('withCredentials');
         // Add data from header options
         $h.each($.getOpt('headers'), function(k,v) {
@@ -529,6 +531,7 @@
         }
         
         $.xhr.open('POST', target);
+        $.xhr.timeout = $.getOpt('xhrTimeout');
         $.xhr.withCredentials = $.getOpt('withCredentials');
         // Add data from header options
         $h.each($.getOpt('headers'), function(k,v) {

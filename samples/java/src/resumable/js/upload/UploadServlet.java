@@ -27,7 +27,7 @@ public class UploadServlet extends HttpServlet {
         RandomAccessFile raf = new RandomAccessFile(info.resumableFilePath, "rw");
 
         //Seek to position
-        raf.seek((resumableChunkNumber - 1) * info.resumableChunkSize);
+        raf.seek((resumableChunkNumber - 1) * (long)info.resumableChunkSize);
 
         //Save to file
         InputStream is = request.getInputStream();

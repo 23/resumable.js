@@ -660,9 +660,6 @@
     $.assignBrowse = function(domNodes, isDirectory){
       if(typeof(domNodes.length)=='undefined') domNodes = [domNodes];
 
-      // We will create an <input> and overlay it on the domNode
-      // (crappy, but since HTML5 doesn't have a cross-browser.browse() method we haven't a choice.
-      //  FF4+ allows click() for this though: https://developer.mozilla.org/en/using_files_from_web_applications)
       $h.each(domNodes, function(domNode) {
         var input;
         if(domNode.tagName==='INPUT' && domNode.type==='file'){
@@ -670,16 +667,10 @@
         } else {
           input = document.createElement('input');
           input.setAttribute('type', 'file');
-          // Place <input /> with the dom node an position the input to fill the entire space
-          domNode.style.display = 'inline-block';
-          domNode.style.position = 'relative';
-          input.style.position = 'absolute';
-          input.style.top = input.style.left = input.style.bottom = input.style.right = 0;
-          input.style.opacity = 0;
-          //IE10 file input buttons hover right. 
-          //This makes the input field as wide as the assigned node for browseButton
-          input.style.width = domNode.clientWidth + 'px';
-          input.style.cursor = 'pointer';
+          input.style.display = 'none';
+          domNode.addEventListener('click', function(){
+            input.click();
+          }, false);
           domNode.appendChild(input);
         }
         var maxFiles = $.getOpt('maxFiles');

@@ -44,6 +44,7 @@
       headers:{},
       preprocess:null,
       method:'multipart',
+      httpMethod: 'POST',
       prioritizeFirstAndLastChunk:false,
       target:'/',
       testChunks:true,
@@ -541,7 +542,7 @@
           data.append($.getOpt('fileParameterName'), bytes);
         }
         
-        $.xhr.open('POST', target);
+        $.xhr.open($.getOpt('httpMethod'), target);
         $.xhr.timeout = $.getOpt('xhrTimeout');
         $.xhr.withCredentials = $.getOpt('withCredentials');
         // Add data from header options

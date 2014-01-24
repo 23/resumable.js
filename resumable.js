@@ -47,6 +47,7 @@
       httpMethod: 'POST',
       prioritizeFirstAndLastChunk:false,
       target:'/',
+      testTarget:'/',
       testChunks:true,
       generateUniqueIdentifier:null,
       maxChunkRetries:undefined,
@@ -173,8 +174,8 @@
           return (size/1024.0/1024.0/1024.0).toFixed(1) + ' GB';
         }
       },
-      getTarget:function(params){
-        var target = $.getOpt('target');
+      getTarget:function(request,params){
+        var target = request === 'test' ? $.getOpt('testTarget') : $.getOpt('target');
         if(target.indexOf('?') < 0) {
           target += '?';
         } else {
@@ -434,7 +435,7 @@
         params.push(['resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
         params.push(['resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
         // Append the relevant chunk and send it
-        $.xhr.open('GET', $h.getTarget(params));
+        $.xhr.open('GET', $h.getTarget('test', params));
         $.xhr.timeout = $.getOpt('xhrTimeout');
         $.xhr.withCredentials = $.getOpt('withCredentials');
         // Add data from header options
@@ -532,7 +533,7 @@
           $h.each(query, function(k,v){
             params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
           });
-          target = $h.getTarget(params);
+          target = $h.getTarget('upload', params);
         } else {
           // Add data from the query options
           data = new FormData();

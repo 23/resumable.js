@@ -79,14 +79,15 @@ The object is loaded with a configuation hash:
     
 Available configuration options are:
 
-* `target` The target URL for the multipart POST request (Default: `/`)
+* `target` The target URL for the multipart HTTP request (Default: `/`)
 * `chunkSize` The size in bytes of each uploaded chunk of data. The last uploaded chunk will be at least this size and up to two the size, see [Issue #51](https://github.com/23/resumable.js/issues/51) for details and reasons. (Default: `1*1024*1024`)
 * `forceChunkSize` Force all chunks to be less or equal than chunkSize. Otherwise, the last chunk will be greater than or equal to `chunkSize`. (Default: `false`)
 * `simultaneousUploads` Number of simultaneous uploads (Default: `3`)
-* `fileParameterName` The name of the multipart POST parameter to use for the file chunk  (Default: `file`)
-* `query` Extra parameters to include in the multipart POST with data. This can be an object or a function. If a function, it will be passed a ResumableFile and a ResumableChunk object (Default: `{}`)
-* `headers` Extra headers to include in the multipart POST with data (Default: `{}`)
-* `method` Method to use when POSTing chunks to the server (`multipart` or `octet`) (Default: `multipart`)
+* `fileParameterName` The name of the multipart request parameter to use for the file chunk  (Default: `file`)
+* `query` Extra parameters to include in the multipart request with data. This can be an object or a function. If a function, it will be passed a ResumableFile and a ResumableChunk object (Default: `{}`)
+* `headers` Extra headers to include in the multipart request with data (Default: `{}`)
+* `method` Method to use when sending chunks to the server (`multipart` or `octet`) (Default: `multipart`)
+* `uploadMethod` HTTP method to use when sending chunks to the server (`POST`, `PUT`, `PATCH`) (Default: `POST`)
 * `prioritizeFirstAndLastChunk` Prioritize first and last chunks of all files. This can be handy if you can determine if a file is valid for your service from only the first or last chunk. For example, photo or video meta data is usually located in the first part of a file, making it easy to test support from only the first chunk. (Default: `false`)
 * `testChunks` Make a GET request to the server for each chunks to see if it already exists. If implemented on the server-side, this will allow for upload resumes even after a browser crash or even a computer restart. (Default: `true`)
 * `preprocess` Optional function to process each chunk before testing & sending. Function is passed the chunk as parameter, and should call the `preprocessFinished` method on the chunk when finished. (Default: `null`)

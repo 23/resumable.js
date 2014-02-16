@@ -205,10 +205,10 @@
           return false;
         }
       }
-      var files = [], fileName = '', fileType = '';
+      var files = [];
       $h.each(fileList, function(file){
-        fileName = file.name.split('.');
-        fileType = fileName[fileName.length-1].toLowerCase();
+        var fileName = file.name.split('.');
+        var fileType = fileName[fileName.length-1].toLowerCase();
         
         if (o.fileType.length > 0 && !$h.contains(o.fileType, fileType)) {
           o.fileTypeErrorCallback(file, errorCount++);
@@ -225,14 +225,18 @@
         }
 
         // directories have size == 0
-        if (!$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
+        if (!$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {(function(){
           var f = new ResumableFile($, file);
-          $.files.push(f);
-          files.push(f);
-          $.fire('fileAdded', f, event);
-        }
+          window.setTimeout(function(){
+            $.files.push(f);
+            files.push(f);
+            $.fire('fileAdded', f, event)
+          },0);
+        })()};
       });
-      $.fire('filesAdded', files);
+      window.setTimeout(function(){
+        $.fire('filesAdded', files)
+      },0);
     };
 
     // INTERNAL OBJECT TYPES
@@ -315,9 +319,16 @@
         $.chunks = [];
         $._prevProgress = 0;
         var round = $.getOpt('forceChunkSize') ? Math.ceil : Math.floor;
-        for (var offset=0; offset<Math.max(round($.file.size/$.getOpt('chunkSize')),1); offset++) {
-          $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
-        }
+        var maxOffset = Math.max(round($.file.size/$.getOpt('chunkSize')),1);
+        for (var offset=0; offset<maxOffset; offset++) {(function(offset){
+            window.setTimeout(function(){
+                $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
+                $.resumableObj.fire('chunkingProgress',$,offset/maxOffset);
+            },0);
+        })(offset)}
+        window.setTimeout(function(){
+            $.resumableObj.fire('chunkingComplete',$);
+        },0);
       };
       $.progress = function(){
         if(_error) return(1);
@@ -367,6 +378,7 @@
 
 
       // Bootstrap and return
+      $.resumableObj.fire('chunkingStart', $);
       $.bootstrap();
       return(this);
     }

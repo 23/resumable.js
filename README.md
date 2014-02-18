@@ -138,6 +138,9 @@ Available configuration options are:
 * `.error(message, file)` An error, including fileError, occured.
 * `.pause()` Uploading was paused.
 * `.cancel()` Uploading was canceled.
+* `.chunkingStart(file)` Started preparing file for upload
+* `.chunkingProgress(file,ratio)` Show progress in file preparation
+* `.chunkingComplete(file) File is ready for upload
 * `.catchAll(event, ...)` Listen to all the events listed above with the same callback function.
 
 ### ResumableFile

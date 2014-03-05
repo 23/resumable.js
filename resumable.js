@@ -230,6 +230,7 @@
           window.setTimeout(function(){
             $.files.push(f);
             files.push(f);
+            f.container = event.srcElement;
             $.fire('fileAdded', f, event)
           },0);
         })()};
@@ -252,6 +253,7 @@
       $.relativePath = file.webkitRelativePath || $.fileName;
       $.uniqueIdentifier = $h.generateUniqueIdentifier(file);
       $._pause = false;
+      $.container = '';
       var _error = false;
 
       // Callback when something happens within the chunk
@@ -681,7 +683,11 @@
           input.setAttribute('type', 'file');
           input.style.display = 'none';
           domNode.addEventListener('click', function(){
+            input.style.opacity = 0;
+            input.style.display='block';
+            input.focus();
             input.click();
+            input.style.display='none';
           }, false);
           domNode.appendChild(input);
         }
@@ -698,7 +704,7 @@
         }
         // When new files are added, simply append them to the overall list
         input.addEventListener('change', function(e){
-          appendFilesFromFileList(e.target.files);
+          appendFilesFromFileList(e.target.files,e);
           e.target.value = '';
         }, false);
       });

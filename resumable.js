@@ -295,7 +295,7 @@
           }
         });
         if(abortCount>0) $.resumableObj.fire('fileProgress', $);
-      }
+      };
       $.cancel = function(){
         // Reset this file to be void
         var _chunks = $.chunks;

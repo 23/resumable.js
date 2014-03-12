@@ -64,7 +64,7 @@ For every request, you can confirm reception in HTTP status codes (can be change
 Enabling the `testChunks` option will allow uploads to be resumed after browser restarts and even across browsers (in theory you could even run the same file upload across multiple tabs or different browsers).  The `POST` data requests listed are required to use Resumable.js to receive data, but you can extend support by implementing a corresponding `GET` request with the same parameters:
 
 * If this request returns a `200` HTTP code, the chunks is assumed to have been completed.
-* If the request returns anything else, the chunk will be uploaded in the standard fashion.
+* If the request returns anything else, the chunk will be uploaded in the standard fashion. (It is recommended to return *204 No Content* in these cases if possible to [avoid unwarrented notices in brower consoles](https://github.com/23/resumable.js/issues/160).)
 
 After this is done and `testChunks` enabled, an upload can quickly catch up even after a browser restart by simply verifying already uploaded chunks that do not need to be uploaded again.
 

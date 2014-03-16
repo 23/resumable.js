@@ -312,7 +312,11 @@
       };
       $.retry = function(){
         $.bootstrap();
-        $.resumableObj.upload();
+        var firedRetry = false;
+        $.resumableObj.on('chunkingComplete', function(){
+          if(!firedRetry) $.resumableObj.upload();
+          firedRetry = true;
+        });
       };
       $.bootstrap = function(){
         $.abort();

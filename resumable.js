@@ -630,7 +630,7 @@
             found = true;
             return(false);
           }
-          if(file.chunks.length>1 && file.chunks[file.chunks.length-1].status()=='pending' && file.chunks[0].preprocessState === 0) {
+          if(file.chunks.length>1 && file.chunks[file.chunks.length-1].status()=='pending' && file.chunks[file.chunks.length-1].preprocessState === 0) {
             file.chunks[file.chunks.length-1].send();
             found = true;
             return(false);

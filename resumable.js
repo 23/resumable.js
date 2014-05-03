@@ -211,10 +211,10 @@
           return false;
         }
       }
-      var files = [], fileName = '', fileType = '';
+      var files = [];
       $h.each(fileList, function(file){
-        fileName = file.name.split('.');
-        fileType = fileName[fileName.length-1].toLowerCase();
+        var fileName = file.name.split('.');
+        var fileType = fileName[fileName.length-1].toLowerCase();
 
         if (o.fileType.length > 0 && !$h.contains(o.fileType, fileType)) {
           o.fileTypeErrorCallback(file, errorCount++);
@@ -231,14 +231,19 @@
         }
 
         // directories have size == 0
-        if (!$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
+        if (!$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {(function(){
           var f = new ResumableFile($, file);
-          $.files.push(f);
-          files.push(f);
-          $.fire('fileAdded', f, event);
-        }
+          window.setTimeout(function(){
+            $.files.push(f);
+            files.push(f);
+            f.container = event.srcElement;
+            $.fire('fileAdded', f, event)
+          },0);
+        })()};
       });
-      $.fire('filesAdded', files);
+      window.setTimeout(function(){
+        $.fire('filesAdded', files)
+      },0);
     };
 
     // INTERNAL OBJECT TYPES
@@ -254,6 +259,7 @@
       $.relativePath = file.webkitRelativePath || $.fileName;
       $.uniqueIdentifier = $h.generateUniqueIdentifier(file);
       $._pause = false;
+      $.container = '';
       var _error = false;
 
       // Callback when something happens within the chunk
@@ -295,7 +301,7 @@
           }
         });
         if(abortCount>0) $.resumableObj.fire('fileProgress', $);
-      }
+      };
       $.cancel = function(){
         // Reset this file to be void
         var _chunks = $.chunks;
@@ -312,7 +318,11 @@
       };
       $.retry = function(){
         $.bootstrap();
-        $.resumableObj.upload();
+        var firedRetry = false;
+        $.resumableObj.on('chunkingComplete', function(){
+          if(!firedRetry) $.resumableObj.upload();
+          firedRetry = true;
+        });
       };
       $.bootstrap = function(){
         $.abort();
@@ -321,9 +331,16 @@
         $.chunks = [];
         $._prevProgress = 0;
         var round = $.getOpt('forceChunkSize') ? Math.ceil : Math.floor;
-        for (var offset=0; offset<Math.max(round($.file.size/$.getOpt('chunkSize')),1); offset++) {
-          $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
-        }
+        var maxOffset = Math.max(round($.file.size/$.getOpt('chunkSize')),1);
+        for (var offset=0; offset<maxOffset; offset++) {(function(offset){
+            window.setTimeout(function(){
+                $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
+                $.resumableObj.fire('chunkingProgress',$,offset/maxOffset);
+            },0);
+        })(offset)}
+        window.setTimeout(function(){
+            $.resumableObj.fire('chunkingComplete',$);
+        },0);
       };
       $.progress = function(){
         if(_error) return(1);
@@ -373,6 +390,7 @@
 
 
       // Bootstrap and return
+      $.resumableObj.fire('chunkingStart', $);
       $.bootstrap();
       return(this);
     }
@@ -622,7 +640,7 @@
             found = true;
             return(false);
           }
-          if(file.chunks.length>1 && file.chunks[file.chunks.length-1].status()=='pending' && file.chunks[0].preprocessState === 0) {
+          if(file.chunks.length>1 && file.chunks[file.chunks.length-1].status()=='pending' && file.chunks[file.chunks.length-1].preprocessState === 0) {
             file.chunks[file.chunks.length-1].send();
             found = true;
             return(false);
@@ -675,7 +693,11 @@
           input.setAttribute('type', 'file');
           input.style.display = 'none';
           domNode.addEventListener('click', function(){
+            input.style.opacity = 0;
+            input.style.display='block';
+            input.focus();
             input.click();
+            input.style.display='none';
           }, false);
           domNode.appendChild(input);
         }
@@ -692,7 +714,7 @@
         }
         // When new files are added, simply append them to the overall list
         input.addEventListener('change', function(e){
-          appendFilesFromFileList(e.target.files);
+          appendFilesFromFileList(e.target.files,e);
           e.target.value = '';
         }, false);
       });

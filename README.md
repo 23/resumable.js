@@ -4,7 +4,7 @@ Resumable.js is a JavaScript library providing multiple simultaneous, stable and
 
 The library is designed to introduce fault-tolerance into the upload of large files through HTTP. This is done by splitting each file into small chunks. Then, whenever the upload of a chunk fails, uploading is retried until the procedure completes. This allows uploads to automatically resume uploading after a network connection is lost either locally or to the server. Additionally, it allows for users to pause, resume and even recover uploads without losing state because only the currently uploading chunks will be aborted, not the entire upload.
 
-Resumable.js does not have any external dependencies other than the `HTML5 File API`. This is relied on for the ability to chunk files into smaller pieces. Currently, this means that support is limited to Firefox 4+, Chrome 11+ and Safari 6+.
+Resumable.js does not have any external dependencies other than the `HTML5 File API`. This is relied on for the ability to chunk files into smaller pieces. Currently, this means that support is widely avaialble in to Firefox 4+, Chrome 11+, Safari 6+ and Internet Explorer 10+.
 
 Samples and examples are available in the `samples/` folder. Please push your own as Markdown to help document the project.
 
@@ -64,7 +64,7 @@ For every request, you can confirm reception in HTTP status codes (can be change
 Enabling the `testChunks` option will allow uploads to be resumed after browser restarts and even across browsers (in theory you could even run the same file upload across multiple tabs or different browsers).  The `POST` data requests listed are required to use Resumable.js to receive data, but you can extend support by implementing a corresponding `GET` request with the same parameters:
 
 * If this request returns a `200` HTTP code, the chunks is assumed to have been completed.
-* If the request returns anything else, the chunk will be uploaded in the standard fashion.
+* If the request returns anything else, the chunk will be uploaded in the standard fashion. (It is recommended to return *204 No Content* in these cases if possible to [avoid unwarrented notices in brower consoles](https://github.com/23/resumable.js/issues/160).)
 
 After this is done and `testChunks` enabled, an upload can quickly catch up even after a browser restart by simply verifying already uploaded chunks that do not need to be uploaded again.
 
@@ -139,6 +139,9 @@ Available configuration options are:
 * `.error(message, file)` An error, including fileError, occured.
 * `.pause()` Uploading was paused.
 * `.cancel()` Uploading was canceled.
+* `.chunkingStart(file)` Started preparing file for upload
+* `.chunkingProgress(file,ratio)` Show progress in file preparation
+* `.chunkingComplete(file) File is ready for upload
 * `.catchAll(event, ...)` Listen to all the events listed above with the same callback function.
 
 ### ResumableFile

@@ -578,7 +578,7 @@
         if($.pendingRetry) {
           // if pending retry then that's effectively the same as actively uploading,
           // there might just be a slight delay before the retry starts
-          return('uploading')
+          return('uploading');
         } else if(!$.xhr) {
           return('pending');
         } else if($.xhr.readyState<4) {

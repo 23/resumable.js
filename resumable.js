@@ -230,7 +230,7 @@
           window.setTimeout(function(){
             $.files.push(f);
             files.push(f);
-            f.container = event.srcElement;
+            f.container = (typeof event != 'undefined' ? event.srcElement : null);
             $.fire('fileAdded', f, event)
           },0);
         })()};
@@ -771,8 +771,8 @@
       });
       return(totalSize>0 ? totalDone/totalSize : 0);
     };
-    $.addFile = function(file){
-      appendFilesFromFileList([file]);
+    $.addFile = function(file, event){
+      appendFilesFromFileList([file], event);
     };
     $.removeFile = function(file){
       for(var i = $.files.length - 1; i >= 0; i--) {

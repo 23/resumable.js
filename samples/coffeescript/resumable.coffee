@@ -415,7 +415,7 @@ window.ResumableChunk = class ResumableChunk
         @callback 'retry', @message()
         @abort()
         @retries++
-        retryInterval = getOpt('chunkRetryInterval')
+        retryInterval = @getOpt('chunkRetryInterval')
         if retryInterval?
           setTimeout @send, retryInterval
 

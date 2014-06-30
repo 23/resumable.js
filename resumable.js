@@ -450,6 +450,7 @@
         params.push(['resumableIdentifier', encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
         params.push(['resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
         params.push(['resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
+        params.push(['resumableTotalChunks', encodeURIComponent($.fileObj.chunks.length)].join('='));
         // Append the relevant chunk and send it
         $.xhr.open('GET', $h.getTarget(params));
         $.xhr.timeout = $.getOpt('xhrTimeout');

@@ -687,12 +687,15 @@
           input = document.createElement('input');
           input.setAttribute('type', 'file');
           input.style.display = 'none';
-          domNode.addEventListener('click', function(){
+          domNode.addEventListener('click', function(e){
             input.style.opacity = 0;
             input.style.display='block';
             input.focus();
             input.click();
             input.style.display='none';
+            if (domNode.tagName==='A') {
+              e.prevenyDefault();
+            }
           }, false);
           domNode.appendChild(input);
         }

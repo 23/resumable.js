@@ -1,11 +1,12 @@
 var express = require('express');
 var resumable = require('./resumable-node.js')('/tmp/resumable.js/');
 var app = express();
+var multipart = require('connect-multiparty');
 
 // Host most stuff in the public folder
 app.use(express.static(__dirname + '/public'));
 
-app.use(express.bodyParser());
+app.use(multipart());
 
 // Handle uploads through Resumable.js
 app.post('/upload', function(req, res){
@@ -37,7 +38,7 @@ app.post('/upload', function(req, res){
 app.get('/upload', function(req, res){
     resumable.get(req, function(status, filename, original_filename, identifier){
         console.log('GET', status);
-        res.send(status, (status == 'found' ? 200 : 404));
+        res.send((status == 'found' ? 200 : 404), status);
       });
   });
 

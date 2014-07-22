@@ -74,7 +74,7 @@
     $.opts = opts||{};
     $.getOpt = function(o) {
       var $opt = this;
-      // Get multiple option if passed an array
+      // Get multiple options if passed an array
       if(o instanceof Array) {
         var options = {};
         $h.each(o, function(option){
@@ -96,7 +96,7 @@
         else { return $opt.defaults[o]; }
       }
     };
-    
+
     // EVENTS
     // catchAll(event, ...)
     // fileSuccess(file), fileProgress(file), fileAdded(file, event), fileRetry(file), fileError(file, message),
@@ -112,14 +112,14 @@
       // Find event listeners, and support pseudo-event `catchAll`
       var event = args[0].toLowerCase();
       for (var i=0; i<=$.events.length; i+=2) {
-        if($.events[i]==event) $.events[i+1].apply($,args.slice(1));
-        if($.events[i]=='catchall') $.events[i+1].apply(null,args);
+        if($.events[i]===event) $.events[i+1].apply($,args.slice(1));
+        if($.events[i]==='catchall') $.events[i+1].apply(null,args);
       }
-      if(event=='fileerror') $.fire('error', args[2], args[1]);
-      if(event=='fileprogress') $.fire('progress');
+      if(event==='fileerror') $.fire('error', args[2], args[1]);
+      if(event==='fileprogress') $.fire('progress');
     };
-    
-    
+
+
     // INTERNAL HELPER METHODS (handy, but ultimately not part of uploading)
     var $h = {
       stopEvent: function(e){
@@ -152,7 +152,7 @@
         var result = false;
 
         $h.each(array, function(value) {
-          if (value == test) {
+          if (value === test) {
             result = true;
             return false;
           }
@@ -197,7 +197,7 @@
       var errorCount = 0;
       var o = $.getOpt(['maxFiles', 'minFileSize', 'maxFileSize', 'maxFilesErrorCallback', 'minFileSizeErrorCallback', 'maxFileSizeErrorCallback', 'fileType', 'fileTypeErrorCallback']);
       if (typeof(o.maxFiles)!=='undefined' && o.maxFiles<(fileList.length+$.files.length)) {
-        // if single-file upload, file is already added, and trying to add 1 new file, simply replace the already-added file 
+        // if single-file upload, file is already added, and trying to add 1 new file, simply replace the already-added file
         if (o.maxFiles===1 && $.files.length===1 && fileList.length===1) {
           $.removeFile($.files[0]);
         } else {
@@ -209,7 +209,7 @@
       $h.each(fileList, function(file){
         var fileName = file.name.split('.');
         var fileType = fileName[fileName.length-1].toLowerCase();
-        
+
         if (o.fileType.length > 0 && !$h.contains(o.fileType, fileType)) {
           o.fileTypeErrorCallback(file, errorCount++);
           return false;
@@ -289,7 +289,7 @@
         // Stop current uploads
         var abortCount = 0;
         $h.each($.chunks, function(c){
-          if(c.status()=='uploading') {
+          if(c.status()==='uploading') {
             c.abort();
             abortCount++;
           }
@@ -302,7 +302,7 @@
         $.chunks = [];
         // Stop current uploads
         $h.each(_chunks, function(c){
-          if(c.status()=='uploading')  {
+          if(c.status()==='uploading')  {
             c.abort();
             $.resumableObj.uploadNextChunk();
           }
@@ -342,7 +342,7 @@
         var ret = 0;
         var error = false;
         $h.each($.chunks, function(c){
-          if(c.status()=='error') error = true;
+          if(c.status()==='error') error = true;
           ret += c.progress(true); // get chunk progress relative to entire file
         });
         ret = (error ? 1 : (ret>0.999 ? 1 : ret));
@@ -353,18 +353,18 @@
       $.isUploading = function(){
         var uploading = false;
         $h.each($.chunks, function(chunk){
-          if(chunk.status()=='uploading') {
+          if(chunk.status()==='uploading') {
             uploading = true;
             return(false);
           }
         });
         return(uploading);
-      };    
+      };
       $.isComplete = function(){
         var outstanding = false;
         $h.each($.chunks, function(chunk){
           var status = chunk.status();
-          if(status=='pending' || status=='uploading' || chunk.preprocessState === 1) {
+          if(status==='pending' || status==='uploading' || chunk.preprocessState === 1) {
             outstanding = true;
             return(false);
           }
@@ -424,7 +424,7 @@
         var testHandler = function(e){
           $.tested = true;
           var status = $.status();
-          if(status=='success') {
+          if(status==='success') {
             $.callback(status, $.message());
             $.resumableObj.uploadNextChunk();
           } else {
@@ -436,8 +436,8 @@
 
         // Add data from the query options
         var params = [];
-        var customQuery = $.getOpt('query'); 
-        if(typeof customQuery == 'function') customQuery = customQuery($.fileObj, $);
+        var customQuery = $.getOpt('query');
+        if(typeof customQuery === 'function') customQuery = customQuery($.fileObj, $);
         $h.each(customQuery, function(k,v){
           params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
         });
@@ -500,14 +500,14 @@
         // Done (either done, failed or retry)
         var doneHandler = function(e){
           var status = $.status();
-          if(status=='success'||status=='error') {
+          if(status==='success'||status==='error') {
             $.callback(status, $.message());
             $.resumableObj.uploadNextChunk();
           } else {
             $.callback('retry', $.message());
             $.abort();
             $.retries++;
-            var retryInterval = $.getOpt('chunkRetryInterval');          
+            var retryInterval = $.getOpt('chunkRetryInterval');
             if(retryInterval !== undefined) {
               $.pendingRetry = true;
               setTimeout($.send, retryInterval);
@@ -533,16 +533,16 @@
         };
         // Mix in custom data
         var customQuery = $.getOpt('query');
-        if(typeof customQuery == 'function') customQuery = customQuery($.fileObj, $);
+        if(typeof customQuery === 'function') customQuery = customQuery($.fileObj, $);
         $h.each(customQuery, function(k,v){
           query[k] = v;
         });
 
         var func   = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice'))),
-        bytes  = $.fileObj.file[func]($.startByte,$.endByte), 
+        bytes  = $.fileObj.file[func]($.startByte,$.endByte),
         data   = null,
         target = $.getOpt('target');
-        
+
         if ($.getOpt('method') === 'octet') {
           // Add data from the query options
           data = bytes;
@@ -559,7 +559,7 @@
           });
           data.append($.getOpt('fileParameterName'), bytes);
         }
-        
+
         $.xhr.open('POST', target);
         $.xhr.timeout = $.getOpt('xhrTimeout');
         $.xhr.withCredentials = $.getOpt('withCredentials');
@@ -586,7 +586,7 @@
           // Status is really 'OPENED', 'HEADERS_RECEIVED' or 'LOADING' - meaning that stuff is happening
           return('uploading');
         } else {
-          if($.xhr.status==200) {
+          if($.xhr.status===200) {
             // HTTP 200, perfect
             return('success');
           } else if($h.contains($.getOpt('permanentErrors'), $.xhr.status) || $.retries >= $.getOpt('maxChunkRetries')) {
@@ -630,12 +630,12 @@
       // metadata and determine if there's even a point in continuing.
       if ($.getOpt('prioritizeFirstAndLastChunk')) {
         $h.each($.files, function(file){
-          if(file.chunks.length && file.chunks[0].status()=='pending' && file.chunks[0].preprocessState === 0) {
+          if(file.chunks.length && file.chunks[0].status()==='pending' && file.chunks[0].preprocessState === 0) {
             file.chunks[0].send();
             found = true;
             return(false);
           }
-          if(file.chunks.length>1 && file.chunks[file.chunks.length-1].status()=='pending' && file.chunks[file.chunks.length-1].preprocessState === 0) {
+          if(file.chunks.length>1 && file.chunks[file.chunks.length-1].status()==='pending' && file.chunks[file.chunks.length-1].preprocessState === 0) {
             file.chunks[file.chunks.length-1].send();
             found = true;
             return(false);
@@ -648,7 +648,7 @@
       $h.each($.files, function(file){
         if(file.isPaused()===false){
          $h.each(file.chunks, function(chunk){
-           if(chunk.status()=='pending' && chunk.preprocessState === 0) {
+           if(chunk.status()==='pending' && chunk.preprocessState === 0) {
              chunk.send();
              found = true;
              return(false);
@@ -677,7 +677,7 @@
 
     // PUBLIC METHODS FOR RESUMABLE.JS
     $.assignBrowse = function(domNodes, isDirectory){
-      if(typeof(domNodes.length)=='undefined') domNodes = [domNodes];
+      if(typeof(domNodes.length)==='undefined') domNodes = [domNodes];
 
       $h.each(domNodes, function(domNode) {
         var input;
@@ -715,7 +715,7 @@
       });
     };
     $.assignDrop = function(domNodes){
-      if(typeof(domNodes.length)=='undefined') domNodes = [domNodes];
+      if(typeof(domNodes.length)==='undefined') domNodes = [domNodes];
 
       $h.each(domNodes, function(domNode) {
         domNode.addEventListener('dragover', onDragOver, false);
@@ -723,7 +723,7 @@
       });
     };
     $.unAssignDrop = function(domNodes) {
-      if (typeof(domNodes.length) == 'undefined') domNodes = [domNodes];
+      if (typeof(domNodes.length) === 'undefined') domNodes = [domNodes];
 
       $h.each(domNodes, function(domNode) {
         domNode.removeEventListener('dragover', onDragOver);
@@ -785,7 +785,7 @@
     $.getFromUniqueIdentifier = function(uniqueIdentifier){
       var ret = false;
       $h.each($.files, function(f){
-        if(f.uniqueIdentifier==uniqueIdentifier) ret = f;
+        if(f.uniqueIdentifier===uniqueIdentifier) ret = f;
       });
       return(ret);
     };

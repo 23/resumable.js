@@ -107,11 +107,12 @@
     };
     $.fire = function(){
       // `arguments` is an object, not array, in FF, so:
-      var args = [], i;
-      for (i=0; i<arguments.length; i++) args.push(arguments[i]);
+      var args = [], len = arguments.length, i;
+      for (i=0; i<len; i++) args.push(arguments[i]);
       // Find event listeners, and support pseudo-event `catchAll`
       var event = args[0].toLowerCase();
-      for (i=0; i<=$.events.length; i+=2) {
+      len = $.events.length;
+      for (i=0; i<=len; i+=2) {
         if($.events[i]===event) $.events[i+1].apply($,args.slice(1));
         if($.events[i]==='catchall') $.events[i+1].apply(null,args);
       }
@@ -127,9 +128,10 @@
         e.preventDefault();
       },
       each: function(o,callback){
-        var i;
-        if(typeof(o.length)!=='undefined') {
-          for (i=0; i<o.length; i++) {
+        var len = o.length, i;
+
+        if(typeof(len)!=='undefined') {
+          for (i=0; i<len; i++) {
             // Array or FileList
             if(callback(o[i])===false) return;
           }
@@ -663,6 +665,7 @@
         }
         if(found) return(false);
       });
+
       if(found) return(true);
 
       // The are no more outstanding chunks to upload, check is everything is done
@@ -751,7 +754,8 @@
       if($.isUploading()) return;
       // Kick off the queue
       $.fire('uploadStart');
-      for (var num=1; num<=$.getOpt('simultaneousUploads'); num++) {
+      var simultaneousUploads = $.getOpt('simultaneousUploads');
+      for (var num=1; num<=simultaneousUploads; num++) {
         $.uploadNextChunk();
       }
     };

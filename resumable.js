@@ -107,11 +107,11 @@
     };
     $.fire = function(){
       // `arguments` is an object, not array, in FF, so:
-      var args = [];
-      for (var i=0; i<arguments.length; i++) args.push(arguments[i]);
+      var args = [], i;
+      for (i=0; i<arguments.length; i++) args.push(arguments[i]);
       // Find event listeners, and support pseudo-event `catchAll`
       var event = args[0].toLowerCase();
-      for (var i=0; i<=$.events.length; i+=2) {
+      for (i=0; i<=$.events.length; i+=2) {
         if($.events[i]===event) $.events[i+1].apply($,args.slice(1));
         if($.events[i]==='catchall') $.events[i+1].apply(null,args);
       }
@@ -127,8 +127,9 @@
         e.preventDefault();
       },
       each: function(o,callback){
+        var i;
         if(typeof(o.length)!=='undefined') {
-          for (var i=0; i<o.length; i++) {
+          for (i=0; i<o.length; i++) {
             // Array or FileList
             if(callback(o[i])===false) return;
           }
@@ -225,18 +226,20 @@
         }
 
         // directories have size == 0
-        if (!$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {(function(){
-          var f = new ResumableFile($, file);
-          window.setTimeout(function(){
-            $.files.push(f);
-            files.push(f);
-            f.container = (typeof event != 'undefined' ? event.srcElement : null);
-            $.fire('fileAdded', f, event)
-          },0);
-        })()};
+        if (!$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {
+          (function(){
+            var f = new ResumableFile($, file);
+            window.setTimeout(function(){
+              $.files.push(f);
+              files.push(f);
+              f.container = (typeof event != 'undefined' ? event.srcElement : null);
+              $.fire('fileAdded', f, event);
+            },0);
+          })();
+        }
       });
       window.setTimeout(function(){
-        $.fire('filesAdded', files)
+        $.fire('filesAdded', files);
       },0);
     };
 
@@ -326,12 +329,15 @@
         $._prevProgress = 0;
         var round = $.getOpt('forceChunkSize') ? Math.ceil : Math.floor;
         var maxOffset = Math.max(round($.file.size/$.getOpt('chunkSize')),1);
-        for (var offset=0; offset<maxOffset; offset++) {(function(offset){
-            window.setTimeout(function(){
-                $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
-                $.resumableObj.fire('chunkingProgress',$,offset/maxOffset);
-            },0);
-        })(offset)}
+        var addChunk = function (offset) {
+          window.setTimeout(function(){
+            $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
+            $.resumableObj.fire('chunkingProgress',$,offset/maxOffset);
+          },0);
+        };
+        for (var offset=0; offset<maxOffset; offset++) {
+          addChunk(offset);
+        }
         window.setTimeout(function(){
             $.resumableObj.fire('chunkingComplete',$);
         },0);
@@ -399,7 +405,7 @@
       $.fileObjType = fileObj.file.type;
       $.offset = offset;
       $.callback = callback;
-      $.lastProgressCallback = (new Date);
+      $.lastProgressCallback = new Date();
       $.tested = false;
       $.retries = 0;
       $.pendingRetry = false;
@@ -487,9 +493,9 @@
 
         // Progress
         $.xhr.upload.addEventListener('progress', function(e){
-          if( (new Date) - $.lastProgressCallback > $.getOpt('throttleProgressCallbacks') * 1000 ) {
+          if( (new Date()) - $.lastProgressCallback > $.getOpt('throttleProgressCallbacks') * 1000 ) {
             $.callback('progress');
-            $.lastProgressCallback = (new Date);
+            $.lastProgressCallback = new Date();
           }
           $.loaded=e.loaded||0;
         }, false);

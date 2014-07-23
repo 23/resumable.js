@@ -199,9 +199,10 @@
       // check for uploading too many files
       var errorCount = 0;
       var o = $.getOpt(['maxFiles', 'minFileSize', 'maxFileSize', 'maxFilesErrorCallback', 'minFileSizeErrorCallback', 'maxFileSizeErrorCallback', 'fileType', 'fileTypeErrorCallback']);
-      if (typeof(o.maxFiles)!=='undefined' && o.maxFiles<(fileList.length+$.files.length)) {
+      var maxFiles = o.maxFiles;
+      if (typeof(maxFiles)!=='undefined' && maxFiles<(fileList.length+$.files.length)) {
         // if single-file upload, file is already added, and trying to add 1 new file, simply replace the already-added file
-        if (o.maxFiles===1 && $.files.length===1 && fileList.length===1) {
+        if (maxFiles===1 && $.files.length===1 && fileList.length===1) {
           $.removeFile($.files[0]);
         } else {
           o.maxFilesErrorCallback(fileList, errorCount++);
@@ -218,11 +219,13 @@
           return false;
         }
 
-        if (typeof(o.minFileSize)!=='undefined' && file.size<o.minFileSize) {
+        var minFileSize = o.minFileSize;
+        if (typeof(minFileSize)!=='undefined' && file.size<minFileSize) {
           o.minFileSizeErrorCallback(file, errorCount++);
           return false;
         }
-        if (typeof(o.maxFileSize)!=='undefined' && file.size>o.maxFileSize) {
+        var maxFileSize = o.maxFileSize;
+        if (typeof(maxFileSize)!=='undefined' && file.size>maxFileSize) {
           o.maxFileSizeErrorCallback(file, errorCount++);
           return false;
         }
@@ -654,13 +657,15 @@
       // metadata and determine if there's even a point in continuing.
       if ($.getOpt('prioritizeFirstAndLastChunk')) {
         $h.each($.files, function(file){
-          if(file.chunks.length && file.chunks[0].status()==='pending' && file.chunks[0].preprocessState === 0) {
-            file.chunks[0].send();
+          var firstChunk = file.chunks[0],
+              lastChunk = file.chunks[file.chunks.length-1];
+          if(file.chunks.length && firstChunk.status()==='pending' && firstChunk.preprocessState === 0) {
+            firstChunk.send();
             found = true;
             return(false);
           }
-          if(file.chunks.length>1 && file.chunks[file.chunks.length-1].status()==='pending' && file.chunks[file.chunks.length-1].preprocessState === 0) {
-            file.chunks[file.chunks.length-1].send();
+          if(file.chunks.length>1 && lastChunk.status()==='pending' && lastChunk.preprocessState === 0) {
+            lastChunk.send();
             found = true;
             return(false);
           }

@@ -431,6 +431,12 @@
 
         var testHandler = function(e){
           $.tested = true;
+
+          // release listeners
+          $.xhr.removeEventListener('load', testHandler, false);
+          $.xhr.removeEventListener('error', testHandler, false);
+          $.xhr = null;
+
           var status = $.status();
           if(status==='success') {
             $.callback(status, $.message());
@@ -439,6 +445,7 @@
             $.send();
           }
         };
+
         $.xhr.addEventListener('load', testHandler, false);
         $.xhr.addEventListener('error', testHandler, false);
 
@@ -493,14 +500,16 @@
         // Set up request and listen for event
         $.xhr = new XMLHttpRequest();
 
-        // Progress
-        $.xhr.upload.addEventListener('progress', function(e){
+        var progress = function(e){
           if( (new Date()) - $.lastProgressCallback > $.getOpt('throttleProgressCallbacks') * 1000 ) {
             $.callback('progress');
             $.lastProgressCallback = new Date();
           }
           $.loaded=e.loaded||0;
-        }, false);
+        };
+
+        // Progress
+        $.xhr.upload.addEventListener('progress', progress, false);
         $.loaded = 0;
         $.pendingRetry = false;
         $.callback('progress');
@@ -508,6 +517,12 @@
         // Done (either done, failed or retry)
         var doneHandler = function(e){
           var status = $.status();
+
+          // release listeners
+          $.xhr.upload.removeEventListener('progress', progress, false);
+          $.xhr.removeEventListener('load', doneHandler, false);
+          $.xhr.removeEventListener('error', doneHandler, false);
+
           if(status==='success'||status==='error') {
             $.callback(status, $.message());
             $.resumableObj.uploadNextChunk();
@@ -524,6 +539,7 @@
             }
           }
         };
+
         $.xhr.addEventListener('load', doneHandler, false);
         $.xhr.addEventListener('error', doneHandler, false);
 

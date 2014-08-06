@@ -1,11 +1,11 @@
 # Sample code for Node.js
 
-This sample is written for [Node.js 0.6+](http://nodejs.org/) and requires [Express](http://expressjs.com/) to make the sample code cleaner.
+This sample is written for [Node.js 0.10+](http://nodejs.org/) and requires [Express 4+](http://expressjs.com/) to make the sample code cleaner.
 
 To install and run:
 
     cd samples/Node.js
-    npm install express
+    npm install
     node app.js
 
 Then browse to [localhost:3000](http://localhost:3000).

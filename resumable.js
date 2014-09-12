@@ -50,7 +50,7 @@
       generateUniqueIdentifier:null,
       maxChunkRetries:undefined,
       chunkRetryInterval:undefined,
-      permanentErrors:[404, 415, 500, 501],
+      permanentErrors:[204, 404, 415, 500, 501],
       maxFiles:undefined,
       withCredentials:false,
       xhrTimeout:0,

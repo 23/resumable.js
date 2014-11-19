@@ -50,7 +50,7 @@
       generateUniqueIdentifier:null,
       maxChunkRetries:undefined,
       chunkRetryInterval:undefined,
-      permanentErrors:[404, 415, 500, 501],
+      permanentErrors:[400, 404, 415, 500, 501],
       maxFiles:undefined,
       withCredentials:false,
       xhrTimeout:0,
@@ -345,7 +345,7 @@
           if(c.status()=='error') error = true;
           ret += c.progress(true); // get chunk progress relative to entire file
         });
-        ret = (error ? 1 : (ret>0.999 ? 1 : ret));
+        ret = (error ? 1 : (ret>0.99999 ? 1 : ret));
         ret = Math.max($._prevProgress, ret); // We don't want to lose percentages when an upload is paused
         $._prevProgress = ret;
         return(ret);

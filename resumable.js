@@ -30,6 +30,42 @@
                    );
     if(!this.support) return(false);
 
+    // Object to detect Android OS and Native Browser to identify Bug and call fallback method to work proper
+    var androidBug = {
+        uAString: function() {
+            return  navigator.userAgent;
+        },
+        // Android Mobile
+        isAndroidMobile: function() {
+            return  androidBug.uAString().indexOf('Android') > -1 && androidBug.uAString().indexOf('Mozilla/5.0') > -1 && androidBug.uAString().indexOf('AppleWebKit') > -1;
+        },
+        // Android Browser (not Chrome)
+        regExAppleWebKit: function() {
+            return new RegExp(/AppleWebKit\/([\d.]+)/);
+        },
+        resultAppleWebKitRegEx: function() {
+            return androidBug.regExAppleWebKit().exec(androidBug.uAString());
+        },
+        appleWebKitVersion: function() {
+            return (androidBug.resultAppleWebKitRegEx() === null ? null : parseFloat(androidBug.regExAppleWebKit().exec(androidBug.uAString())[1]));
+        },
+        isAndroidBrowser: function() {
+            return (androidBug.isAndroidMobile() && androidBug.appleWebKitVersion() !== null && androidBug.appleWebKitVersion() < 537);
+        },
+        getAndroidOSVersion: function() {
+            var ua = androidBug.uAString();
+            var match = ua.match(/Android\s([0-9\.]*)/);
+            return match ? match[1] : false;
+        },
+        isAndroidHaveBug: function() {
+            // Fixed in Android 4.4 so that lower version those are suppoerted HTML5 API but have a bug 
+            if (androidBug.isAndroidBrowser() && parseFloat(androidBug.getAndroidOSVersion()) < 4.4) {
+                return true;
+            }
+            return false;
+        }
+
+    };
 
     // PROPERTIES
     var $ = this;
@@ -180,6 +216,22 @@
           target += '&';
         }
         return target + params.join('&');
+      },
+      sendAsArrayBuffer: function(str, callback) {
+            var blob;
+            var BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder;
+            if (typeof (BlobBuilder) !== 'undefined') {
+                var bb = new BlobBuilder();
+                bb.append(str);
+                blob = bb.getBlob();
+            } else {
+                blob = new Blob([str]);
+            }
+            var f = new FileReader();
+            f.onload = function(e) {
+                callback(e.target.result);
+            };
+            f.readAsArrayBuffer(blob);
       }
     };
 
@@ -543,31 +595,46 @@
         data   = null,
         target = $.getOpt('target');
         
-        if ($.getOpt('method') === 'octet') {
-          // Add data from the query options
-          data = bytes;
-          var params = [];
-          $h.each(query, function(k,v){
-            params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
-          });
-          target = $h.getTarget(params);
-        } else {
-          // Add data from the query options
-          data = new FormData();
-          $h.each(query, function(k,v){
-            data.append(k,v);
-          });
-          data.append($.getOpt('fileParameterName'), bytes);
-        }
-        
         $.xhr.open('POST', target);
+        
+        if(androidBug.isAndroidHaveBug()){
+            $.xhr.setRequestHeader("X-Send-File-Using", "ArrayBuffer");
+             $h.each(query, function(k, v) {
+                $.xhr.setRequestHeader("X-" + k.charAt(0).toUpperCase() + k.slice(1), v);
+             });
+        }else{
+            if ($.getOpt('method') === 'octet') {
+              // Add data from the query options
+              data = bytes;
+              var params = [];
+              $h.each(query, function(k,v){
+                params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
+              });
+              target = $h.getTarget(params);
+            } else {
+              // Add data from the query options
+              data = new FormData();
+              $h.each(query, function(k,v){
+                data.append(k,v);
+              });
+              data.append($.getOpt('fileParameterName'), bytes);
+            }
+        }
+       
+        
         $.xhr.timeout = $.getOpt('xhrTimeout');
         $.xhr.withCredentials = $.getOpt('withCredentials');
         // Add data from header options
         $h.each($.getOpt('headers'), function(k,v) {
           $.xhr.setRequestHeader(k, v);
         });
-        $.xhr.send(data);
+        if(androidBug.isAndroidHaveBug()){
+             $h.sendAsArrayBuffer(data, function(buff) {
+                        $.xhr.send(buff);
+             });
+        }else{
+            $.xhr.send(data);
+        }
       };
       $.abort = function(){
         // Abort and reset

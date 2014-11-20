@@ -133,6 +133,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
        }
     }
 
+    // If Data is send using ArrayBuffer for Android Bug
+if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_SERVER['HTTP_X_SEND_FILE_USING']) && $_SERVER['HTTP_X_SEND_FILE_USING']==="ArrayBuffer") {
+
+    $fileName = $_SERVER['HTTP_X_RESUMABLEFILENAME'];
+    $identifier = $_SERVER['HTTP_X_RESUMABLEIDENTIFIER'];
+    $chunkNumber = $_SERVER['HTTP_X_RESUMABLECHUNKNUMBER'];
+    $chunkSize = $_SERVER['HTTP_X_RESUMABLECHUNKSIZE'];
+    $totalSize = $_SERVER['HTTP_X_RESUMABLETOTALSIZE'];
+
+    // init the destination file (format <filename.ext>.part<#chunk>
+    // the file is stored in a temporary directory
+    $temp_dir = 'temp/' . $identifier;
+    $dest_file = $temp_dir . '/' . $fileName . '.part' . $chunkNumber;
+    // create the temporary directory
+    if (!is_dir($temp_dir)) {
+        mkdir($temp_dir, 0777, true);
+    }
+
+    $input = fopen("php://input", "r");
+    file_put_contents($dest_file, $input);
+
+    // check if all the parts present, and create the final destination file
+    createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize);
+}    
 
 
 // loop through files and move the chunks to a temporarily created directory

@@ -433,6 +433,7 @@
         };
         $.xhr.addEventListener('load', testHandler, false);
         $.xhr.addEventListener('error', testHandler, false);
+        $.xhr.addEventListener('timeout', testHandler, false);
 
         // Add data from the query options
         var params = [];
@@ -518,6 +519,7 @@
         };
         $.xhr.addEventListener('load', doneHandler, false);
         $.xhr.addEventListener('error', doneHandler, false);
+        $.xhr.addEventListener('timeout', doneHandler, false);
 
         // Set up the basic query data from Resumable
         var query = {

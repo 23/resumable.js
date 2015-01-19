@@ -186,11 +186,11 @@
     var onDrop = function(event){
       $h.stopEvent(event);
 
-      //handle dropped things as items if we can (Chrome only at the moment)
+      //handle dropped things as items if we can (this lets us deal with folders nicer in some cases)
       if (event.dataTransfer && event.dataTransfer.items) {
         loadFiles(event.dataTransfer.items, event);
       }
-      //else fall back on treating them as files
+      //else handle them as files
       else if (event.dataTransfer && event.dataTransfer.files) {
         loadFiles(event.dataTransfer.files, event);
       }
@@ -213,37 +213,48 @@
       //update the total number of things we plan to process
       queue.total += files.length;
 
+      //loop over all the passed in objects checking if they are files or folders
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
         var entry, reader;
 
         if (file.isFile || file.isDirectory) {
+          //this is an object we can handle below with no extra work needed up front
           entry = file;
         }
         else if (file.getAsEntry) {
+          //get the file as an entry object if we can using the proposed HTML5 api (unlikely to get implemented by anyone)
           entry = file.getAsEntry();
         }
         else if (file.webkitGetAsEntry) {
+          //get the file as an entry object if we can using the Chrome specific webkit implementation
           entry = file.webkitGetAsEntry();
         }
         else if (typeof file.getAsFile === 'function') {
+          //if this is still a DataTransferItem object, get it as a file object
           enqueueFileAddition(file.getAsFile(), queue, path);
+          //we just added this file object to the queue so we can go to the next object in the loop and skip the processing below
           continue;
         }
         else if (File && file instanceof File) {
+          //this is already a file object so just queue it up and move on
           enqueueFileAddition(file, queue, path);
+          //we just added this file object to the queue so we can go to the next object in the loop and skip the processing below
           continue;
         }
         else {
+          //we can't do anything with this object, decrement the expected total and skip the processing below
           queue.total -= 1;
           continue;
         }
 
         if (!entry) {
-          //there isn't anything we can do with this so shrink the total expected by 1
+          //there isn't anything we can do with this so decrement the total expected
           queue.total -= 1;
         }
         else if (entry.isFile) {
+          //this is handling to read an entry object representing a file, parsing the file object is asynchronous which is why we need the queue
+          //currently entry objects will only exist in this flow for Chrome
           entry.file(function(file) {
             enqueueFileAddition(file, queue, path);
           }, function(err) {
@@ -251,6 +262,8 @@
           });
         }
         else if (entry.isDirectory) {
+          //this is handling to read an entry object representing a folder, parsing the directory object is asynchronous which is why we need the queue
+          //currently entry objects will only exist in this flow for Chrome
           var directory=entry;
           reader = entry.createReader();
 

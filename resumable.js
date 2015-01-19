@@ -201,10 +201,10 @@
 
     // INTERNAL METHODS (both handy and responsible for the heavy load)
     /**
-     * @summary This funciton loops over the files passed in from a drag and drop operation and gets them ready for appendFilesFromFileList
+     * @summary This function loops over the files passed in from a drag and drop operation and gets them ready for appendFilesFromFileList
      *            It attempts to use FileSystem API calls to extract files and subfolders if the dropped items include folders
      *            That capability is only currently available in Chrome, but if it isn't available it will just pass the items along to 
-     *            appendFilesFromFileList (via enqueueFileAddition to help with asyncronous processing.)
+     *            appendFilesFromFileList (via enqueueFileAddition to help with asynchronous processing.)
      * @param files {Array} - the File or Entry objects to be processed depending on your browser support
      * @param event {Object} - the drop event object
      * @param [queue] {Object} - an object to keep track of our progress processing the dropped items
@@ -274,15 +274,19 @@
         else if (entry.isDirectory) {
           //this is handling to read an entry object representing a folder, parsing the directory object is asynchronous which is why we need the queue
           //currently entry objects will only exist in this flow for Chrome
-          var directory=entry;
           reader = entry.createReader();
 
-          reader.readEntries(function(entries) {
-            //process each thing in this directory recursively
-            loadFiles(entries, event, queue, directory.fullPath);
-            //this was a directory rather than a file so decrement the expected file count
-            updateQueueTotal(-1, queue);
-          }, function(err) {
+          //wrap the callback in another function so we can store the path in a closure
+          var readDir = function(path){
+            return function(entries){
+              //process each thing in this directory recursively
+              loadFiles(entries, event, queue, path);
+              //this was a directory rather than a file so decrement the expected file count
+              updateQueueTotal(-1, queue);
+            }
+          };
+
+          reader.readEntries(readDir(entry.fullPath), function(err) {
             console.warn(err);
           });
         }

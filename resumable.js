@@ -251,11 +251,12 @@
           });
         }
         else if (entry.isDirectory) {
+          var directory=entry;
           reader = entry.createReader();
 
           reader.readEntries(function(entries) {
             //process each thing in this directory recursively
-            loadFiles(entries, event, queue, entry.fullPath);
+            loadFiles(entries, event, queue, directory.fullPath);
             //this was a directory rather than a file so decrement the expected file count
             queue.total -= 1;
           }, function(err) {
@@ -266,7 +267,8 @@
     };
 
     var enqueueFileAddition = function(file, queue, path) {
-      file.relativePath = path + '/' + file.name;
+      //store the path to this file if it came in as part of a folder
+      if (path) file.relativePath = path + '/' + file.name;
       queue.files.push(file);
 
       // If all the files we expect have shown up, then flush the queue.

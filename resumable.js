@@ -200,6 +200,16 @@
     };
 
     // INTERNAL METHODS (both handy and responsible for the heavy load)
+    /**
+     * @summary This funciton loops over the files passed in from a drag and drop operation and gets them ready for appendFilesFromFileList
+     *            It attempts to use FileSystem API calls to extract files and subfolders if the dropped items include folders
+     *            That capability is only currently available in Chrome, but if it isn't available it will just pass the items along to 
+     *            appendFilesFromFileList (via enqueueFileAddition to help with asyncronous processing.)
+     * @param files {Array} - the File or Entry objects to be processed depending on your browser support
+     * @param event {Object} - the drop event object
+     * @param [queue] {Object} - an object to keep track of our progress processing the dropped items
+     * @param [path] {String} - the relative path from the originally selected folder to the current files if extracting files from subfolders
+     */
     var loadFiles = function (files, event, queue, path){
       //initialize the queue object if it doesn't exist
       if (!queue) {
@@ -211,7 +221,7 @@
       }
 
       //update the total number of things we plan to process
-      queue.total += files.length;
+      updateQueueTotal(files.length, queue);
 
       //loop over all the passed in objects checking if they are files or folders
       for (var i = 0; i < files.length; i++) {
@@ -244,13 +254,13 @@
         }
         else {
           //we can't do anything with this object, decrement the expected total and skip the processing below
-          queue.total -= 1;
+          updateQueueTotal(-1, queue);
           continue;
         }
 
         if (!entry) {
           //there isn't anything we can do with this so decrement the total expected
-          queue.total -= 1;
+          updateQueueTotal(-1, queue);
         }
         else if (entry.isFile) {
           //this is handling to read an entry object representing a file, parsing the file object is asynchronous which is why we need the queue
@@ -271,7 +281,7 @@
             //process each thing in this directory recursively
             loadFiles(entries, event, queue, directory.fullPath);
             //this was a directory rather than a file so decrement the expected file count
-            queue.total -= 1;
+            updateQueueTotal(-1, queue);
           }, function(err) {
             console.warn(err);
           });
@@ -279,6 +289,27 @@
       }
     };
 
+    /**
+     * @summary Adjust the total number of files we are expecting to process
+     *          if decrementing and the new expected total is equal to the number processed, flush the queue
+     * @param addition {Number} - the number of additional files we expect to process (may be negative)
+     * @param queue {Object} - an object to keep track of our progress processing the dropped items
+     */
+    var updateQueueTotal = function(addition, queue){
+      queue.total += addition;
+      
+      // If all the files we expect have shown up, then flush the queue.
+      if (queue.files.length === queue.total) {
+        appendFilesFromFileList(queue.files, queue.event);
+      }
+    };
+
+    /**
+     * @summary Add a file to the queue of processed files, if it brings the total up to the expected total, flush the queue
+     * @param file {Object} - File object to be passed along to appendFilesFromFileList eventually
+     * @param queue {Object} - an object to keep track of our progress processing the dropped items
+     * @param [path] {String} - the file's relative path from the originally dropped folder if we are parsing folder content (Chrome only for now)
+     */
     var enqueueFileAddition = function(file, queue, path) {
       //store the path to this file if it came in as part of a folder
       if (path) file.relativePath = path + '/' + file.name;

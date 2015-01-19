@@ -185,13 +185,96 @@
 
     var onDrop = function(event){
       $h.stopEvent(event);
-      appendFilesFromFileList(event.dataTransfer.files, event);
+
+      //handle dropped things as items if we can (Chrome only at the moment)
+      if (event.dataTransfer && event.dataTransfer.items) {
+        loadFiles(event.dataTransfer.items, event);
+      }
+      //else fall back on treating them as files
+      else if (event.dataTransfer && event.dataTransfer.files) {
+        loadFiles(event.dataTransfer.files, event);
+      }
     };
     var onDragOver = function(e) {
       e.preventDefault();
     };
 
     // INTERNAL METHODS (both handy and responsible for the heavy load)
+    var loadFiles = function (files, event, queue, path){
+      //initialize the queue object if it doesn't exist
+      if (!queue) {
+        queue = {
+          total: 0,
+          files: [],
+          event: event
+        };
+      }
+
+      //update the total number of things we plan to process
+      queue.total += files.length;
+
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        var entry, reader;
+
+        if (file.isFile || file.isDirectory) {
+          entry = file;
+        }
+        else if (file.getAsEntry) {
+          entry = file.getAsEntry();
+        }
+        else if (file.webkitGetAsEntry) {
+          entry = file.webkitGetAsEntry();
+        }
+        else if (typeof file.getAsFile === 'function') {
+          enqueueFileAddition(file.getAsFile(), queue, path);
+          continue;
+        }
+        else if (File && file instanceof File) {
+          enqueueFileAddition(file, queue, path);
+          continue;
+        }
+        else {
+          queue.total -= 1;
+          continue;
+        }
+
+        if (!entry) {
+          //there isn't anything we can do with this so shrink the total expected by 1
+          queue.total -= 1;
+        }
+        else if (entry.isFile) {
+          entry.file(function(file) {
+            enqueueFileAddition(file, queue, path);
+          }, function(err) {
+            console.warn(err);
+          });
+        }
+        else if (entry.isDirectory) {
+          reader = entry.createReader();
+
+          reader.readEntries(function(entries) {
+            //process each thing in this directory recursively
+            loadFiles(entries, event, queue, entry.fullPath);
+            //this was a directory rather than a file so decrement the expected file count
+            queue.total -= 1;
+          }, function(err) {
+            console.warn(err);
+          });
+        }
+      }
+    };
+
+    var enqueueFileAddition = function(file, queue, path) {
+      file.relativePath = path + '/' + file.name;
+      queue.files.push(file);
+
+      // If all the files we expect have shown up, then flush the queue.
+      if (queue.files.length === queue.total) {
+        appendFilesFromFileList(queue.files, queue.event);
+      }
+    };
+
     var appendFilesFromFileList = function(fileList, event){
       // check for uploading too many files
       var errorCount = 0;
@@ -250,7 +333,7 @@
       $.file = file;
       $.fileName = file.fileName||file.name; // Some confusion in different versions of Firefox
       $.size = file.size;
-      $.relativePath = file.webkitRelativePath || $.fileName;
+      $.relativePath = file.webkitRelativePath || file.relativePath || $.fileName;
       $.uniqueIdentifier = $h.generateUniqueIdentifier(file);
       $._pause = false;
       $.container = '';

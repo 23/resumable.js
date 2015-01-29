@@ -113,8 +113,8 @@
 
     // EVENTS
     // catchAll(event, ...)
-    // fileSuccess(file), fileProgress(file), fileAdded(file, event), fileRetry(file), fileError(file, message),
-    // complete(), progress(), error(message, file), pause()
+    // fileSuccess(file), fileProgress(file), fileAdded(file, event), filesAdded(files, filesSkipped), fileRetry(file),
+    // fileError(file, message), complete(), progress(), error(message, file), pause()
     $.events = [];
     $.on = function(event,callback){
       $.events.push(event.toLowerCase(), callback);
@@ -303,7 +303,7 @@
           return false;
         }
       }
-      var files = [];
+      var files = [], filesSkipped = [];
       $h.each(fileList, function(file){
         var fileName = file.name;
         if(o.fileType.length > 0){
@@ -341,7 +341,9 @@
             window.setTimeout(function(){
               $.fire('fileAdded', f, event)
             },0);
-          })()};
+          })()} else {
+            filesSkipped.push(f);
+          };
         }
         // directories have size == 0
         var uniqueIdentifier = $h.generateUniqueIdentifier(file)
@@ -359,7 +361,7 @@
 
       });
       window.setTimeout(function(){
-        $.fire('filesAdded', files)
+        $.fire('filesAdded', files, filesSkipped);
       },0);
     };
 

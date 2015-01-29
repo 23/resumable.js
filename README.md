@@ -141,7 +141,7 @@ Available configuration options are:
 * `.fileSuccess(file, message)` A specific file was completed. `message` is the response body from the server.
 * `.fileProgress(file)` Uploading progressed for a specific file.
 * `.fileAdded(file, event)` A new file was added. Optionally, you can use the browser `event` object from when the file was added.
-* `.filesAdded(array)` New files were added.
+* `.filesAdded(arrayAdded, arraySkipped)` New files were added (and maybe some have been skipped).
 * `.fileRetry(file)` Something went wrong during upload of a specific file, uploading is being retried.
 * `.fileError(file, message)` An error occurred during upload of a specific file.
 * `.uploadStart()` Upload has been started on the Resumable object.

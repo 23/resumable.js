@@ -73,7 +73,7 @@ function rrmdir($dir) {
  *
  * Check if all the parts exist, and 
  * gather all the parts of the file together
- * @param string $dir - the temporary directory holding all the parts of the file
+ * @param string $temp_dir - the temporary directory holding all the parts of the file
  * @param string $fileName - the original file name
  * @param string $chunkSize - each chunk size (in bytes)
  * @param string $totalSize - original file size (in bytes)

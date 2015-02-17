@@ -1,6 +1,6 @@
 ## What is Resumable.js
 
-Resumable.js is a JavaScript library providing multiple simultaneous, stable and resumable uploads via the [`HTML5 File API`](http://www.w3.org/TR/FileAPI/). 
+Resumable.js is a JavaScript library providing multiple simultaneous, stable and resumable uploads via the [`HTML5 File API`](http://www.w3.org/TR/FileAPI/).
 
 The library is designed to introduce fault-tolerance into the upload of large files through HTTP. This is done by splitting each file into small chunks. Then, whenever the upload of a chunk fails, uploading is retried until the procedure completes. This allows uploads to automatically resume uploading after a network connection is lost either locally or to the server. Additionally, it allows for users to pause, resume and even recover uploads without losing state because only the currently uploading chunks will be aborted, not the entire upload.
 
@@ -14,12 +14,12 @@ Samples and examples are available in the `samples/` folder. Please push your ow
 A new `Resumable` object is created with information of what and where to post:
 
     var r = new Resumable({
-      target:'/api/photo/redeem-upload-token', 
+      target:'/api/photo/redeem-upload-token',
       query:{upload_token:'my_token'}
     });
     // Resumable.js isn't supported, fall back on a different method
     if(!r.support) location.href = '/some-old-crappy-uploader';
-  
+
 To allow files to be selected and drag-dropped, you need to assign a drop target and a DOM item to be clicked for browsing:
 
     r.assignBrowse(document.getElementById('browseButton'));
@@ -44,7 +44,7 @@ Most of the magic for Resumable.js happens in the user's browser, but files stil
 To handle the state of upload chunks, a number of extra parameters are sent along with all requests:
 
 * `resumableChunkNumber`: The index of the chunk in the current upload. First chunk is `1` (no base-0 counting here).
-* `resumableTotalChunks`: The total number of chunks.  
+* `resumableTotalChunks`: The total number of chunks.
 * `resumableChunkSize`: The general chunk size. Using this value and `resumableTotalSize` you can calculate the total number of chunks. Please note that the size of the data received in the HTTP might be lower than `resumableChunkSize` of this for the last chunk for a file.
 * `resumableTotalSize`: The total file size.
 * `resumableIdentifier`: A unique identifier for the file contained in the request.
@@ -56,7 +56,7 @@ You should allow for the same chunk to be uploaded more than once; this isn't st
 For every request, you can confirm reception in HTTP status codes (can be change through the `permanentErrors` option):
 
 * `200`: The chunk was accepted and correct. No need to re-upload.
-* `404`, `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload. 
+* `404`, `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload.
 * _Anything else_: Something went wrong, but try reuploading the file.
 
 ## Handling GET (or `test()` requests)
@@ -76,19 +76,21 @@ After this is done and `testChunks` enabled, an upload can quickly catch up even
 The object is loaded with a configuration hash:
 
     var r = new Resumable({opt1:'val', ...});
-    
+
 Available configuration options are:
 
-* `target` The target URL for the multipart POST request (Default: `/`)
+* `target` The target URL for the multipart HTTP request (Default: `/`)
 * `chunkSize` The size in bytes of each uploaded chunk of data. The last uploaded chunk will be at least this size and up to two the size, see [Issue #51](https://github.com/23/resumable.js/issues/51) for details and reasons. (Default: `1*1024*1024`)
 * `forceChunkSize` Force all chunks to be less or equal than chunkSize. Otherwise, the last chunk will be greater than or equal to `chunkSize`. (Default: `false`)
 * `simultaneousUploads` Number of simultaneous uploads (Default: `3`)
-* `fileParameterName` The name of the multipart POST parameter to use for the file chunk  (Default: `file`)
-* `query` Extra parameters to include in the multipart POST with data. This can be an object or a function. If a function, it will be passed a ResumableFile and a ResumableChunk object (Default: `{}`)
-* `headers` Extra headers to include in the multipart POST with data (Default: `{}`)
-* `method` Method to use when POSTing chunks to the server (`multipart` or `octet`) (Default: `multipart`)
+* `fileParameterName` The name of the multipart request parameter to use for the file chunk  (Default: `file`)
+* `query` Extra parameters to include in the multipart request with data. This can be an object or a function. If a function, it will be passed a ResumableFile and a ResumableChunk object (Default: `{}`)
+* `headers` Extra headers to include in the multipart request with data (Default: `{}`)
+* `method` Method to use when sending chunks to the server (`multipart` or `octet`) (Default: `multipart`)
+* `uploadMethod` HTTP method to use when sending chunks to the server (`POST`, `PUT`, `PATCH`) (Default: `POST`)
 * `prioritizeFirstAndLastChunk` Prioritize first and last chunks of all files. This can be handy if you can determine if a file is valid for your service from only the first or last chunk. For example, photo or video meta data is usually located in the first part of a file, making it easy to test support from only the first chunk. (Default: `false`)
 * `testChunks` Make a GET request to the server for each chunks to see if it already exists. If implemented on the server-side, this will allow for upload resumes even after a browser crash or even a computer restart. (Default: `true`)
+* `testTarget` The target URL for the GET request to the server for each chunk to see if it already exists (Default: `target`)
 * `preprocess` Optional function to process each chunk before testing & sending. Function is passed the chunk as parameter, and should call the `preprocessFinished` method on the chunk when finished. (Default: `null`)
 * `generateUniqueIdentifier` Override the function that generates unique identifiers for each file.  (Default: `null`)
 * `maxFiles` Indicates how many files can be uploaded in a single session. Valid values are any positive integer and `undefined` for no limit. (Default: `undefined`)
@@ -162,11 +164,11 @@ Available configuration options are:
 * `.retry()` Retry uploading the file.
 * `.bootstrap()` Rebuild the state of a `ResumableFile` object, including reassigning chunks and XMLHttpRequest instances.
 * `.isUploading()` Returns a boolean indicating whether file chunks is uploading.
-* `.isComplete()` Returns a boolean indicating whether the file has completed uploading and received a server response. 
+* `.isComplete()` Returns a boolean indicating whether the file has completed uploading and received a server response.
 
 ## Alternatives
 
-This library is explicitly designed for modern browsers supporting advanced HTML5 file features, and the motivation has been to provide stable and resumable support for large files (allowing uploads of several GB files through HTTP in a predictable fashion). 
+This library is explicitly designed for modern browsers supporting advanced HTML5 file features, and the motivation has been to provide stable and resumable support for large files (allowing uploads of several GB files through HTTP in a predictable fashion).
 
 If your aim is just to support progress indications during upload/uploading multiple files at once, Resumable.js isn't for you. In those cases, [SWFUpload](http://swfupload.org/) and [Plupload](http://plupload.com/) provides the same features with wider browser support.
 

@@ -340,13 +340,21 @@
       }
       var files = [];
       $h.each(fileList, function(file){
-        var fileName = file.name.split('.');
-        var fileType = fileName[fileName.length-1].toLowerCase();
-        
-        if (o.fileType.length > 0 && !$h.contains(o.fileType, fileType)) {
-          o.fileTypeErrorCallback(file, errorCount++);
-          return false;
-        }
+        var fileName = file.name;
+        if(typeof(o.fileType)==='array' && o.fileType.length > 0){
+			var fileTypeFound = false;
+			for(var index in  ){
+				var extension = '.' + o.fileType[index];
+				if(fileName.indexOf(extension, fileName.length - extension.length) !== -1){
+					fileTypeFound = true;
+					break;
+				}
+			}
+			if (!fileTypeFound) {
+			  o.fileTypeErrorCallback(file, errorCount++);
+			  return false;
+			}
+		}
 
         if (typeof(o.minFileSize)!=='undefined' && file.size<o.minFileSize) {
           o.minFileSizeErrorCallback(file, errorCount++);

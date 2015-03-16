@@ -341,7 +341,7 @@
       var files = [];
       $h.each(fileList, function(file){
         var fileName = file.name;
-        if(typeof(o.fileType)==='array' && o.fileType.length > 0){
+        if(o.fileType.length > 0){
 			var fileTypeFound = false;
 			for(var index in o.fileType){
 				var extension = '.' + o.fileType[index];

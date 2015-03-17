@@ -8,7 +8,6 @@ Resumable.js does not have any external dependencies other than the `HTML5 File 
 
 Samples and examples are available in the `samples/` folder. Please push your own as Markdown to help document the project.
 
-
 ## How can I use it?
 
 A new `Resumable` object is created with information of what and where to post:

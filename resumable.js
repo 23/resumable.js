@@ -365,16 +365,32 @@
           return false;
         }
 
+        function addFile(uniqueIdentifier){
+          if (!$.getFromUniqueIdentifier(uniqueIdentifier)) {(function(){
+            file.uniqueIdentifier = uniqueIdentifier;
+            var f = new ResumableFile($, file, uniqueIdentifier);
+            window.setTimeout(function(){
+              $.files.push(f);
+              files.push(f);
+              f.container = (typeof event != 'undefined' ? event.srcElement : null);
+              $.fire('fileAdded', f, event)
+            },0);
+          })()};
+        }
         // directories have size == 0
-        if (!$.getFromUniqueIdentifier($h.generateUniqueIdentifier(file))) {(function(){
-          var f = new ResumableFile($, file);
-          window.setTimeout(function(){
-            $.files.push(f);
-            files.push(f);
-            f.container = (typeof event != 'undefined' ? event.srcElement : null);
-            $.fire('fileAdded', f, event)
-          },0);
-        })()};
+        var uniqueIdentifier = $h.generateUniqueIdentifier(file)
+        if(uniqueIdentifier && typeof uniqueIdentifier.done === 'function' && typeof uniqueIdentifier.fail === 'function'){
+          uniqueIdentifier
+          .done(function(uniqueIdentifier){
+              addFile(uniqueIdentifier);
+          })
+          .fail(function(){
+              addFile();
+          });
+        }else{
+          addFile(uniqueIdentifier);
+        }
+
       });
       window.setTimeout(function(){
         $.fire('filesAdded', files)
@@ -382,7 +398,7 @@
     };
 
     // INTERNAL OBJECT TYPES
-    function ResumableFile(resumableObj, file){
+    function ResumableFile(resumableObj, file, uniqueIdentifier){
       var $ = this;
       $.opts = {};
       $.getOpt = resumableObj.getOpt;
@@ -392,10 +408,10 @@
       $.fileName = file.fileName||file.name; // Some confusion in different versions of Firefox
       $.size = file.size;
       $.relativePath = file.webkitRelativePath || file.relativePath || $.fileName;
-      $.uniqueIdentifier = $h.generateUniqueIdentifier(file);
+      $.uniqueIdentifier = uniqueIdentifier;
       $._pause = false;
       $.container = '';
-      var _error = false;
+      var _error = uniqueIdentifier !== undefined;
 
       // Callback when something happens within the chunk
       var chunkEvent = function(event, message){
@@ -529,6 +545,7 @@
       $.bootstrap();
       return(this);
     }
+
 
     function ResumableChunk(resumableObj, fileObj, offset, callback){
       var $ = this;

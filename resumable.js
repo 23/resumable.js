@@ -369,10 +369,10 @@
           if (!$.getFromUniqueIdentifier(uniqueIdentifier)) {(function(){
             file.uniqueIdentifier = uniqueIdentifier;
             var f = new ResumableFile($, file, uniqueIdentifier);
+            $.files.push(f);
+            files.push(f);
+            f.container = (typeof event != 'undefined' ? event.srcElement : null);
             window.setTimeout(function(){
-              $.files.push(f);
-              files.push(f);
-              f.container = (typeof event != 'undefined' ? event.srcElement : null);
               $.fire('fileAdded', f, event)
             },0);
           })()};

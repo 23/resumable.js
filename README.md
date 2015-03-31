@@ -1,6 +1,6 @@
 ## What is Resumable.js
 
-Resumable.js is a JavaScript library providing multiple simultaneous, stable and resumable uploads via the [`HTML5 File API`](http://www.w3.org/TR/FileAPI/). 
+Resumable.js is a JavaScript library providing multiple simultaneous, stable and resumable uploads via the [`HTML5 File API`](http://www.w3.org/TR/FileAPI/).
 
 The library is designed to introduce fault-tolerance into the upload of large files through HTTP. This is done by splitting each file into small chunks. Then, whenever the upload of a chunk fails, uploading is retried until the procedure completes. This allows uploads to automatically resume uploading after a network connection is lost either locally or to the server. Additionally, it allows for users to pause, resume and even recover uploads without losing state because only the currently uploading chunks will be aborted, not the entire upload.
 
@@ -14,12 +14,12 @@ Samples and examples are available in the `samples/` folder. Please push your ow
 A new `Resumable` object is created with information of what and where to post:
 
     var r = new Resumable({
-      target:'/api/photo/redeem-upload-token', 
+      target:'/api/photo/redeem-upload-token',
       query:{upload_token:'my_token'}
     });
     // Resumable.js isn't supported, fall back on a different method
     if(!r.support) location.href = '/some-old-crappy-uploader';
-  
+
 To allow files to be selected and drag-dropped, you need to assign a drop target and a DOM item to be clicked for browsing:
 
     r.assignBrowse(document.getElementById('browseButton'));
@@ -51,12 +51,14 @@ To handle the state of upload chunks, a number of extra parameters are sent alon
 * `resumableFilename`: The original file name (since a bug in Firefox results in the file name not being transmitted in chunk multipart posts).
 * `resumableRelativePath`: The file's relative path when selecting a directory (defaults to file name in all browsers except Chrome).
 
+These parameter names are overridable using the `paramNames` configuration.
+
 You should allow for the same chunk to be uploaded more than once; this isn't standard behaviour, but on an unstable network environment it could happen, and this case is exactly what Resumable.js is designed for.
 
 For every request, you can confirm reception in HTTP status codes (can be change through the `permanentErrors` option):
 
 * `200`: The chunk was accepted and correct. No need to re-upload.
-* `404`, `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload. 
+* `404`, `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload.
 * _Anything else_: Something went wrong, but try reuploading the file.
 
 ## Handling GET (or `test()` requests)
@@ -76,7 +78,7 @@ After this is done and `testChunks` enabled, an upload can quickly catch up even
 The object is loaded with a configuration hash:
 
     var r = new Resumable({opt1:'val', ...});
-    
+
 Available configuration options are:
 
 * `target` The target URL for the multipart POST request (Default: `/`)
@@ -84,6 +86,16 @@ Available configuration options are:
 * `forceChunkSize` Force all chunks to be less or equal than chunkSize. Otherwise, the last chunk will be greater than or equal to `chunkSize`. (Default: `false`)
 * `simultaneousUploads` Number of simultaneous uploads (Default: `3`)
 * `fileParameterName` The name of the multipart POST parameter to use for the file chunk  (Default: `file`)
+* `paramNames` A hash of the names used for each parameter
+  * `chunkNumber` The name of the parameter for the currently uploading chunk (Default: `resumableChunkNumber`)
+  * `totalChunks` The name of the parameter for the total number of chunks (Default: `resumableTotalChunks`)
+  * `chunkSize` The name of the parameter for the general chunk size (Default: `resumableChunkSize`)
+  * `currentChunkSize` The name of the parameter for the current chunk size (Default: `resumableCurrentChunkSize`)
+  * `totalSize` The name of the parameter for the total file size (Default: `resumableTotalSize`)
+  * `identifier` The name of the parameter for the file's unique identifier (Default: `resumableIdentifier`)
+  * `filename` The name of the parameter for the original file name (Default: `resumableFilename`)
+  * `relativePath` The name of the parameter for the file's relative path (Default: `resumableRelativePath`)
+  * `type` The name of the parameter for the file type (Default: `resumableType`)
 * `query` Extra parameters to include in the multipart POST with data. This can be an object or a function. If a function, it will be passed a ResumableFile and a ResumableChunk object (Default: `{}`)
 * `headers` Extra headers to include in the multipart POST with data (Default: `{}`)
 * `method` Method to use when POSTing chunks to the server (`multipart` or `octet`) (Default: `multipart`)
@@ -162,11 +174,10 @@ Available configuration options are:
 * `.retry()` Retry uploading the file.
 * `.bootstrap()` Rebuild the state of a `ResumableFile` object, including reassigning chunks and XMLHttpRequest instances.
 * `.isUploading()` Returns a boolean indicating whether file chunks is uploading.
-* `.isComplete()` Returns a boolean indicating whether the file has completed uploading and received a server response. 
+* `.isComplete()` Returns a boolean indicating whether the file has completed uploading and received a server response.
 
 ## Alternatives
 
-This library is explicitly designed for modern browsers supporting advanced HTML5 file features, and the motivation has been to provide stable and resumable support for large files (allowing uploads of several GB files through HTTP in a predictable fashion). 
+This library is explicitly designed for modern browsers supporting advanced HTML5 file features, and the motivation has been to provide stable and resumable support for large files (allowing uploads of several GB files through HTTP in a predictable fashion).
 
 If your aim is just to support progress indications during upload/uploading multiple files at once, Resumable.js isn't for you. In those cases, [SWFUpload](http://swfupload.org/) and [Plupload](http://plupload.com/) provides the same features with wider browser support.
-

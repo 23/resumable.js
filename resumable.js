@@ -40,6 +40,17 @@
       simultaneousUploads:3,
       fileParameterName:'file',
       throttleProgressCallbacks:0.5,
+      paramNames:{
+        chunkNumber: 'resumableChunkNumber',
+        chunkSize: 'resumableChunkSize',
+        currentChunkSize: 'resumableCurrentChunkSize',
+        totalSize: 'resumableTotalSize',
+        type: 'resumableType',
+        identifier: 'resumableIdentifier',
+        filename: 'resumableFilename',
+        relativePath: 'resumableRelativePath',
+        totalChunks: 'resumableTotalChunks'
+      },
       query:{},
       headers:{},
       preprocess:null,
@@ -73,7 +84,9 @@
     };
     $.opts = opts||{};
     $.getOpt = function(o) {
-      var $opt = this;
+      var $opt = this,
+          getPath = $h.getPath,
+          val;
       // Get multiple option if passed an array
       if(o instanceof Array) {
         var options = {};
@@ -84,16 +97,19 @@
       }
       // Otherwise, just return a simple option
       if ($opt instanceof ResumableChunk) {
-        if (typeof $opt.opts[o] !== 'undefined') { return $opt.opts[o]; }
+        val = getPath($opt.opts, o);
+        if (typeof val !== 'undefined') { return val; }
         else { $opt = $opt.fileObj; }
       }
       if ($opt instanceof ResumableFile) {
-        if (typeof $opt.opts[o] !== 'undefined') { return $opt.opts[o]; }
+        val = getPath($opt.opts, o);
+        if (typeof val !== 'undefined') { return val; }
         else { $opt = $opt.resumableObj; }
       }
       if ($opt instanceof Resumable) {
-        if (typeof $opt.opts[o] !== 'undefined') { return $opt.opts[o]; }
-        else { return $opt.defaults[o]; }
+        val = getPath($opt.opts, o);
+        if (typeof val !== 'undefined') { return val; }
+        else { return getPath($opt.defaults, o); }
       }
     };
     
@@ -180,6 +196,20 @@
           target += '&';
         }
         return target + params.join('&');
+      },
+      get:function(obj, key){
+        if (!obj || !key || !(obj instanceof Object)) { return; }
+        return obj[key];
+      },
+      getPath:function(obj, path){
+        var parts, len, i;
+        if (!obj || !path || typeof path !== 'string') { return; }
+        parts = path.split('.');
+        len = parts.length;
+        for (i = 0; typeof obj !== 'undefined' && i < len; i++) {
+          obj = $h.get(obj, parts[i]);
+        }
+        return obj;
       }
     };
 
@@ -601,15 +631,15 @@
           params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
         });
         // Add extra data to identify chunk
-        params.push(['resumableChunkNumber', encodeURIComponent($.offset+1)].join('='));
-        params.push(['resumableChunkSize', encodeURIComponent($.getOpt('chunkSize'))].join('='));
-        params.push(['resumableCurrentChunkSize', encodeURIComponent($.endByte - $.startByte)].join('='));
-        params.push(['resumableTotalSize', encodeURIComponent($.fileObjSize)].join('='));
-        params.push(['resumableType', encodeURIComponent($.fileObjType)].join('='));
-        params.push(['resumableIdentifier', encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
-        params.push(['resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
-        params.push(['resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
-        params.push(['resumableTotalChunks', encodeURIComponent($.fileObj.chunks.length)].join('='));
+        params.push([$.getOpt('paramNames.chunkNumber'), encodeURIComponent($.offset+1)].join('='));
+        params.push([$.getOpt('paramNames.chunkSize'), encodeURIComponent($.getOpt('chunkSize'))].join('='));
+        params.push([$.getOpt('paramNames.currentChunkSize'), encodeURIComponent($.endByte - $.startByte)].join('='));
+        params.push([$.getOpt('paramNames.totalSize'), encodeURIComponent($.fileObjSize)].join('='));
+        params.push([$.getOpt('paramNames.type'), encodeURIComponent($.fileObjType)].join('='));
+        params.push([$.getOpt('paramNames.identifier'), encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
+        params.push([$.getOpt('paramNames.filename'), encodeURIComponent($.fileObj.fileName)].join('='));
+        params.push([$.getOpt('paramNames.relativePath'), encodeURIComponent($.fileObj.relativePath)].join('='));
+        params.push([$.getOpt('paramNames.totalChunks'), encodeURIComponent($.fileObj.chunks.length)].join('='));
         // Append the relevant chunk and send it
         $.xhr.open('GET', $h.getTarget(params));
         $.xhr.timeout = $.getOpt('xhrTimeout');
@@ -680,17 +710,17 @@
         $.xhr.addEventListener('timeout', doneHandler, false);
 
         // Set up the basic query data from Resumable
-        var query = {
-          resumableChunkNumber: $.offset+1,
-          resumableChunkSize: $.getOpt('chunkSize'),
-          resumableCurrentChunkSize: $.endByte - $.startByte,
-          resumableTotalSize: $.fileObjSize,
-          resumableType: $.fileObjType,
-          resumableIdentifier: $.fileObj.uniqueIdentifier,
-          resumableFilename: $.fileObj.fileName,
-          resumableRelativePath: $.fileObj.relativePath,
-          resumableTotalChunks: $.fileObj.chunks.length
-        };
+        var query = {};
+        query[$.getOpt('paramNames.chunkNumber')] = $.offset+1;
+        query[$.getOpt('paramNames.chunkSize')] = $.getOpt('chunkSize');
+        query[$.getOpt('paramNames.currentChunkSize')] = $.endByte - $.startByte;
+        query[$.getOpt('paramNames.totalSize')] = $.fileObjSize;
+        query[$.getOpt('paramNames.type')] = $.fileObjType;
+        query[$.getOpt('paramNames.identifier')] = $.fileObj.uniqueIdentifier;
+        query[$.getOpt('paramNames.filename')] = $.fileObj.fileName;
+        query[$.getOpt('paramNames.relativePath')] = $.fileObj.relativePath;
+        query[$.getOpt('paramNames.totalChunks')] = $.fileObj.chunks.length;
+
         // Mix in custom data
         var customQuery = $.getOpt('query');
         if(typeof customQuery == 'function') customQuery = customQuery($.fileObj, $);

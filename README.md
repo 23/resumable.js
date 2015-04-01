@@ -85,6 +85,7 @@ Available configuration options are:
 * `simultaneousUploads` Number of simultaneous uploads (Default: `3`)
 * `fileParameterName` The name of the multipart POST parameter to use for the file chunk  (Default: `file`)
 * `query` Extra parameters to include in the multipart POST with data. This can be an object or a function. If a function, it will be passed a ResumableFile and a ResumableChunk object (Default: `{}`)
+* `parameterNamespace` Extra prefix added before the name of each parameter included in the multipart POST or in the test GET. (Default: `''`)
 * `headers` Extra headers to include in the multipart POST with data (Default: `{}`)
 * `method` Method to use when POSTing chunks to the server (`multipart` or `octet`) (Default: `multipart`)
 * `prioritizeFirstAndLastChunk` Prioritize first and last chunks of all files. This can be handy if you can determine if a file is valid for your service from only the first or last chunk. For example, photo or video meta data is usually located in the first part of a file, making it easy to test support from only the first chunk. (Default: `false`)

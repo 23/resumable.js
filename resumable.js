@@ -46,6 +46,7 @@
       method:'multipart',
       prioritizeFirstAndLastChunk:false,
       target:'/',
+      parameterNamespace:'',
       testChunks:true,
       generateUniqueIdentifier:null,
       maxChunkRetries:undefined,
@@ -595,21 +596,22 @@
 
         // Add data from the query options
         var params = [];
+        var parameterNamespace = $.getOpt('parameterNamespace');
         var customQuery = $.getOpt('query'); 
         if(typeof customQuery == 'function') customQuery = customQuery($.fileObj, $);
         $h.each(customQuery, function(k,v){
-          params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
+          params.push([encodeURIComponent(parameterNamespace+k), encodeURIComponent(v)].join('='));
         });
         // Add extra data to identify chunk
-        params.push(['resumableChunkNumber', encodeURIComponent($.offset+1)].join('='));
-        params.push(['resumableChunkSize', encodeURIComponent($.getOpt('chunkSize'))].join('='));
-        params.push(['resumableCurrentChunkSize', encodeURIComponent($.endByte - $.startByte)].join('='));
-        params.push(['resumableTotalSize', encodeURIComponent($.fileObjSize)].join('='));
-        params.push(['resumableType', encodeURIComponent($.fileObjType)].join('='));
-        params.push(['resumableIdentifier', encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
-        params.push(['resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
-        params.push(['resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
-        params.push(['resumableTotalChunks', encodeURIComponent($.fileObj.chunks.length)].join('='));
+        params.push([parameterNamespace+'resumableChunkNumber', encodeURIComponent($.offset+1)].join('='));
+        params.push([parameterNamespace+'resumableChunkSize', encodeURIComponent($.getOpt('chunkSize'))].join('='));
+        params.push([parameterNamespace+'resumableCurrentChunkSize', encodeURIComponent($.endByte - $.startByte)].join('='));
+        params.push([parameterNamespace+'resumableTotalSize', encodeURIComponent($.fileObjSize)].join('='));
+        params.push([parameterNamespace+'resumableType', encodeURIComponent($.fileObjType)].join('='));
+        params.push([parameterNamespace+'resumableIdentifier', encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
+        params.push([parameterNamespace+'resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
+        params.push([parameterNamespace+'resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
+        params.push([parameterNamespace+'resumableTotalChunks', encodeURIComponent($.fileObj.chunks.length)].join('='));
         // Append the relevant chunk and send it
         $.xhr.open('GET', $h.getTarget(params));
         $.xhr.timeout = $.getOpt('xhrTimeout');
@@ -702,22 +704,23 @@
         bytes  = $.fileObj.file[func]($.startByte,$.endByte), 
         data   = null,
         target = $.getOpt('target');
-        
+
+        var parameterNamespace = $.getOpt('parameterNamespace');
         if ($.getOpt('method') === 'octet') {
           // Add data from the query options
           data = bytes;
           var params = [];
           $h.each(query, function(k,v){
-            params.push([encodeURIComponent(k), encodeURIComponent(v)].join('='));
+            params.push([encodeURIComponent(parameterNamespace+k), encodeURIComponent(v)].join('='));
           });
           target = $h.getTarget(params);
         } else {
           // Add data from the query options
           data = new FormData();
           $h.each(query, function(k,v){
-            data.append(k,v);
+            data.append(parameterNamespace+k,v);
           });
-          data.append($.getOpt('fileParameterName'), bytes);
+          data.append(parameterNamespace+$.getOpt('fileParameterName'), bytes);
         }
         
         $.xhr.open('POST', target);

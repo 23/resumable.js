@@ -97,7 +97,7 @@
         else { return $opt.defaults[o]; }
       }
     };
-    
+
     // EVENTS
     // catchAll(event, ...)
     // fileSuccess(file), fileProgress(file), fileAdded(file, event), fileRetry(file), fileError(file, message),
@@ -119,8 +119,8 @@
       if(event=='fileerror') $.fire('error', args[2], args[1]);
       if(event=='fileprogress') $.fire('progress');
     };
-    
-    
+
+
     // INTERNAL HELPER METHODS (handy, but ultimately not part of uploading)
     var $h = {
       stopEvent: function(e){
@@ -204,7 +204,7 @@
     /**
      * @summary This function loops over the files passed in from a drag and drop operation and gets them ready for appendFilesFromFileList
      *            It attempts to use FileSystem API calls to extract files and subfolders if the dropped items include folders
-     *            That capability is only currently available in Chrome, but if it isn't available it will just pass the items along to 
+     *            That capability is only currently available in Chrome, but if it isn't available it will just pass the items along to
      *            appendFilesFromFileList (via enqueueFileAddition to help with asynchronous processing.)
      * @param files {Array} - the File or Entry objects to be processed depending on your browser support
      * @param event {Object} - the drop event object
@@ -277,19 +277,33 @@
           //currently entry objects will only exist in this flow for Chrome
           reader = entry.createReader();
 
-          //wrap the callback in another function so we can store the path in a closure
-          var readDir = function(path){
-            return function(entries){
-              //process each thing in this directory recursively
-              loadFiles(entries, event, queue, path);
-              //this was a directory rather than a file so decrement the expected file count
-              updateQueueTotal(-1, queue);
-            }
-          };
-
-          reader.readEntries(readDir(entry.fullPath), function(err) {
-            console.warn(err);
-          });
+            var newEntries = [];
+            //wrap the callback in another function so we can store the path in a closure
+            var readDir = function(path){
+                reader.readEntries(
+                    //success callback: read entries out of the directory
+                    function(entries){
+                        if (entries.length>0){
+                            //add these results to the array of all the new stuff
+                            for (var i=0; i<entries.length; i++) { newEntries.push(entries[i]); }
+                            //call this function again as all the results may not have been sent yet
+                            readDir(entry.fullPath);
+                        }
+                        else {
+                            //we have now gotten all the results in newEntries so let's process them recursively
+                            loadFiles(newEntries, event, queue, path);
+                            //this was a directory rather than a file so decrement the expected file count
+                            updateQueueTotal(-1, queue);
+                        }
+                    },
+                    //error callback, most often hit if there is a directory with nothing inside it
+                    function(err) {
+                        //this was a directory rather than a file so decrement the expected file count
+                        updateQueueTotal(-1, queue);
+                        console.warn(err);
+                    }
+                );
+            };
         }
       }
     };
@@ -302,7 +316,7 @@
      */
     var updateQueueTotal = function(addition, queue){
       queue.total += addition;
-      
+
       // If all the files we expect have shown up, then flush the queue.
       if (queue.files.length === queue.total) {
         appendFilesFromFileList(queue.files, queue.event);
@@ -331,7 +345,7 @@
       var errorCount = 0;
       var o = $.getOpt(['maxFiles', 'minFileSize', 'maxFileSize', 'maxFilesErrorCallback', 'minFileSizeErrorCallback', 'maxFileSizeErrorCallback', 'fileType', 'fileTypeErrorCallback']);
       if (typeof(o.maxFiles)!=='undefined' && o.maxFiles<(fileList.length+$.files.length)) {
-        // if single-file upload, file is already added, and trying to add 1 new file, simply replace the already-added file 
+        // if single-file upload, file is already added, and trying to add 1 new file, simply replace the already-added file
         if (o.maxFiles===1 && $.files.length===1 && fileList.length===1) {
           $.removeFile($.files[0]);
         } else {
@@ -517,7 +531,7 @@
           }
         });
         return(uploading);
-      };    
+      };
       $.isComplete = function(){
         var outstanding = false;
         $h.each($.chunks, function(chunk){
@@ -597,7 +611,7 @@
         // Add data from the query options
         var params = [];
         var parameterNamespace = $.getOpt('parameterNamespace');
-        var customQuery = $.getOpt('query'); 
+        var customQuery = $.getOpt('query');
         if(typeof customQuery == 'function') customQuery = customQuery($.fileObj, $);
         $h.each(customQuery, function(k,v){
           params.push([encodeURIComponent(parameterNamespace+k), encodeURIComponent(v)].join('='));
@@ -668,7 +682,7 @@
             $.callback('retry', $.message());
             $.abort();
             $.retries++;
-            var retryInterval = $.getOpt('chunkRetryInterval');          
+            var retryInterval = $.getOpt('chunkRetryInterval');
             if(retryInterval !== undefined) {
               $.pendingRetry = true;
               setTimeout($.send, retryInterval);
@@ -701,7 +715,7 @@
         });
 
         var func   = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice'))),
-        bytes  = $.fileObj.file[func]($.startByte,$.endByte), 
+        bytes  = $.fileObj.file[func]($.startByte,$.endByte),
         data   = null,
         target = $.getOpt('target');
 
@@ -722,7 +736,7 @@
           });
           data.append(parameterNamespace+$.getOpt('fileParameterName'), bytes);
         }
-        
+
         $.xhr.open('POST', target);
         $.xhr.timeout = $.getOpt('xhrTimeout');
         $.xhr.withCredentials = $.getOpt('withCredentials');

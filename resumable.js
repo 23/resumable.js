@@ -647,7 +647,7 @@
         var preprocess = $.getOpt('preprocess');
         if(typeof preprocess === 'function') {
           switch($.preprocessState) {
-          case 0: preprocess($); $.preprocessState = 1; return;
+          case 0: $.preprocessState = 1; preprocess($); return;
           case 1: return;
           case 2: break;
           }

@@ -80,6 +80,7 @@ public class UploadServlet extends HttpServlet {
         String resumableFilename        = request.getParameter("resumableFilename");
         String resumableRelativePath    = request.getParameter("resumableRelativePath");
         //Here we add a ".temp" to every upload file to indicate NON-FINISHED
+        new File(base_dir).mkdir();
         String resumableFilePath        = new File(base_dir, resumableFilename).getAbsolutePath() + ".temp";
 
         ResumableInfoStorage storage = ResumableInfoStorage.getInstance();

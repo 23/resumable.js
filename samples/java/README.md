@@ -4,6 +4,14 @@ This is a resumable.js demo for people who use java-servlet in server side.
 
 `resumable.js.upload.UploadServlet` is the servlet. 
 
+###Run
+
+mvn jetty:run
+
+http://localhost:8080/java-example/
+
+Uploaded files will appear in "upload_dir".
+
 ###Upload chunks
 
 UploadServlet accepts Resumable.js Upload with 'octet' type, gets parameters from url like 

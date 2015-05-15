@@ -17,7 +17,7 @@ import java.io.RandomAccessFile;
  */
 public class UploadServlet extends HttpServlet {
 
-    public static final String UPLOAD_DIR = "e:\\";
+    public static final String UPLOAD_DIR = "upload_dir";
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int resumableChunkNumber        = getResumableChunkNumber(request);

@@ -196,7 +196,7 @@
         loadFiles(event.dataTransfer.files, event);
       }
     };
-    var onDragOver = function(e) {
+    var preventDefault = function(e) {
       e.preventDefault();
     };
 
@@ -895,7 +895,8 @@
       if(typeof(domNodes.length)=='undefined') domNodes = [domNodes];
 
       $h.each(domNodes, function(domNode) {
-        domNode.addEventListener('dragover', onDragOver, false);
+        domNode.addEventListener('dragover', preventDefault, false);
+        domNode.addEventListener('dragenter', preventDefault, false);
         domNode.addEventListener('drop', onDrop, false);
       });
     };
@@ -903,7 +904,8 @@
       if (typeof(domNodes.length) == 'undefined') domNodes = [domNodes];
 
       $h.each(domNodes, function(domNode) {
-        domNode.removeEventListener('dragover', onDragOver);
+        domNode.removeEventListener('dragover', preventDefault);
+        domNode.removeEventListener('dragenter', preventDefault);
         domNode.removeEventListener('drop', onDrop);
       });
     };

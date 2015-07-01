@@ -44,6 +44,8 @@
       headers:{},
       preprocess:null,
       method:'multipart',
+      uploadMethod: 'POST',
+      testMethod: 'GET',
       prioritizeFirstAndLastChunk:false,
       target:'/',
       parameterNamespace:'',
@@ -627,7 +629,7 @@
         params.push([parameterNamespace+'resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
         params.push([parameterNamespace+'resumableTotalChunks', encodeURIComponent($.fileObj.chunks.length)].join('='));
         // Append the relevant chunk and send it
-        $.xhr.open('GET', $h.getTarget(params));
+        $.xhr.open($.getOpt('testMethod'), $h.getTarget(params));
         $.xhr.timeout = $.getOpt('xhrTimeout');
         $.xhr.withCredentials = $.getOpt('withCredentials');
         // Add data from header options
@@ -737,7 +739,11 @@
           data.append(parameterNamespace+$.getOpt('fileParameterName'), bytes);
         }
 
-        $.xhr.open('POST', target);
+        var method = $.getOpt('uploadMethod');
+        $.xhr.open(method, target);
+        if ($.getOpt('method') === 'octet') {
+          $.xhr.setRequestHeader('Content-Type', 'binary/octet-stream');
+        }
         $.xhr.timeout = $.getOpt('xhrTimeout');
         $.xhr.withCredentials = $.getOpt('withCredentials');
         // Add data from header options

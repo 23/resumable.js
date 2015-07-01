@@ -85,6 +85,8 @@ Available configuration options are:
 * `simultaneousUploads` Number of simultaneous uploads (Default: `3`)
 * `fileParameterName` The name of the multipart POST parameter to use for the file chunk  (Default: `file`)
 * `query` Extra parameters to include in the multipart POST with data. This can be an object or a function. If a function, it will be passed a ResumableFile and a ResumableChunk object (Default: `{}`)
+* `testMethod` Method for chunk test request. (Default: `'GET'`)
+* `uploadMethod` Method for chunk upload request. (Default: `'POST'`)
 * `parameterNamespace` Extra prefix added before the name of each parameter included in the multipart POST or in the test GET. (Default: `''`)
 * `headers` Extra headers to include in the multipart POST with data (Default: `{}`)
 * `method` Method to use when POSTing chunks to the server (`multipart` or `octet`) (Default: `multipart`)

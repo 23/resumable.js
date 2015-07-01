@@ -51,6 +51,7 @@
       parameterNamespace:'',
       testChunks:true,
       generateUniqueIdentifier:null,
+      getTarget:null,
       maxChunkRetries:undefined,
       chunkRetryInterval:undefined,
       permanentErrors:[400, 404, 415, 500, 501],
@@ -177,6 +178,9 @@
       },
       getTarget:function(params){
         var target = $.getOpt('target');
+        if(typeof target === 'function') {
+          return target(params);
+        }
         if(target.indexOf('?') < 0) {
           target += '?';
         } else {

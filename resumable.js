@@ -773,8 +773,8 @@
           // Status is really 'OPENED', 'HEADERS_RECEIVED' or 'LOADING' - meaning that stuff is happening
           return('uploading');
         } else {
-          if($.xhr.status >= 200 && $.xhr.status < 300) {
-            // HTTP 2XX, perfect
+          if($.xhr.status == 200 || $.xhr.status == 201) {
+            // HTTP 200 or 201 (created) perfect
             return('success');
           } else if($h.contains($.getOpt('permanentErrors'), $.xhr.status) || $.retries >= $.getOpt('maxChunkRetries')) {
             // HTTP 415/500/501, permanent error

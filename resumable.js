@@ -310,6 +310,7 @@
                     }
                 );
             };
+          readDir(entry.fullPath);
         }
       }
     };

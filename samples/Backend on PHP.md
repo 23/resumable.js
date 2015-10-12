@@ -81,18 +81,17 @@ function rrmdir($dir) {
 function createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize) {
 
     // count all the parts of this file
-    $total_files = 0;
+    $total_files_on_server_size = 0;
+    $temp_total = 0;
     foreach(scandir($temp_dir) as $file) {
-        if (stripos($file, $fileName) !== false) {
-            $total_files++;
-        }
+        $temp_total = $total_files_on_server_size;
+        $tempfilesize = filesize($temp_dir.'/'.$file);
+        $total_files_on_server_size = $temp_total + $tempfilesize;
     }
-
     // check that all the parts are present
-    // the size of the last part is between chunkSize and 2*$chunkSize
-    if ($total_files * $chunkSize >=  ($totalSize - $chunkSize + 1)) {
-
-        // create the final destination file 
+    // If the Size of all the chunks on the server is equal to the size of the file uploaded.
+    if ($total_files_on_server_size >= $totalSize) {
+    // create the final destination file 
         if (($fp = fopen('temp/'.$fileName, 'w')) !== false) {
             for ($i=1; $i<=$total_files; $i++) {
                 fwrite($fp, file_get_contents($temp_dir.'/'.$fileName.'.part'.$i));

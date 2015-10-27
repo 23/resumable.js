@@ -88,7 +88,7 @@ Available configuration options are:
 * `testMethod` Method for chunk test request. (Default: `'GET'`)
 * `uploadMethod` Method for chunk upload request. (Default: `'POST'`)
 * `parameterNamespace` Extra prefix added before the name of each parameter included in the multipart POST or in the test GET. (Default: `''`)
-* `headers` Extra headers to include in the multipart POST with data (Default: `{}`)
+* `headers` Extra headers to include in the multipart POST with data. This can be an `object` or a `function` that allows you to construct and return a value, based on supplied `file` (Default: `{}`)
 * `method` Method to use when POSTing chunks to the server (`multipart` or `octet`) (Default: `multipart`)
 * `prioritizeFirstAndLastChunk` Prioritize first and last chunks of all files. This can be handy if you can determine if a file is valid for your service from only the first or last chunk. For example, photo or video meta data is usually located in the first part of a file, making it easy to test support from only the first chunk. (Default: `false`)
 * `testChunks` Make a GET request to the server for each chunks to see if it already exists. If implemented on the server-side, this will allow for upload resumes even after a browser crash or even a computer restart. (Default: `true`)

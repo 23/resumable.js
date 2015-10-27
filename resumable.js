@@ -638,7 +638,11 @@
         $.xhr.timeout = $.getOpt('xhrTimeout');
         $.xhr.withCredentials = $.getOpt('withCredentials');
         // Add data from header options
-        $h.each($.getOpt('headers'), function(k,v) {
+        var customHeaders = $.getOpt('headers');
+        if(typeof customHeaders === 'function') {
+          customHeaders = customHeaders($.fileObj, $);
+        }
+        $h.each(customHeaders, function(k,v) {
           $.xhr.setRequestHeader(k, v);
         });
         $.xhr.send(null);
@@ -752,7 +756,11 @@
         $.xhr.timeout = $.getOpt('xhrTimeout');
         $.xhr.withCredentials = $.getOpt('withCredentials');
         // Add data from header options
-        $h.each($.getOpt('headers'), function(k,v) {
+        var customHeaders = $.getOpt('headers');
+        if(typeof customHeaders === 'function') {
+          customHeaders = customHeaders($.fileObj, $);
+        }
+        $h.each(customHeaders, function(k,v) {
           $.xhr.setRequestHeader(k, v);
         });
         $.xhr.send(data);

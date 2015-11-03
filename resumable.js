@@ -60,7 +60,7 @@
       xhrTimeout:0,
       maxFilesErrorCallback:function (files, errorCount) {
         var maxFiles = $.getOpt('maxFiles');
-        alert('Please upload ' + maxFiles + ' file' + (maxFiles === 1 ? '' : 's') + ' at a time.');
+        alert('Please upload no more than ' + maxFiles + ' file' + (maxFiles === 1 ? '' : 's') + ' at a time.');
       },
       minFileSize:1,
       minFileSizeErrorCallback:function(file, errorCount) {

@@ -63,11 +63,11 @@ module.exports = resumable = function(temporaryFolder){
   //'found', filename, original_filename, identifier
   //'not_found', null, null, null
   $.get = function(req, callback){
-    var chunkNumber = req.param('resumableChunkNumber', 0);
-    var chunkSize = req.param('resumableChunkSize', 0);
-    var totalSize = req.param('resumableTotalSize', 0);
-    var identifier = req.param('resumableIdentifier', "");
-    var filename = req.param('resumableFilename', "");
+    var chunkNumber = req.query.resumableChunkNumber || 0;
+    var chunkSize = req.query.resumableChunkSize || 0;
+    var totalSize = req.query.resumableTotalSize || 0;
+    var identifier = req.query.resumableIdentifier || "";
+    var filename = req.query.resumableFilename || "";
 
     if(validateRequest(chunkNumber, chunkSize, totalSize, identifier, filename)=='valid') {
       var chunkFilename = getChunkFilename(chunkNumber, identifier);

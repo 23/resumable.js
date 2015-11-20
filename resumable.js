@@ -667,22 +667,6 @@
           $.test();
           return;
         }
-
-        // Set up request and listen for event
-        $.xhr = new XMLHttpRequest();
-
-        // Progress
-        $.xhr.upload.addEventListener('progress', function(e){
-          if( (new Date) - $.lastProgressCallback > $.getOpt('throttleProgressCallbacks') * 1000 ) {
-            $.callback('progress');
-            $.lastProgressCallback = (new Date);
-          }
-          $.loaded=e.loaded||0;
-        }, false);
-        $.loaded = 0;
-        $.pendingRetry = false;
-        $.callback('progress');
-
         // Done (either done, failed or retry)
         var doneHandler = function(e){
           var status = $.status();
@@ -702,10 +686,9 @@
             }
           }
         };
-        $.xhr.addEventListener('load', doneHandler, false);
-        $.xhr.addEventListener('error', doneHandler, false);
-        $.xhr.addEventListener('timeout', doneHandler, false);
-
+        $.loaded = 0;
+        $.pendingRetry = false;
+        $.callback('progress');
         // Set up the basic query data from Resumable
         var query = {
           resumableChunkNumber: $.offset+1,
@@ -725,45 +708,97 @@
           query[k] = v;
         });
 
-        var func   = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice'))),
-        bytes  = $.fileObj.file[func]($.startByte,$.endByte),
-        data   = null,
-        target = $.getOpt('target');
+        var app = document.URL.indexOf( 'http://' ) === -1 && document.URL.indexOf( 'https://' ) === -1;
+        if ( app ) { //Running on phonegap
+            FileOptions = new FileUploadOptions();
+            TransferObject = new FileTransfer();
+            ServerURI = encodeURI($.getOpt('target'));
+            // PhoneGap application
+            var queryParams = {'params':query};
+            var fileURI = new FileEntry($.fileObj.file.name, $.fileObj.file.fullPath);
+            fileURI = encodeURI(fileURI.toURL());
+            var filename = (file.name) ? file.name : fileURI.replace(/^.*[\\\/]/, '');
+            // replace semicolon with dash
+            filename = filename.replace(/%3A/, '-');
+            fileURI = fileURI.replace(/%2520/, ' ');//Add space
+            FileOptions.fileKey = "file";
+            FileOptions.fileName = filename; //file.path.substr(file.path.lastIndexOf('/') + 1);
+            FileOptions.mimeType = file.type; // file.mime
+            FileOptions.chunkedMode = false;
+            for(var o in queryParams) {
+              if(queryParams.hasOwnProperty(o)) {
+                FileOptions[o] = queryParams[o];
+              }
+            }
+            file.size = file.size || 0;
 
-        var parameterNamespace = $.getOpt('parameterNamespace');
-        if ($.getOpt('method') === 'octet') {
-          // Add data from the query options
-          data = bytes;
-          var params = [];
-          $h.each(query, function(k,v){
-            params.push([encodeURIComponent(parameterNamespace+k), encodeURIComponent(v)].join('='));
-          });
-          target = $h.getTarget(params);
+            TransferObject.upload(
+            fileURI, // URI of server we're sending to (HTTP... or HTTPS...)
+            ServerURI,
+            doneHandler, // success handler
+            doneHandler, // error handler
+            FileOptions, //Options
+            true,// trustAllHosts
+            $.startByte,
+            $.endByte);
         } else {
-          // Add data from the query options
-          data = new FormData();
-          $h.each(query, function(k,v){
-            data.append(parameterNamespace+k,v);
-          });
-          data.append(parameterNamespace+$.getOpt('fileParameterName'), bytes);
-        }
+          // Web page
+          // Set up request and listen for event
+          $.xhr = new XMLHttpRequest();
 
-        var method = $.getOpt('uploadMethod');
-        $.xhr.open(method, target);
-        if ($.getOpt('method') === 'octet') {
-          $.xhr.setRequestHeader('Content-Type', 'binary/octet-stream');
+          // Progress
+          $.xhr.upload.addEventListener('progress', function(e){
+            if( (new Date) - $.lastProgressCallback > $.getOpt('throttleProgressCallbacks') * 1000 ) {
+              $.callback('progress');
+              $.lastProgressCallback = (new Date);
+            }
+            $.loaded=e.loaded||0;
+          }, false);
+
+          $.xhr.addEventListener('load', doneHandler, false);
+          $.xhr.addEventListener('error', doneHandler, false);
+          $.xhr.addEventListener('timeout', doneHandler, false);
+         
+          var func   = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice'))),
+          bytes  = $.fileObj.file[func]($.startByte,$.endByte),
+          data   = null,
+          target = $.getOpt('target');
+
+          var parameterNamespace = $.getOpt('parameterNamespace');
+          if ($.getOpt('method') === 'octet') {
+            // Add data from the query options
+            data = bytes;
+            var params = [];
+            $h.each(query, function(k,v){
+              params.push([encodeURIComponent(parameterNamespace+k), encodeURIComponent(v)].join('='));
+            });
+            target = $h.getTarget(params);
+          } else {
+            // Add data from the query options
+            data = new FormData();
+            $h.each(query, function(k,v){
+              data.append(parameterNamespace+k,v);
+            });
+            data.append(parameterNamespace+$.getOpt('fileParameterName'), bytes);
+          }
+
+          var method = $.getOpt('uploadMethod');
+          $.xhr.open(method, target);
+          if ($.getOpt('method') === 'octet') {
+            $.xhr.setRequestHeader('Content-Type', 'binary/octet-stream');
+          }
+          $.xhr.timeout = $.getOpt('xhrTimeout');
+          $.xhr.withCredentials = $.getOpt('withCredentials');
+          // Add data from header options
+          var customHeaders = $.getOpt('headers');
+          if(typeof customHeaders === 'function') {
+            customHeaders = customHeaders($.fileObj, $);
+          }
+          $h.each(customHeaders, function(k,v) {
+            $.xhr.setRequestHeader(k, v);
+          });
+          $.xhr.send(data);
         }
-        $.xhr.timeout = $.getOpt('xhrTimeout');
-        $.xhr.withCredentials = $.getOpt('withCredentials');
-        // Add data from header options
-        var customHeaders = $.getOpt('headers');
-        if(typeof customHeaders === 'function') {
-          customHeaders = customHeaders($.fileObj, $);
-        }
-        $h.each(customHeaders, function(k,v) {
-          $.xhr.setRequestHeader(k, v);
-        });
-        $.xhr.send(data);
       };
       $.abort = function(){
         // Abort and reset

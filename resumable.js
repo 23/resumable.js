@@ -994,6 +994,13 @@
       });
       return(totalSize);
     };
+    $.handleDropEvent = function (e) {
+      onDrop(e);
+    };
+    $.handleChangeEvent = function (e) {
+      appendFilesFromFileList(e.target.files, e);
+      e.target.value = '';
+    };
 
     return(this);
   };

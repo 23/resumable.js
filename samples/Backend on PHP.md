@@ -21,6 +21,9 @@ It's a sample implementation to illustrate chunking. It should probably not be u
  *
  * @author Gregory Chris (http://online-php.com)
  * @email www.online.php@gmail.com
+ *
+ * @editor Bivek Joshi (http://www.bivekjoshi.com.np)
+ * @email meetbivek@gmail.com
  */
 
 
@@ -78,7 +81,7 @@ function rrmdir($dir) {
  * @param string $chunkSize - each chunk size (in bytes)
  * @param string $totalSize - original file size (in bytes)
  */
-function createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize) {
+function createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize,$total_files) {
 
     // count all the parts of this file
     $total_files_on_server_size = 0;
@@ -122,17 +125,23 @@ function createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize) {
 //check if request is GET and the requested chunk exists or not. this makes testChunks work
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
+    if(!(isset($_GET['resumableIdentifier']) && trim($_GET['resumableIdentifier'])!='')){
+        $_GET['resumableIdentifier']='';
+    }
     $temp_dir = 'temp/'.$_GET['resumableIdentifier'];
+    if(!(isset($_GET['resumableFilename']) && trim($_GET['resumableFilename'])!='')){
+        $_GET['resumableFilename']='';
+    }
+    if(!(isset($_GET['resumableChunkNumber']) && trim($_GET['resumableChunkNumber'])!='')){
+        $_GET['resumableChunkNumber']='';
+    }
     $chunk_file = $temp_dir.'/'.$_GET['resumableFilename'].'.part'.$_GET['resumableChunkNumber'];
     if (file_exists($chunk_file)) {
          header("HTTP/1.0 200 Ok");
-       } else
-       {
+       } else {
          header("HTTP/1.0 404 Not Found");
        }
-    }
-
-
+}
 
 // loop through files and move the chunks to a temporarily created directory
 if (!empty($_FILES)) foreach ($_FILES as $file) {
@@ -145,7 +154,9 @@ if (!empty($_FILES)) foreach ($_FILES as $file) {
 
     // init the destination file (format <filename.ext>.part<#chunk>
     // the file is stored in a temporary directory
-    $temp_dir = 'temp/'.$_POST['resumableIdentifier'];
+    if(isset($_POST['resumableIdentifier']) && trim($_POST['resumableIdentifier'])!=''){
+        $temp_dir = 'temp/'.$_POST['resumableIdentifier'];
+    }
     $dest_file = $temp_dir.'/'.$_POST['resumableFilename'].'.part'.$_POST['resumableChunkNumber'];
 
     // create the temporary directory
@@ -157,10 +168,8 @@ if (!empty($_FILES)) foreach ($_FILES as $file) {
     if (!move_uploaded_file($file['tmp_name'], $dest_file)) {
         _log('Error saving (move_uploaded_file) chunk '.$_POST['resumableChunkNumber'].' for file '.$_POST['resumableFilename']);
     } else {
-
         // check if all the parts present, and create the final destination file
-        createFileFromChunks($temp_dir, $_POST['resumableFilename'], 
-                $_POST['resumableChunkSize'], $_POST['resumableTotalSize']);
+        createFileFromChunks($temp_dir, $_POST['resumableFilename'],$_POST['resumableChunkSize'], $_POST['resumableTotalSize'],$_POST['resumableTotalChunks']);
     }
 }
 ```

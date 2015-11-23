@@ -79,22 +79,36 @@ function rrmdir($dir) {
  * @param string $totalSize - original file size (in bytes)
  */
 function createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize) {
-
-    // count all the parts of this file
+    // count the size of all the parts of this file
     $total_files_on_server_size = 0;
-    $temp_total = 0;
-    foreach(scandir($temp_dir) as $file) {
-        $temp_total = $total_files_on_server_size;
-        $tempfilesize = filesize($temp_dir.'/'.$file);
-        $total_files_on_server_size = $temp_total + $tempfilesize;
+    // count the number of all the parts of this file
+    $count_valid_chunk_files = 0;
+    foreach (scandir($temp_dir) as $file) {
+        // skip the dir path like '.' and '..'
+        $temp_file_path = $temp_dir . '/' . $file;
+        if (!is_file($temp_file_path)) continue;
+
+        $tempfilesize = filesize($temp_file_path);
+        $total_files_on_server_size += $tempfilesize;
+        $count_valid_chunk_files += 1;
     }
+
     // check that all the parts are present
     // If the Size of all the chunks on the server is equal to the size of the file uploaded.
     if ($total_files_on_server_size >= $totalSize) {
-    // create the final destination file 
+        // create the final destination file
         if (($fp = fopen('temp/'.$fileName, 'w')) !== false) {
-            for ($i=1; $i<=$total_files; $i++) {
-                fwrite($fp, file_get_contents($temp_dir.'/'.$fileName.'.part'.$i));
+            for ($i = 1; $i <= $count_valid_chunk_files; $i++) {
+                $fp_tmp = fopen($temp_dir.'/'.$fileName.'.part'.$i, 'rb');
+                if ($fp_tmp === false) {
+                    _log('cannot open one part of file, the part is '.$i);
+                    return false;
+                }
+                // the size of temp chunk file maybe huge, so just handle 8KB data every time
+                while (!feof($fp_tmp)) {
+                    fwrite($fp, fread($fp_tmp, 8192));
+                }
+                fclose($fp_tmp);
                 _log('writing chunk '.$i);
             }
             fclose($fp);
@@ -119,21 +133,22 @@ function createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize) {
 // THE SCRIPT
 ////////////////////////////////////////////////////////////////////
 
-//check if request is GET and the requested chunk exists or not. this makes testChunks work
+// check if request is GET and the requested chunk exists or not. this makes testChunks work
+// you can ignore this process if you turn off the "testChunks" option in javascript
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $temp_dir = 'temp/'.$_GET['resumableIdentifier'];
     $chunk_file = $temp_dir.'/'.$_GET['resumableFilename'].'.part'.$_GET['resumableChunkNumber'];
     if (file_exists($chunk_file)) {
-         header("HTTP/1.0 200 Ok");
-       } else
-       {
-         header("HTTP/1.0 404 Not Found");
-       }
+        header("HTTP/1.0 200 Ok");
+    } else {
+        header("HTTP/1.0 404 Not Found");
     }
+    // the process for handling GET request ends here
+    return;
+}
 
-
-
+// the code below is the process for handling POST request
 // loop through files and move the chunks to a temporarily created directory
 if (!empty($_FILES)) foreach ($_FILES as $file) {
 
@@ -164,5 +179,4 @@ if (!empty($_FILES)) foreach ($_FILES as $file) {
     }
 }
 ```
-
 

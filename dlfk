@@ -1,75 +1,0 @@
-[1mdiff --git a/samples/Backend on PHP.md b/samples/Backend on PHP.md[m
-[1mindex b5520b4..d0106c0 100644[m
-[1m--- a/samples/Backend on PHP.md[m	
-[1m+++ b/samples/Backend on PHP.md[m	
-[36m@@ -21,6 +21,9 @@[m [mIt's a sample implementation to illustrate chunking. It should probably not be u[m
-  *[m
-  * @author Gregory Chris (http://online-php.com)[m
-  * @email www.online.php@gmail.com[m
-[32m+[m[32m *[m[41m[m
-[32m+[m[32m * @editor Bivek Joshi (http://www.bivekjoshi.com.np)[m[41m[m
-[32m+[m[32m * @email meetbivek@gmail.com[m[41m[m
-  */[m
- [m
- [m
-[36m@@ -78,7 +81,7 @@[m [mfunction rrmdir($dir) {[m
-  * @param string $chunkSize - each chunk size (in bytes)[m
-  * @param string $totalSize - original file size (in bytes)[m
-  */[m
-[31m-function createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize) {[m
-[32m+[m[32mfunction createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize,$total_files) {[m[41m[m
- [m
-     // count all the parts of this file[m
-     $total_files_on_server_size = 0;[m
-[36m@@ -122,17 +125,23 @@[m [mfunction createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize) {[m
- //check if request is GET and the requested chunk exists or not. this makes testChunks work[m
- if ($_SERVER['REQUEST_METHOD'] === 'GET') {[m
- [m
-[32m+[m[32m    if(!(isset($_GET['resumableIdentifier']) && trim($_GET['resumableIdentifier'])!='')){[m[41m[m
-[32m+[m[32m        $_GET['resumableIdentifier']='';[m[41m[m
-[32m+[m[32m    }[m[41m[m
-     $temp_dir = 'temp/'.$_GET['resumableIdentifier'];[m
-[32m+[m[32m    if(!(isset($_GET['resumableFilename']) && trim($_GET['resumableFilename'])!='')){[m[41m[m
-[32m+[m[32m        $_GET['resumableFilename']='';[m[41m[m
-[32m+[m[32m    }[m[41m[m
-[32m+[m[32m    if(!(isset($_GET['resumableChunkNumber']) && trim($_GET['resumableChunkNumber'])!='')){[m[41m[m
-[32m+[m[32m        $_GET['resumableChunkNumber']='';[m[41m[m
-[32m+[m[32m    }[m[41m[m
-     $chunk_file = $temp_dir.'/'.$_GET['resumableFilename'].'.part'.$_GET['resumableChunkNumber'];[m
-     if (file_exists($chunk_file)) {[m
-          header("HTTP/1.0 200 Ok");[m
-[31m-       } else[m
-[31m-       {[m
-[32m+[m[32m       } else {[m[41m[m
-          header("HTTP/1.0 404 Not Found");[m
-        }[m
-[31m-    }[m
-[31m-[m
-[31m-[m
-[32m+[m[32m}[m[41m[m
- [m
- // loop through files and move the chunks to a temporarily created directory[m
- if (!empty($_FILES)) foreach ($_FILES as $file) {[m
-[36m@@ -145,7 +154,9 @@[m [mif (!empty($_FILES)) foreach ($_FILES as $file) {[m
- [m
-     // init the destination file (format <filename.ext>.part<#chunk>[m
-     // the file is stored in a temporary directory[m
-[31m-    $temp_dir = 'temp/'.$_POST['resumableIdentifier'];[m
-[32m+[m[32m    if(isset($_POST['resumableIdentifier']) && trim($_POST['resumableIdentifier'])!=''){[m[41m[m
-[32m+[m[32m        $temp_dir = 'temp/'.$_POST['resumableIdentifier'];[m[41m[m
-[32m+[m[32m    }[m[41m[m
-     $dest_file = $temp_dir.'/'.$_POST['resumableFilename'].'.part'.$_POST['resumableChunkNumber'];[m
- [m
-     // create the temporary directory[m
-[36m@@ -157,10 +168,8 @@[m [mif (!empty($_FILES)) foreach ($_FILES as $file) {[m
-     if (!move_uploaded_file($file['tmp_name'], $dest_file)) {[m
-         _log('Error saving (move_uploaded_file) chunk '.$_POST['resumableChunkNumber'].' for file '.$_POST['resumableFilename']);[m
-     } else {[m
-[31m-[m
-         // check if all the parts present, and create the final destination file[m
-[31m-        createFileFromChunks($temp_dir, $_POST['resumableFilename'], [m
-[31m-                $_POST['resumableChunkSize'], $_POST['resumableTotalSize']);[m
-[32m+[m[32m        createFileFromChunks($temp_dir, $_POST['resumableFilename'],$_POST['resumableChunkSize'], $_POST['resumableTotalSize'],$_POST['resumableTotalChunks']);[m[41m[m
-     }[m
- }[m
- ```[m

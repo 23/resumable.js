@@ -1,6 +1,7 @@
 import Resumable = require('./index');
 
 let resumable: Resumable = new Resumable({chunkSize: 123});
+let resumableNoOpts: Resumable = new Resumable();
 
 resumable.addFile(new File([], 'test.tmp'), {});
 resumable.assignBrowse(document, true);
@@ -10,7 +11,7 @@ resumable.assignDrop([document]);
 resumable.cancel();
 let defaults: Object = resumable.defaults;
 let events: any[] = resumable.events;
-let files: File[] = resumable.files;
+let files: any[] = resumable.files;
 resumable.fire();
 let {} = resumable.getFromUniqueIdentifier('test');
 let {} = resumable.getOpt('test');

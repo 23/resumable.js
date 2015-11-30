@@ -1,3 +1,8 @@
+// Type definitions for Resumable.js
+// Project: https://github.com/23/resumable.js
+// Definitions by: Matthew de Nobrega <https://github.com/matthewdenobrega>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+
 declare class Resumable {
     addFile(file: File, event: any): void;
     assignBrowse(domNodes: any, isDirectory: boolean): void;
@@ -20,12 +25,12 @@ declare class Resumable {
 
     defaults: Object;
     events: Array<any>;
-    files: Array<File>;
+    files: Array<any>;
     opts: Object;
     support: boolean;
     version: number;
 
-    constructor(opts: Object);
+    constructor(opts?: Object);
 }
 
 export = Resumable

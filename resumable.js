@@ -955,6 +955,7 @@
       $.fire('pause');
     };
     $.cancel = function(){
+      $.fire('beforeCancel');
       for(var i = $.files.length - 1; i >= 0; i--) {
         $.files[i].cancel();
       }

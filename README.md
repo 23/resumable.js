@@ -140,6 +140,7 @@ Available configuration options are:
 * `.progress()` Uploading progress.
 * `.error(message, file)` An error, including fileError, occurred.
 * `.pause()` Uploading was paused.
+* `.beforeCancel()` Triggers before the items are cancelled allowing to do any processing on uploading files.
 * `.cancel()` Uploading was canceled.
 * `.chunkingStart(file)` Started preparing file for upload
 * `.chunkingProgress(file,ratio)` Show progress in file preparation

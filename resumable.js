@@ -990,6 +990,7 @@
       $.fire('pause');
     };
     $.cancel = function(){
+      $.fire('beforeCancel');
       for(var i = $.files.length - 1; i >= 0; i--) {
         $.files[i].cancel();
       }
@@ -1028,6 +1029,13 @@
         totalSize += file.size;
       });
       return(totalSize);
+    };
+    $.handleDropEvent = function (e) {
+      onDrop(e);
+    };
+    $.handleChangeEvent = function (e) {
+      appendFilesFromFileList(e.target.files, e);
+      e.target.value = '';
     };
 
     return(this);

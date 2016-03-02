@@ -58,6 +58,7 @@
       maxFiles:undefined,
       withCredentials:false,
       xhrTimeout:0,
+      clearInput:true,
       maxFilesErrorCallback:function (files, errorCount) {
         var maxFiles = $.getOpt('maxFiles');
         alert('Please upload no more than ' + maxFiles + ' file' + (maxFiles === 1 ? '' : 's') + ' at a time.');
@@ -907,7 +908,10 @@
         // When new files are added, simply append them to the overall list
         input.addEventListener('change', function(e){
           appendFilesFromFileList(e.target.files,e);
-          e.target.value = '';
+          var clearInput = $.getOpt('clearInput');
+          if (clearInput) {
+            e.target.value = '';
+          }
         }, false);
       });
     };

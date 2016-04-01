@@ -26,6 +26,42 @@ declare module Resumable  {
      **/
     fileParameterName?: string;
     /**
+     * The name of the chunk index (base-1) in the current upload POST parameter to use for the file chunk (Default: resumableChunkNumber)
+     */
+    chunkNumberParameterName?: string;
+    /**
+     * The name of the total number of chunks POST parameter to use for the file chunk (Default: resumableTotalChunks)
+     */
+    totalChunksParameterName?: string;
+    /**
+     * The name of the general chunk size POST parameter to use for the file chunk (Default: resumableChunkSize)
+     */
+    chunkSizeParameterName?: string;
+    /**
+     * The name of the total file size number POST parameter to use for the file chunk (Default: resumableTotalSize)
+     */
+    totalSizeParameterName?: string;
+    /**
+     * The name of the unique identifier POST parameter to use for the file chunk (Default: resumableIdentifier)
+     */
+    identifierParameterName?: string;
+    /**
+     * The name of the original file name POST parameter to use for the file chunk (Default: resumableFilename)
+     */
+    fileNameParameterName?: string;
+    /**
+     * The name of the file's relative path POST parameter to use for the file chunk (Default: resumableRelativePath)
+     */
+    relativePathParameterName?: string;
+    /**
+     * The name of the current chunk size POST parameter to use for the file chunk (Default: resumableCurrentChunkSize)
+     */
+    currentChunkSizeParameterName?: string;
+    /**
+     * The name of the file type POST parameter to use for the file chunk (Default: resumableType)
+     */
+    typeParameterName?: string;
+    /**
      * Extra parameters to include in the multipart POST with data. This can be an object or a function. If a function, it will be passed a ResumableFile and a ResumableChunk object (Default: {})
      **/
     query?: Object;

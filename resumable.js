@@ -39,7 +39,16 @@
       forceChunkSize:false,
       simultaneousUploads:3,
       fileParameterName:'file',
-      throttleProgressCallbacks:0.5,
+	  chunkNumberParameterName: 'resumableChunkNumber',
+	  chunkSizeParameterName: 'resumableChunkSize',
+	  currentChunkSizeParameterName: 'resumableCurrentChunkSize',
+	  totalSizeParameterName: 'resumableTotalSize',
+	  typeParameterName: 'resumableType',
+	  identifierParameterName: 'resumableIdentifier',
+	  fileNameParameterName: 'resumableFilename',
+	  relativePathParameterName: 'resumableRelativePath',
+	  totalChunksParameterName: 'resumableTotalChunks',
+	  throttleProgressCallbacks:0.5,
       query:{},
       headers:{},
       preprocess:null,
@@ -625,15 +634,15 @@
           params.push([encodeURIComponent(parameterNamespace+k), encodeURIComponent(v)].join('='));
         });
         // Add extra data to identify chunk
-        params.push([parameterNamespace+'resumableChunkNumber', encodeURIComponent($.offset+1)].join('='));
-        params.push([parameterNamespace+'resumableChunkSize', encodeURIComponent($.getOpt('chunkSize'))].join('='));
-        params.push([parameterNamespace+'resumableCurrentChunkSize', encodeURIComponent($.endByte - $.startByte)].join('='));
-        params.push([parameterNamespace+'resumableTotalSize', encodeURIComponent($.fileObjSize)].join('='));
-        params.push([parameterNamespace+'resumableType', encodeURIComponent($.fileObjType)].join('='));
-        params.push([parameterNamespace+'resumableIdentifier', encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
-        params.push([parameterNamespace+'resumableFilename', encodeURIComponent($.fileObj.fileName)].join('='));
-        params.push([parameterNamespace+'resumableRelativePath', encodeURIComponent($.fileObj.relativePath)].join('='));
-        params.push([parameterNamespace+'resumableTotalChunks', encodeURIComponent($.fileObj.chunks.length)].join('='));
+	      params.push([parameterNamespace + $.getOpt('chunkNumberParameterName'), encodeURIComponent($.offset + 1)].join('='));
+	      params.push([parameterNamespace + $.getOpt('chunkSizeParameterName'), encodeURIComponent($.getOpt('chunkSize'))].join('='));
+	      params.push([parameterNamespace + $.getOpt('currentChunkSizeParameterName'), encodeURIComponent($.endByte - $.startByte)].join('='));
+	      params.push([parameterNamespace + $.getOpt('totalSizeParameterName'), encodeURIComponent($.fileObjSize)].join('='));
+	      params.push([parameterNamespace + $.getOpt('typeParameterName'), encodeURIComponent($.fileObjType)].join('='));
+	      params.push([parameterNamespace + $.getOpt('identifierParameterName'), encodeURIComponent($.fileObj.uniqueIdentifier)].join('='));
+	      params.push([parameterNamespace + $.getOpt('fileNameParameterName'), encodeURIComponent($.fileObj.fileName)].join('='));
+	      params.push([parameterNamespace + $.getOpt('relativePathParameterName'), encodeURIComponent($.fileObj.relativePath)].join('='));
+	      params.push([parameterNamespace + $.getOpt('totalChunksParameterName'), encodeURIComponent($.fileObj.chunks.length)].join('='));
         // Append the relevant chunk and send it
         $.xhr.open($.getOpt('testMethod'), $h.getTarget(params));
         $.xhr.timeout = $.getOpt('xhrTimeout');
@@ -708,17 +717,16 @@
         $.xhr.addEventListener('timeout', doneHandler, false);
 
         // Set up the basic query data from Resumable
-        var query = {
-          resumableChunkNumber: $.offset+1,
-          resumableChunkSize: $.getOpt('chunkSize'),
-          resumableCurrentChunkSize: $.endByte - $.startByte,
-          resumableTotalSize: $.fileObjSize,
-          resumableType: $.fileObjType,
-          resumableIdentifier: $.fileObj.uniqueIdentifier,
-          resumableFilename: $.fileObj.fileName,
-          resumableRelativePath: $.fileObj.relativePath,
-          resumableTotalChunks: $.fileObj.chunks.length
-        };
+        var query = {};
+        query[$.getOpt('chunkNumberParameterName')] = $.offset+1;
+        query[$.getOpt('chunkSizeParameterName')] = $.getOpt('chunkSize');
+        query[$.getOpt('currentChunkSizeParameterName')] = $.endByte - $.startByte;
+        query[$.getOpt('totalSizeParameterName')] = $.fileObjSize;
+        query[$.getOpt('typeParameterName')] = $.fileObjType;
+        query[$.getOpt('identifierParameterName')] = $.fileObj.uniqueIdentifier;
+        query[$.getOpt('filenameParameterName')] = $.fileObj.fileName;
+        query[$.getOpt('relativePathParameterName')] = $.fileObj.relativePath;
+        query[$.getOpt('totalChunksParameterName')] = $.fileObj.chunks.lengt;
         // Mix in custom data
         var customQuery = $.getOpt('query');
         if(typeof customQuery == 'function') customQuery = customQuery($.fileObj, $);

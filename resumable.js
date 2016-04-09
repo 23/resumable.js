@@ -724,7 +724,7 @@
         query[$.getOpt('totalSizeParameterName')] = $.fileObjSize;
         query[$.getOpt('typeParameterName')] = $.fileObjType;
         query[$.getOpt('identifierParameterName')] = $.fileObj.uniqueIdentifier;
-        query[$.getOpt('filenameParameterName')] = $.fileObj.fileName;
+        query[$.getOpt('fileNameParameterName')] = $.fileObj.fileName;
         query[$.getOpt('relativePathParameterName')] = $.fileObj.relativePath;
         query[$.getOpt('totalChunksParameterName')] = $.fileObj.chunks.length;
         // Mix in custom data

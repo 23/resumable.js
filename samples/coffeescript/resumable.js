@@ -15,15 +15,17 @@
         forceChunkSize: false,
         simultaneousUploads: 3,
         fileParameterName: 'file',
-        chunkNumberParameterName: 'resumableChunkNumber',
-        chunkSizeParameterName: 'resumableChunkSize',
-        currentChunkSizeParameterName: 'resumableCurrentChunkSize',
-        totalSizeParameterName: 'resumableTotalSize',
-        typeParameterName: 'resumableType',
-        identifierParameterName: 'resumableIdentifier',
-        fileNameParameterName: 'resumableFilename',
-        relativePathParameterName: 'resumableRelativePath',
-        totalChunksParameterName: 'resumableTotalChunks',
+        paramNames: {
+          chunkNumber: 'resumableChunkNumber',
+          chunkSize: 'resumableChunkSize',
+          currentChunkSize: 'resumableCurrentChunkSize',
+          totalSize: 'resumableTotalSize',
+          type: 'resumableType',
+          identifier: 'resumableIdentifier',
+          fileName: 'resumableFilename',
+          relativePath: 'resumableRelativePath',
+          totalChunks: 'resumableTotalChunks'
+        },
         throttleProgressCallbacks: 0.5,
         query: {},
         headers: {},
@@ -496,13 +498,13 @@
           pushParams(key, value);
         }
       }
-      this.pushParams(params, this.getOpt('chunkNumberParameterName'), this.offset + 1);
-      this.pushParams(params, this.getOpt('chunkSizeParameterName'), this.chunkSize);
-      this.pushParams(params, this.getOpt('currentChunkSizeParameterName'), this.endByte - this.startByte);
-      this.pushParams(params, this.getOpt('totalSizeParameterName'), this.fileObjSize);
-      this.pushParams(params, this.getOpt('identifierParameterName'), this.fileObj.uniqueIdentifier);
-      this.pushParams(params, this.getOpt('fileNameParameterName'), this.fileObj.fileName);
-      this.pushParams(params, this.getOpt('relativePathParameterName'), this.fileObj.relativePath);
+      this.pushParams(params, this.getOpt('paramNames.chunkNumber'), this.offset + 1);
+      this.pushParams(params, this.getOpt('paramNames.chunkSize'), this.chunkSize);
+      this.pushParams(params, this.getOpt('paramNames.currentChunkSize'), this.endByte - this.startByte);
+      this.pushParams(params, this.getOpt('paramNames.totalSize'), this.fileObjSize);
+      this.pushParams(params, this.getOpt('paramNames.identifier'), this.fileObj.uniqueIdentifier);
+      this.pushParams(params, this.getOpt('paramNames.fileName'), this.fileObj.fileName);
+      this.pushParams(params, this.getOpt('paramNames.relativePath'), this.fileObj.relativePath);
       this.xhr.open('GET', this.getOpt('target') + '?' + params.join('&'));
       headers = this.getOpt('headers');
       if (headers == null) {
@@ -599,13 +601,13 @@
       data = null;
       target = this.getOpt('target');
       query = {};
-      query[this.getOpt('chunkNumber')] = this.offset + 1;
-      query[this.getOpt('chunkSize')] = this.getOpt('chunkSize');
-      query[this.getOpt('currentChunkSize')] = this.endByte - this.startByte;
-      query[this.getOpt('totalSize')] = this.fileObjSize;
-      query[this.getOpt('identifier')] = this.fileObj.uniqueIdentifier;
-      query[this.getOpt('filename')] = this.fileObj.fileName;
-      query[this.getOpt('relativePath')] = this.fileObj.relativePath;
+      query[this.getOpt('paramNames.chunkNumber')] = this.offset + 1;
+      query[this.getOpt('paramNames.chunkSize')] = this.getOpt('chunkSize');
+      query[this.getOpt('paramNames.currentChunkSize')] = this.endByte - this.startByte;
+      query[this.getOpt('paramNames.totalSize')] = this.fileObjSize;
+      query[this.getOpt('paramNames.identifier')] = this.fileObj.uniqueIdentifier;
+      query[this.getOpt('paramNames.filename')] = this.fileObj.fileName;
+      query[this.getOpt('paramNames.relativePath')] = this.fileObj.relativePath;
       customQuery = this.getOpt('query');
       if (typeof customQuery === 'function') {
         customQuery = customQuery(this.fileObj, this);
@@ -631,7 +633,7 @@
           value = query[key];
           data.append(key, value);
         }
-        data.append(this.getOpt('fileParameterName'), bytes);
+        data.append(this.getOpt('paramNames.file'), bytes);
       }
       this.xhr.open('POST', target);
       return this.xhr.send(data);

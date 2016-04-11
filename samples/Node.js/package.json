@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "express": "~4.6.1",
-    "connect-multiparty": "~1.1.0"
+    "connect-multiparty": "~1.1.0",
+    "concat-files": "~0.1.0"
   }
 }

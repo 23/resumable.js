@@ -5,8 +5,8 @@
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   window.Resumable = Resumable = (function() {
-    function Resumable(opt) {
-      this.opt = opt;
+    function Resumable(opt1) {
+      this.opt = opt1;
       console.log('constructor');
       this.support = (typeof File !== "undefined" && File !== null) && (typeof Blob !== "undefined" && Blob !== null) && (typeof FileList !== "undefined" && FileList !== null) && ((Blob.prototype.webkitSlice != null) || (Blob.prototype.mozSlice != null) || (Blob.prototype.slice != null));
       this.files = [];
@@ -15,15 +15,17 @@
         forceChunkSize: false,
         simultaneousUploads: 3,
         fileParameterName: 'file',
-        chunkNumberParameterName: 'resumableChunkNumber',
-        chunkSizeParameterName: 'resumableChunkSize',
-        currentChunkSizeParameterName: 'resumableCurrentChunkSize',
-        totalSizeParameterName: 'resumableTotalSize',
-        typeParameterName: 'resumableType',
-        identifierParameterName: 'resumableIdentifier',
-        fileNameParameterName: 'resumableFilename',
-        relativePathParameterName: 'resumableRelativePath',
-        totalChunksParameterName: 'resumableTotalChunks',
+        paramNames: {
+          chunkNumber: 'resumableChunkNumber',
+          chunkSize: 'resumableChunkSize',
+          currentChunkSize: 'resumableCurrentChunkSize',
+          totalSize: 'resumableTotalSize',
+          type: 'resumableType',
+          identifier: 'resumableIdentifier',
+          fileName: 'resumableFilename',
+          relativePath: 'resumableRelativePath',
+          totalChunks: 'resumableTotalChunks'
+        },
         throttleProgressCallbacks: 0.5,
         query: {},
         headers: {},
@@ -59,20 +61,54 @@
       this.events = [];
     }
 
+    Resumable.prototype.getProperty = function(obj, property) {
+      var j, len, prop, props, result;
+      result = obj;
+      props = property.split(".");
+      for (j = 0, len = props.length; j < len; j++) {
+        prop = props[j];
+        prop = props[i];
+        if (typeof result[prop] === 'undefined') {
+          return void 0;
+        }
+        result = result[prop];
+      }
+      return result;
+    };
+
+    Resumable.prototype.setProperty = function(obj, property, value) {
+      var j, len, prop, props, result;
+      result = obj;
+      props = property.split(".");
+      if (props.length > 1) {
+        for (j = 0, len = props.length; j < len; j++) {
+          prop = props[j];
+          if (typeof result[prop] !== 'undefined') {
+            result[prop] = {};
+          }
+          result = result[prop];
+        }
+        return result[prop] = value;
+      } else {
+        return result[props[0]] = value;
+      }
+    };
+
     Resumable.prototype.getOpt = function(o) {
-      var i, item, len, opts;
+      var item, j, len, opt, opts;
       if (o instanceof Array) {
         opts = {};
-        for (i = 0, len = o.length; i < len; i++) {
-          item = o[i];
+        for (j = 0, len = o.length; j < len; j++) {
+          item = o[j];
           opts[item] = this.getOpt(item);
         }
         return opts;
       } else {
-        if (this.opt[o] != null) {
-          return this.opt[o];
+        opt = this.getProperty(this.opt, o);
+        if (opt) {
+          return opt;
         } else {
-          return this.defaults[o];
+          return this.getProperty(this.defaults, o);
         }
       }
     };
@@ -117,13 +153,13 @@
     };
 
     Resumable.prototype.fire = function() {
-      var args, e, event, i, len, ref;
+      var args, e, event, j, len, ref;
       args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
       console.log("fire: " + args[0]);
       event = args[0].toLowerCase();
       ref = this.events;
-      for (i = 0, len = ref.length; i < len; i++) {
-        e = ref[i];
+      for (j = 0, len = ref.length; j < len; j++) {
+        e = ref[j];
         if (e.event.toLowerCase() === event) {
           e.callback.apply(this, args.slice(1));
         }
@@ -151,7 +187,7 @@
     };
 
     Resumable.prototype.appendFilesFromFileList = function(fileList, event) {
-      var errorCount, file, files, i, len, maxFileSize, maxFileSizeErrorCallback, maxFiles, maxFilesErrorCallback, minFileSize, minFileSizeErrorCallback, ref, resumableFile;
+      var errorCount, file, files, j, len, maxFileSize, maxFileSizeErrorCallback, maxFiles, maxFilesErrorCallback, minFileSize, minFileSizeErrorCallback, ref, resumableFile;
       console.log("appendFilesFromFileList");
       errorCount = 0;
       ref = this.getOpt(['maxFiles', 'minFileSize', 'maxFileSize', 'maxFilesErrorCallback', 'minFileSizeErrorCallback', 'maxFileSizeErrorCallback']), maxFiles = ref[0], minFileSize = ref[1], maxFileSize = ref[2], maxFilesErrorCallback = ref[3], minFileSizeErrorCallback = ref[4], maxFileSizeErrorCallback = ref[5];
@@ -160,8 +196,8 @@
         return false;
       }
       files = [];
-      for (i = 0, len = fileList.length; i < len; i++) {
-        file = fileList[i];
+      for (j = 0, len = fileList.length; j < len; j++) {
+        file = fileList[j];
         file.name = file.fileName = file.name || file.fileName;
         if ((minFileSize != null) && file.size < minFileSize) {
           minFileSizeErrorCallback(file, errorCount++);
@@ -182,13 +218,13 @@
     };
 
     Resumable.prototype.uploadNextChunk = function() {
-      var chunk, file, found, i, j, k, l, len, len1, len2, len3, len4, m, outstanding, ref, ref1, ref2, ref3, ref4, status;
+      var chunk, file, found, j, k, l, len, len1, len2, len3, len4, m, n, outstanding, ref, ref1, ref2, ref3, ref4, status;
       console.log("uploadNextChunk");
       found = false;
       if (this.getOpt('prioritizeFirstAndLastChunk')) {
         ref = this.files;
-        for (i = 0, len = ref.length; i < len; i++) {
-          file = ref[i];
+        for (j = 0, len = ref.length; j < len; j++) {
+          file = ref[j];
           if (file.chunks.length && file.chunks[0].status() === 'pending' && file.chunks[0].preprocessState === 0) {
             file.chunks[0].send();
             found = true;
@@ -205,11 +241,11 @@
         }
       }
       ref1 = this.files;
-      for (j = 0, len1 = ref1.length; j < len1; j++) {
-        file = ref1[j];
+      for (k = 0, len1 = ref1.length; k < len1; k++) {
+        file = ref1[k];
         ref2 = file.chunks;
-        for (k = 0, len2 = ref2.length; k < len2; k++) {
-          chunk = ref2[k];
+        for (l = 0, len2 = ref2.length; l < len2; l++) {
+          chunk = ref2[l];
           if (chunk.status() === 'pending' && chunk.preprocessState === 0) {
             chunk.send();
             found = true;
@@ -224,12 +260,12 @@
         return true;
       }
       ref3 = this.files;
-      for (l = 0, len3 = ref3.length; l < len3; l++) {
-        file = ref3[l];
+      for (m = 0, len3 = ref3.length; m < len3; m++) {
+        file = ref3[m];
         outstanding = false;
         ref4 = file.chunks;
-        for (m = 0, len4 = ref4.length; m < len4; m++) {
-          chunk = ref4[m];
+        for (n = 0, len4 = ref4.length; n < len4; n++) {
+          chunk = ref4[n];
           status = chunk.status();
           if (status === 'pending' || status === 'uploading' || chunk.preprocessState === 1) {
             outstanding = true;
@@ -247,13 +283,13 @@
     };
 
     Resumable.prototype.assignBrowse = function(domNodes, isDirectory) {
-      var changeHandler, dn, i, input, len, maxFiles;
+      var changeHandler, dn, input, j, len, maxFiles;
       console.log("assignBrowse");
       if (domNodes.length == null) {
         domNodes = [domNodes];
       }
-      for (i = 0, len = domNodes.length; i < len; i++) {
-        dn = domNodes[i];
+      for (j = 0, len = domNodes.length; j < len; j++) {
+        dn = domNodes[j];
         if (dn.tagName === 'INPUT' && dn.type === 'file') {
           input = dn;
         } else {
@@ -289,14 +325,14 @@
     };
 
     Resumable.prototype.assignDrop = function(domNodes) {
-      var dn, i, len, results;
+      var dn, j, len, results;
       console.log("assignDrop");
       if (domNodes.length == null) {
         domNodes = [domNodes];
       }
       results = [];
-      for (i = 0, len = domNodes.length; i < len; i++) {
-        dn = domNodes[i];
+      for (j = 0, len = domNodes.length; j < len; j++) {
+        dn = domNodes[j];
         dn.addEventListener('dragover', this.onDragOver, false);
         results.push(dn.addEventListener('drop', this.onDrop, false));
       }
@@ -304,14 +340,14 @@
     };
 
     Resumable.prototype.unAssignDrop = function(domNodes) {
-      var dn, i, len, results;
+      var dn, j, len, results;
       console.log("unAssignDrop");
       if (domNodes.length == null) {
         domNodes = [domNodes];
       }
       results = [];
-      for (i = 0, len = domNodes.length; i < len; i++) {
-        dn = domNodes[i];
+      for (j = 0, len = domNodes.length; j < len; j++) {
+        dn = domNodes[j];
         dn.removeEventListener('dragover', this.onDragOver);
         results.push(dn.removeEventListener('drop', this.onDrop));
       }
@@ -319,14 +355,14 @@
     };
 
     Resumable.prototype.isUploading = function() {
-      var chunk, file, i, j, len, len1, ref, ref1, uploading;
+      var chunk, file, j, k, len, len1, ref, ref1, uploading;
       uploading = false;
       ref = this.files;
-      for (i = 0, len = ref.length; i < len; i++) {
-        file = ref[i];
+      for (j = 0, len = ref.length; j < len; j++) {
+        file = ref[j];
         ref1 = file.chunks;
-        for (j = 0, len1 = ref1.length; j < len1; j++) {
-          chunk = ref1[j];
+        for (k = 0, len1 = ref1.length; k < len1; k++) {
+          chunk = ref1[k];
           if (chunk.status() === 'uploading') {
             uploading = true;
             break;
@@ -340,49 +376,49 @@
     };
 
     Resumable.prototype.upload = function() {
-      var i, num, ref, results;
+      var j, num, ref, results;
       console.log("upload");
       if (this.isUploading()) {
         return;
       }
       this.fire('uploadStart');
       results = [];
-      for (num = i = 0, ref = this.getOpt('simultaneousUploads'); 0 <= ref ? i <= ref : i >= ref; num = 0 <= ref ? ++i : --i) {
+      for (num = j = 0, ref = this.getOpt('simultaneousUploads'); 0 <= ref ? j <= ref : j >= ref; num = 0 <= ref ? ++j : --j) {
         results.push(this.uploadNextChunk());
       }
       return results;
     };
 
     Resumable.prototype.pause = function() {
-      var file, i, len, ref;
+      var file, j, len, ref;
       console.log("pause");
       ref = this.files;
-      for (i = 0, len = ref.length; i < len; i++) {
-        file = ref[i];
+      for (j = 0, len = ref.length; j < len; j++) {
+        file = ref[j];
         file.abort();
       }
       return this.fire('pause');
     };
 
     Resumable.prototype.cancel = function() {
-      var file, i, len, ref;
+      var file, j, len, ref;
       console.log("cancel");
       ref = this.files;
-      for (i = 0, len = ref.length; i < len; i++) {
-        file = ref[i];
+      for (j = 0, len = ref.length; j < len; j++) {
+        file = ref[j];
         file.cancel();
       }
       return this.fire('cancel');
     };
 
     Resumable.prototype.progress = function() {
-      var file, i, len, ref, totalDone, totalSize;
+      var file, j, len, ref, totalDone, totalSize;
       console.log("progress");
       totalDone = 0;
       totalSize = 0;
       ref = this.files;
-      for (i = 0, len = ref.length; i < len; i++) {
-        file = ref[i];
+      for (j = 0, len = ref.length; j < len; j++) {
+        file = ref[j];
         totalDone += file.progress() * file.size;
         totalSize += file.size;
       }
@@ -395,12 +431,12 @@
     };
 
     Resumable.prototype.removeFile = function(file) {
-      var f, files, i, len, ref;
+      var f, files, j, len, ref;
       console.log("removeFile");
       files = [];
       ref = this.files;
-      for (i = 0, len = ref.length; i < len; i++) {
-        f = ref[i];
+      for (j = 0, len = ref.length; j < len; j++) {
+        f = ref[j];
         if (f !== file) {
           files.push(f);
         }
@@ -409,11 +445,11 @@
     };
 
     Resumable.prototype.getFromUniqueIdentifier = function(uniqueIdentifier) {
-      var f, i, len, ref;
+      var f, j, len, ref;
       console.log("getFromUniqueIdentifier");
       ref = this.files;
-      for (i = 0, len = ref.length; i < len; i++) {
-        f = ref[i];
+      for (j = 0, len = ref.length; j < len; j++) {
+        f = ref[j];
         if (f.uniqueIdentifier === uniqueIdentifier) {
           return f;
         }
@@ -422,12 +458,12 @@
     };
 
     Resumable.prototype.getSize = function() {
-      var file, i, len, ref, totalSize;
+      var file, j, len, ref, totalSize;
       console.log("getSize");
       totalSize = 0;
       ref = this.files;
-      for (i = 0, len = ref.length; i < len; i++) {
-        file = ref[i];
+      for (j = 0, len = ref.length; j < len; j++) {
+        file = ref[j];
         totalSize += file.size;
       }
       return totalSize;
@@ -496,13 +532,13 @@
           pushParams(key, value);
         }
       }
-      this.pushParams(params, this.getOpt('chunkNumberParameterName'), this.offset + 1);
-      this.pushParams(params, this.getOpt('chunkSizeParameterName'), this.chunkSize);
-      this.pushParams(params, this.getOpt('currentChunkSizeParameterName'), this.endByte - this.startByte);
-      this.pushParams(params, this.getOpt('totalSizeParameterName'), this.fileObjSize);
-      this.pushParams(params, this.getOpt('identifierParameterName'), this.fileObj.uniqueIdentifier);
-      this.pushParams(params, this.getOpt('fileNameParameterName'), this.fileObj.fileName);
-      this.pushParams(params, this.getOpt('relativePathParameterName'), this.fileObj.relativePath);
+      this.pushParams(params, this.getOpt('paramNames.chunkNumber'), this.offset + 1);
+      this.pushParams(params, this.getOpt('paramNames.chunkSize'), this.chunkSize);
+      this.pushParams(params, this.getOpt('paramNames.currentChunkSize'), this.endByte - this.startByte);
+      this.pushParams(params, this.getOpt('paramNames.totalSize'), this.fileObjSize);
+      this.pushParams(params, this.getOpt('paramNames.identifier'), this.fileObj.uniqueIdentifier);
+      this.pushParams(params, this.getOpt('paramNames.fileName'), this.fileObj.fileName);
+      this.pushParams(params, this.getOpt('paramNames.relativePath'), this.fileObj.relativePath);
       this.xhr.open('GET', this.getOpt('target') + '?' + params.join('&'));
       headers = this.getOpt('headers');
       if (headers == null) {
@@ -599,13 +635,13 @@
       data = null;
       target = this.getOpt('target');
       query = {};
-      query[this.getOpt('chunkNumber')] = this.offset + 1;
-      query[this.getOpt('chunkSize')] = this.getOpt('chunkSize');
-      query[this.getOpt('currentChunkSize')] = this.endByte - this.startByte;
-      query[this.getOpt('totalSize')] = this.fileObjSize;
-      query[this.getOpt('identifier')] = this.fileObj.uniqueIdentifier;
-      query[this.getOpt('filename')] = this.fileObj.fileName;
-      query[this.getOpt('relativePath')] = this.fileObj.relativePath;
+      query[this.getOpt('paramNames.chunkNumber')] = this.offset + 1;
+      query[this.getOpt('paramNames.chunkSize')] = this.getOpt('chunkSize');
+      query[this.getOpt('paramNames.currentChunkSize')] = this.endByte - this.startByte;
+      query[this.getOpt('paramNames.totalSize')] = this.fileObjSize;
+      query[this.getOpt('paramNames.identifier')] = this.fileObj.uniqueIdentifier;
+      query[this.getOpt('paramNames.filename')] = this.fileObj.fileName;
+      query[this.getOpt('paramNames.relativePath')] = this.fileObj.relativePath;
       customQuery = this.getOpt('query');
       if (typeof customQuery === 'function') {
         customQuery = customQuery(this.fileObj, this);
@@ -631,7 +667,7 @@
           value = query[key];
           data.append(key, value);
         }
-        data.append(this.getOpt('fileParameterName'), bytes);
+        data.append(this.getOpt('paramNames.file'), bytes);
       }
       this.xhr.open('POST', target);
       return this.xhr.send(data);
@@ -732,10 +768,10 @@
     };
 
     ResumableFile.prototype.abort = function() {
-      var c, i, len, ref;
+      var c, j, len, ref;
       ref = this.chunks;
-      for (i = 0, len = ref.length; i < len; i++) {
-        c = ref[i];
+      for (j = 0, len = ref.length; j < len; j++) {
+        c = ref[j];
         if (c.status() === 'uploading') {
           c.abort();
         }
@@ -744,11 +780,11 @@
     };
 
     ResumableFile.prototype.cancel = function() {
-      var _chunks, c, i, len;
+      var _chunks, c, j, len;
       _chunks = this.chunks;
       this.chunks = [];
-      for (i = 0, len = _chunks.length; i < len; i++) {
-        c = _chunks[i];
+      for (j = 0, len = _chunks.length; j < len; j++) {
+        c = _chunks[j];
         if (c.status() === 'uploading') {
           c.abort();
           this.resumableObj.uploadNextChunk();
@@ -764,7 +800,7 @@
     };
 
     ResumableFile.prototype.bootstrap = function() {
-      var i, max, offset, ref, results, round;
+      var j, max, offset, ref, results, round;
       this.abort();
       this._error = false;
       this.chunks = [];
@@ -777,22 +813,22 @@
       offset = 0;
       max = Math.max(round(this.file.size / this.getOpt('chunkSize')), 1);
       results = [];
-      for (offset = i = 0, ref = max - 1; 0 <= ref ? i <= ref : i >= ref; offset = 0 <= ref ? ++i : --i) {
+      for (offset = j = 0, ref = max - 1; 0 <= ref ? j <= ref : j >= ref; offset = 0 <= ref ? ++j : --j) {
         results.push(this.chunks.push(new ResumableChunk(this.resumableObj, this, offset, this.chunkEvent)));
       }
       return results;
     };
 
     ResumableFile.prototype.progress = function() {
-      var c, error, i, len, ref, ret;
+      var c, error, j, len, ref, ret;
       if (this._error) {
         return 1.;
       }
       ret = 0;
       error = false;
       ref = this.chunks;
-      for (i = 0, len = ref.length; i < len; i++) {
-        c = ref[i];
+      for (j = 0, len = ref.length; j < len; j++) {
+        c = ref[j];
         error = c.status() === 'error';
         ret += c.progress(true);
       }

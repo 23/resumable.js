@@ -11,15 +11,17 @@ window.Resumable = class Resumable
       forceChunkSize: false
       simultaneousUploads: 3
       fileParameterName: 'file'
-      chunkNumberParameterName: 'resumableChunkNumber'
-      chunkSizeParameterName: 'resumableChunkSize'
-      currentChunkSizeParameterName: 'resumableCurrentChunkSize'
-      totalSizeParameterName: 'resumableTotalSize'
-      typeParameterName: 'resumableType'
-      identifierParameterName: 'resumableIdentifier'
-      fileNameParameterName: 'resumableFilename'
-      relativePathParameterName: 'resumableRelativePath'
-      totalChunksParameterName: 'resumableTotalChunks'
+      paramNames: {
+        chunkNumber: 'resumableChunkNumber'
+        chunkSize: 'resumableChunkSize'
+        currentChunkSize: 'resumableCurrentChunkSize'
+        totalSize: 'resumableTotalSize'
+        type: 'resumableType'
+        identifier: 'resumableIdentifier'
+        fileName: 'resumableFilename'
+        relativePath: 'resumableRelativePath'
+        totalChunks: 'resumableTotalChunks'
+      }
       throttleProgressCallbacks: 0.5
       query: {}
       headers: {}
@@ -48,15 +50,42 @@ window.Resumable = class Resumable
     @opt = {} if not @opt?
     @events = []
 
-  getOpt: (o)->
+  # Gets object property by path
+  getProperty: (obj, property) ->
+    result = obj;
+    props = property.split(".");
 
+    for prop in props
+      prop = props[i];
+      if (typeof result[prop] == 'undefined')
+        return undefined;
+      result = result[prop];
+    return result;
+
+  # Sets object property by path
+  setProperty: (obj, property, value)->
+    result = obj
+    props = property.split(".")
+
+    if(props.length > 1)
+      # Build object path
+      for prop in props
+        if (typeof result[prop] != 'undefined')
+          result[prop] = {}
+        result = result[prop]
+      result[prop] = value
+    else
+      result[props[0]] = value
+
+  getOpt: (o)->
     if o instanceof Array
       opts = {}
       for item in o
         opts[item] = @getOpt(item)
       return opts
     else
-      return if @opt[o]? then @opt[o] else @defaults[o]
+      opt = (@getProperty @opt, o);
+      return if opt then opt else (@getProperty @defaults, o)
 
   formatSize: (size)->
     if size < 1024
@@ -361,15 +390,15 @@ window.ResumableChunk = class ResumableChunk
         pushParams key, value
 
     #Add extra data to identify chunk
-    @pushParams params, (@getOpt 'chunkNumberParameterName'),      (@offset + 1)
-    @pushParams params, (@getOpt 'chunkSizeParameterName'),        @chunkSize
-    @pushParams params, (@getOpt 'currentChunkSizeParameterName'), (@endByte - @startByte)
-    @pushParams params, (@getOpt 'totalSizeParameterName'),        @fileObjSize
-    #TODO: @pushParams params, (@getOpt 'typeParameterName'),
-    @pushParams params, (@getOpt 'identifierParameterName'),       @fileObj.uniqueIdentifier
-    @pushParams params, (@getOpt 'fileNameParameterName'),         @fileObj.fileName
-    @pushParams params, (@getOpt 'relativePathParameterName'),     @fileObj.relativePath
-    #TODO: @pushParams params, (@getOpt 'totalChunksParameterName'),
+    @pushParams params, (@getOpt 'paramNames.chunkNumber'),      (@offset + 1)
+    @pushParams params, (@getOpt 'paramNames.chunkSize'),        @chunkSize
+    @pushParams params, (@getOpt 'paramNames.currentChunkSize'), (@endByte - @startByte)
+    @pushParams params, (@getOpt 'paramNames.totalSize'),        @fileObjSize
+    #TODO: @pushParams params, (@getOpt 'paramNames.type'),
+    @pushParams params, (@getOpt 'paramNames.identifier'),       @fileObj.uniqueIdentifier
+    @pushParams params, (@getOpt 'paramNames.fileName'),         @fileObj.fileName
+    @pushParams params, (@getOpt 'paramNames.relativePath'),     @fileObj.relativePath
+    #TODO: @pushParams params, (@getOpt 'paramNames.totalChunks'),
 
     #Append the relevant chunk and send it
     @xhr.open 'GET', @getOpt('target') + '?' + params.join('&')
@@ -455,15 +484,15 @@ window.ResumableChunk = class ResumableChunk
     #Set up the basic query data from Resumable
     query = {}
 
-    query[(@getOpt 'chunkNumber')] =       @offset+1
-    query[(@getOpt 'chunkSize')] =         @getOpt('chunkSize')
-    query[(@getOpt 'currentChunkSize')] =  @endByte - @startByte
-    query[(@getOpt 'totalSize')] =         @fileObjSize
-    #TODO: query[(@getOpt 'typeParameterName')] =
-    query[(@getOpt 'identifier')] =        @fileObj.uniqueIdentifier
-    query[(@getOpt 'filename')] =          @fileObj.fileName
-    query[(@getOpt 'relativePath')] =      @fileObj.relativePath
-    #TODO: query[(@getOpt 'totalChunksParameterName')] =
+    query[(@getOpt 'paramNames.chunkNumber')] =       @offset+1
+    query[(@getOpt 'paramNames.chunkSize')] =         @getOpt('chunkSize')
+    query[(@getOpt 'paramNames.currentChunkSize')] =  @endByte - @startByte
+    query[(@getOpt 'paramNames.totalSize')] =         @fileObjSize
+    #TODO: query[(@getOpt 'paramNames.type')] =
+    query[(@getOpt 'paramNames.identifier')] =        @fileObj.uniqueIdentifier
+    query[(@getOpt 'paramNames.filename')] =          @fileObj.fileName
+    query[(@getOpt 'paramNames.relativePath')] =      @fileObj.relativePath
+    #TODO: query[(@getOpt 'paramNames.totalChunks')] =
 
     customQuery = @getOpt 'query'
     customQuery = customQuery(@fileObj, @) if typeof customQuery is 'function'
@@ -485,7 +514,7 @@ window.ResumableChunk = class ResumableChunk
       for key, value of query
         data.append(key, value)
 
-      data.append(@getOpt('fileParameterName'), bytes)
+      data.append(@getOpt('paramNames.file'), bytes)
 
     @xhr.open 'POST', target
     @xhr.send data

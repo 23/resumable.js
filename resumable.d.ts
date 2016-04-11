@@ -4,6 +4,48 @@
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
 declare module Resumable  {
+  export interface ParameterNames {
+    /**
+     * The name of the multipart POST parameter to use for the file chunk (Default: file)
+     **/
+    file?: string;
+    /**
+     * The name of the chunk index (base-1) in the current upload POST parameter to use for the file chunk (Default: resumableChunkNumber)
+     */
+    chunkNumber?: string;
+    /**
+     * The name of the total number of chunks POST parameter to use for the file chunk (Default: resumableTotalChunks)
+     */
+    totalChunks?: string;
+    /**
+     * The name of the general chunk size POST parameter to use for the file chunk (Default: resumableChunkSize)
+     */
+    chunkSize?: string;
+    /**
+     * The name of the total file size number POST parameter to use for the file chunk (Default: resumableTotalSize)
+     */
+    totalSize?: string;
+    /**
+     * The name of the unique identifier POST parameter to use for the file chunk (Default: resumableIdentifier)
+     */
+    identifier?: string;
+    /**
+     * The name of the original file name POST parameter to use for the file chunk (Default: resumableFilename)
+     */
+    fileName?: string;
+    /**
+     * The name of the file's relative path POST parameter to use for the file chunk (Default: resumableRelativePath)
+     */
+    relativePath?: string;
+    /**
+     * The name of the current chunk size POST parameter to use for the file chunk (Default: resumableCurrentChunkSize)
+     */
+    currentChunkSize?: string;
+    /**
+     * The name of the file type POST parameter to use for the file chunk (Default: resumableType)
+     */
+    type?: string;
+  }
   export interface ConfigurationHash {
     /**
      * The target URL for the multipart POST request. This can be a string or a function that allows you you to construct and return a value, based on supplied params. (Default: /)
@@ -21,46 +63,12 @@ declare module Resumable  {
      * Number of simultaneous uploads (Default: 3)
      **/
     simultaneousUploads?: number;
+
     /**
-     * The name of the multipart POST parameter to use for the file chunk (Default: file)
-     **/
-    fileParameterName?: string;
-    /**
-     * The name of the chunk index (base-1) in the current upload POST parameter to use for the file chunk (Default: resumableChunkNumber)
+     * Names of
      */
-    chunkNumberParameterName?: string;
-    /**
-     * The name of the total number of chunks POST parameter to use for the file chunk (Default: resumableTotalChunks)
-     */
-    totalChunksParameterName?: string;
-    /**
-     * The name of the general chunk size POST parameter to use for the file chunk (Default: resumableChunkSize)
-     */
-    chunkSizeParameterName?: string;
-    /**
-     * The name of the total file size number POST parameter to use for the file chunk (Default: resumableTotalSize)
-     */
-    totalSizeParameterName?: string;
-    /**
-     * The name of the unique identifier POST parameter to use for the file chunk (Default: resumableIdentifier)
-     */
-    identifierParameterName?: string;
-    /**
-     * The name of the original file name POST parameter to use for the file chunk (Default: resumableFilename)
-     */
-    fileNameParameterName?: string;
-    /**
-     * The name of the file's relative path POST parameter to use for the file chunk (Default: resumableRelativePath)
-     */
-    relativePathParameterName?: string;
-    /**
-     * The name of the current chunk size POST parameter to use for the file chunk (Default: resumableCurrentChunkSize)
-     */
-    currentChunkSizeParameterName?: string;
-    /**
-     * The name of the file type POST parameter to use for the file chunk (Default: resumableType)
-     */
-    typeParameterName?: string;
+    paramNames?: ParameterNames;
+
     /**
      * Extra parameters to include in the multipart POST with data. This can be an object or a function. If a function, it will be passed a ResumableFile and a ResumableChunk object (Default: {})
      **/

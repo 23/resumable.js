@@ -82,19 +82,19 @@
       }
     };
     $.opts = opts||{};
+
+    /**
+     * Gets property by path
+     * @param {Object} obj
+     * @param {string} property
+     * @returns {*}
+     */
     $.getProperty = function(obj, property) {
       var result = obj;
       var i;
       var prop;
-      var props;
+      var props = property.split(".");
 
-      if (!isNaN(property)) {
-        props = [property];
-      } else {
-        props = property.split(".");
-      }
-
-      // Build object path
       for (i = 0; i < props.length; i++) {
         prop = props[i];
         if (typeof result[prop] === 'undefined') {
@@ -104,19 +104,21 @@
       }
       return result;
     };
+
+    /**
+     * Sets property by path
+     * @param {Object}  obj
+     * @param {string}  property
+     * @param {*}       value
+     */
     $.setProperty = function(obj, property, value) {
       var result = obj;
       var i;
       var prop;
-      var props;
-
-      if (!isNaN(property)) {
-        props = [property];
-      } else {
-        props = property.split(".");
-      }
+      var props = property.split(".");
 
       if(props.length > 1) {
+        // Build object path
         for (i = 0; i < props.length - 1; i++) {
           prop = props[i];
           if (typeof result[prop] !== 'undefined') {

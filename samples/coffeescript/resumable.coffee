@@ -50,15 +50,42 @@ window.Resumable = class Resumable
     @opt = {} if not @opt?
     @events = []
 
-  getOpt: (o)->
+  # Gets object property by path
+  getProperty: (obj, property) ->
+    result = obj;
+    props = property.split(".");
 
+    for prop in props
+      prop = props[i];
+      if (typeof result[prop] == 'undefined')
+        return undefined;
+      result = result[prop];
+    return result;
+
+  # Sets object property by path
+  setProperty: (obj, property, value)->
+    result = obj
+    props = property.split(".")
+
+    if(props.length > 1)
+      # Build object path
+      for prop in props
+        if (typeof result[prop] != 'undefined')
+          result[prop] = {}
+        result = result[prop]
+      result[prop] = value
+    else
+      result[props[0]] = value
+
+  getOpt: (o)->
     if o instanceof Array
       opts = {}
       for item in o
         opts[item] = @getOpt(item)
       return opts
     else
-      return if @opt[o]? then @opt[o] else @defaults[o]
+      opt = (@getProperty @opt, o);
+      return if opt then opt else (@getProperty @defaults, o)
 
   formatSize: (size)->
     if size < 1024

@@ -11,22 +11,22 @@ namespace Resumable.Controllers
 	[RoutePrefix("api/File")]
 	public class FileUploadController : ApiController
 	{
-		protected string root = System.Web.Hosting.HostingEnvironment.MapPath("~/upload"); 
+		private string root = System.Web.Hosting.HostingEnvironment.MapPath("~/upload"); 
 		
 		[Route("Upload"), HttpOptions]
-		public virtual object UploadFileOptions()
+		public object UploadFileOptions()
 		{
 			return Request.CreateResponse(HttpStatusCode.OK);
 		}
 
 		[Route("Upload"), HttpGet]
-		public virtual object Upload(int resumableChunkNumber, string resumableIdentifier)
+		public object Upload(int resumableChunkNumber, string resumableIdentifier)
 		{
 			return ChunkIsHere(resumableChunkNumber, resumableIdentifier) ? Request.CreateResponse(HttpStatusCode.OK) : Request.CreateResponse(HttpStatusCode.NoContent);
 		}
 
 		[Route("Upload"), HttpPost]
-		public virtual async Task<object> Upload()
+		public async Task<object> Upload()
 		{
 			// Check if the request contains multipart/form-data.
 			if (!Request.Content.IsMimeMultipartContent())
@@ -95,28 +95,28 @@ namespace Resumable.Controllers
 		}
 
 		[NonAction]
-		protected virtual string GetFileName(MultipartFormDataStreamProvider provider)
+		private string GetFileName(MultipartFormDataStreamProvider provider)
 		{
 			var filename = provider.FormData["resumableFilename"];
 			return !String.IsNullOrEmpty(filename) ? filename : provider.FileData[0].Headers.ContentDisposition.FileName.Trim('\"');
 		}
 
 		[NonAction]
-		protected virtual string GetId(MultipartFormDataStreamProvider provider)
+		private string GetId(MultipartFormDataStreamProvider provider)
 		{
 			var id = provider.FormData["resumableIdentifier"];
 			return !String.IsNullOrEmpty(id) ? id : Guid.NewGuid().ToString();
 		}
 
 		[NonAction]
-		protected virtual int GetTotalChunks(MultipartFormDataStreamProvider provider)
+		private int GetTotalChunks(MultipartFormDataStreamProvider provider)
 		{
 			var total = provider.FormData["resumableTotalChunks"];
 			return !String.IsNullOrEmpty(total) ? Convert.ToInt32(total) : 1;
 		}
 
 		[NonAction]
-		protected virtual int GetChunkNumber(MultipartFormDataStreamProvider provider)
+		private int GetChunkNumber(MultipartFormDataStreamProvider provider)
 		{
 			var chunk = provider.FormData["resumableChunkNumber"];
 			return !String.IsNullOrEmpty(chunk) ? Convert.ToInt32(chunk) : 1;
@@ -127,13 +127,13 @@ namespace Resumable.Controllers
 		#region Chunk methods
 
 		[NonAction]
-		protected virtual string GetChunkFileName(int chunkNumber, string identifier)
+		private string GetChunkFileName(int chunkNumber, string identifier)
 		{
 			return Path.Combine(root, string.Format("{0}_{1}", identifier, chunkNumber.ToString()));
 		}
 
 		[NonAction]
-		protected virtual void RenameChunk(MultipartFileData chunk, int chunkNumber, string identifier)
+		private void RenameChunk(MultipartFileData chunk, int chunkNumber, string identifier)
 		{
 			string generatedFileName = chunk.LocalFileName;
 			string chunkFileName = GetChunkFileName(chunkNumber, identifier);
@@ -143,20 +143,20 @@ namespace Resumable.Controllers
 		}
 
 		[NonAction]
-		protected virtual string GetFilePath(ResumableConfiguration configuration)
+		private string GetFilePath(ResumableConfiguration configuration)
 		{
 			return Path.Combine(root, configuration.Identifier);
 		}
 
 		[NonAction]
-		protected virtual bool ChunkIsHere(int chunkNumber, string identifier)
+		private bool ChunkIsHere(int chunkNumber, string identifier)
 		{
 			string fileName = GetChunkFileName(chunkNumber, identifier);
 			return File.Exists(fileName);
 		}
 
 		[NonAction]
-		protected virtual bool AllChunksAreHere(ResumableConfiguration configuration)
+		private bool AllChunksAreHere(ResumableConfiguration configuration)
 		{
 			for (int chunkNumber = 1; chunkNumber <= configuration.Chunks; chunkNumber++)
 				if (!ChunkIsHere(chunkNumber, configuration.Identifier)) return false;
@@ -164,7 +164,7 @@ namespace Resumable.Controllers
 		}
 	
 		[NonAction]
-		protected virtual void TryAssembleFile(ResumableConfiguration configuration)
+		private void TryAssembleFile(ResumableConfiguration configuration)
 		{
 			if (AllChunksAreHere(configuration))
 			{
@@ -180,7 +180,7 @@ namespace Resumable.Controllers
 		}
 
 		[NonAction]
-		protected void DeleteChunks(ResumableConfiguration configuration)
+		private void DeleteChunks(ResumableConfiguration configuration)
 		{
 			for (int chunkNumber = 1; chunkNumber <= configuration.Chunks; chunkNumber++)
 			{
@@ -190,7 +190,7 @@ namespace Resumable.Controllers
 		}
 		
 		[NonAction]
-		protected string ConsolidateFile(ResumableConfiguration configuration)
+		private string ConsolidateFile(ResumableConfiguration configuration)
 		{
 			var path = GetFilePath(configuration);
 			using (var destStream = File.Create(path, 15000))

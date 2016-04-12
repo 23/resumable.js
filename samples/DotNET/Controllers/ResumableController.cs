@@ -94,7 +94,6 @@ namespace Resumable.Controllers
 			return ResumableConfiguration.Create(identifier: GetId(provider), filename: GetFileName(provider), chunks: GetTotalChunks(provider));
 		}
 
-
 		[NonAction]
 		protected virtual string GetFileName(MultipartFormDataStreamProvider provider)
 		{
@@ -163,8 +162,7 @@ namespace Resumable.Controllers
 				if (!ChunkIsHere(chunkNumber, configuration.Identifier)) return false;
 			return true;
 		}
-
-
+	
 		[NonAction]
 		protected virtual void TryAssembleFile(ResumableConfiguration configuration)
 		{
@@ -187,18 +185,14 @@ namespace Resumable.Controllers
 			for (int chunkNumber = 1; chunkNumber <= configuration.Chunks; chunkNumber++)
 			{
 				var chunkFileName = GetChunkFileName(chunkNumber, configuration.Identifier);
-				// FIXME: batch test is throwing an IO error
 				File.Delete(chunkFileName);
 			}
 		}
-
-
+		
 		[NonAction]
 		protected string ConsolidateFile(ResumableConfiguration configuration)
 		{
 			var path = GetFilePath(configuration);
-
-			// FIXME: batch test is throwing an IO error
 			using (var destStream = File.Create(path, 15000))
 			{
 				for (int chunkNumber = 1; chunkNumber <= configuration.Chunks; chunkNumber++)

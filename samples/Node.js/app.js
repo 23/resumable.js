@@ -13,8 +13,20 @@ app.post('/upload', function(req, res){
 
 	// console.log(req);
 
-    resumable.post(req, function(status, filename, original_filename, identifier){
-        console.log('POST', status, original_filename, identifier);
+    resumable.post(req, function(status, filename, original_filename, identifier, numberOfChunks){
+        console.log('POST', status, filename, original_filename, identifier);
+        if('done' == status){
+         console.log('save now');
+         var concat = require('concat-files');
+         var chunknames = [];
+         for(var i=1; i <= numberOfChunks; i++){ 
+          var uploadname = '/tmp/resumable.js/resumable-'+identifier+'.'+i;
+          chunknames.push(uploadname);
+         }
+         concat(chunknames, 'uploads/'+filename, function() { console.log('saved');});
+
+        }
+ 
 
         res.send(status, {
             // NOTE: Uncomment this funciton to enable cross-domain request.

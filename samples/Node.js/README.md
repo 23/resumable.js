@@ -6,10 +6,11 @@ To install and run:
 
     cd samples/Node.js
     npm install
-    node app.js
+    nodejs app.js
 
 Then browse to [localhost:3000](http://localhost:3000).
 
+The uploaded files will appear in samples/Node.js/uploads.
 
 ## Enabling Cross-domain Uploads
 

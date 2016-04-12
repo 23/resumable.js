@@ -73,13 +73,13 @@ module.exports = resumable = function(temporaryFolder){
       var chunkFilename = getChunkFilename(chunkNumber, identifier);
       fs.exists(chunkFilename, function(exists){
           if(exists){
-            callback('found', chunkFilename, filename, identifier);
+            callback('found', chunkFilename, filename, identifier, chunkNumber);
           } else {
-            callback('not_found', null, null, null);
+            callback('not_found', null, null, null, 0);
           }
         });
     } else {
-      callback('not_found', null, null, null);
+      callback('not_found', null, null, null, 0);
     }
   }
 
@@ -101,7 +101,7 @@ module.exports = resumable = function(temporaryFolder){
 		var original_filename = fields['resumableIdentifier'];
 
     if(!files[$.fileParameterName] || !files[$.fileParameterName].size) {
-      callback('invalid_resumable_request', null, null, null);
+      callback('invalid_resumable_request', null, null, null, 0);
       return;
     }
     var validation = validateRequest(chunkNumber, chunkSize, totalSize, identifier, files[$.fileParameterName].size);
@@ -119,20 +119,20 @@ module.exports = resumable = function(temporaryFolder){
                 if(exists){
                   currentTestChunk++;
                   if(currentTestChunk>numberOfChunks) {
-                    callback('done', filename, original_filename, identifier);
+                    callback('done', filename, original_filename, identifier, numberOfChunks);
                   } else {
                     // Recursion
                     testChunkExists();
                   }
                 } else {
-                  callback('partly_done', filename, original_filename, identifier);
+                  callback('partly_done', filename, original_filename, identifier, currentTestChunk);
                 }
               });
             }
         testChunkExists();
       });
     } else {
-          callback(validation, filename, original_filename, identifier);
+          callback(validation, filename, original_filename, identifier, 0);
     }
   }
 

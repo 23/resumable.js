@@ -8,39 +8,28 @@ app.use(express.static(__dirname + '/public'));
 
 app.use(multipart());
 
+// Uncomment to allow CORS
+// app.use(function (req, res, next) {
+//    res.header('Access-Control-Allow-Origin', '*');
+//    next();
+// });
+
 // Handle uploads through Resumable.js
 app.post('/upload', function(req, res){
-
-	// console.log(req);
-
     resumable.post(req, function(status, filename, original_filename, identifier){
         console.log('POST', status, original_filename, identifier);
 
-        res.send(status, {
-            // NOTE: Uncomment this funciton to enable cross-domain request.
-            //'Access-Control-Allow-Origin': '*'
-        });
+        res.send(status);
     });
 });
-
-// Handle cross-domain requests
-// NOTE: Uncomment this funciton to enable cross-domain request.
-/*
-  app.options('/upload', function(req, res){
-  console.log('OPTIONS');
-  res.send(true, {
-  'Access-Control-Allow-Origin': '*'
-  }, 200);
-  });
-*/
 
 // Handle status checks on chunks through Resumable.js
 app.get('/upload', function(req, res){
     resumable.get(req, function(status, filename, original_filename, identifier){
         console.log('GET', status);
         res.send((status == 'found' ? 200 : 404), status);
-      });
-  });
+    });
+});
 
 app.get('/download/:identifier', function(req, res){
 	resumable.write(req.params.identifier, res);

@@ -401,6 +401,7 @@
         }
 
         function addFile(uniqueIdentifier){
+          var pathIndex = $.files.length ? $.files.length : 0;
           if (!$.getFromUniqueIdentifier(uniqueIdentifier)) {(function(){
             file.uniqueIdentifier = uniqueIdentifier;
             file.sendPath = $.paths[pathIndex];

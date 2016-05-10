@@ -34,6 +34,7 @@
     // PROPERTIES
     var $ = this;
     $.files = [];
+    $.paths = [];
     $.defaults = {
       chunkSize:1*1024*1024,
       forceChunkSize:false,
@@ -280,6 +281,7 @@
           updateQueueTotal(-1, queue);
         }
         else if (entry.isFile) {
+          $.paths.push(entry.fullPath);
           //this is handling to read an entry object representing a file, parsing the file object is asynchronous which is why we need the queue
           //currently entry objects will only exist in this flow for Chrome
           entry.file(function(file) {
@@ -374,19 +376,19 @@
       $h.each(fileList, function(file){
         var fileName = file.name;
         if(o.fileType.length > 0){
-			var fileTypeFound = false;
-			for(var index in o.fileType){
-				var extension = '.' + o.fileType[index];
-				if(fileName.indexOf(extension, fileName.length - extension.length) !== -1){
-					fileTypeFound = true;
-					break;
-				}
-			}
-			if (!fileTypeFound) {
-			  o.fileTypeErrorCallback(file, errorCount++);
-			  return false;
-			}
-		}
+          var fileTypeFound = false;
+          for(var index in o.fileType){
+            var extension = '.' + o.fileType[index];
+            if(fileName.indexOf(extension, fileName.length - extension.length) !== -1){
+              fileTypeFound = true;
+              break;
+            }
+          }
+          if (!fileTypeFound) {
+            o.fileTypeErrorCallback(file, errorCount++);
+            return false;
+          }
+        }
 
         if (typeof(o.minFileSize)!=='undefined' && file.size<o.minFileSize) {
           o.minFileSizeErrorCallback(file, errorCount++);
@@ -398,8 +400,10 @@
         }
 
         function addFile(uniqueIdentifier){
+          var pathIndex = $.files.length ? $.files.length : 0;
           if (!$.getFromUniqueIdentifier(uniqueIdentifier)) {(function(){
             file.uniqueIdentifier = uniqueIdentifier;
+            file.relativePath = $.paths[pathIndex];
             var f = new ResumableFile($, file, uniqueIdentifier);
             $.files.push(f);
             files.push(f);
@@ -407,7 +411,9 @@
             window.setTimeout(function(){
               $.fire('fileAdded', f, event)
             },0);
-          })()};
+          })()} else {
+            $.paths.splice(pathIndex, 1);
+          };
         }
         // directories have size == 0
         var uniqueIdentifier = $h.generateUniqueIdentifier(file)
@@ -439,7 +445,7 @@
       $.file = file;
       $.fileName = file.fileName||file.name; // Some confusion in different versions of Firefox
       $.size = file.size;
-      $.relativePath = file.webkitRelativePath || file.relativePath || $.fileName;
+      $.relativePath = file.relativePath || file.webkitRelativePath || $.fileName;
       $.uniqueIdentifier = uniqueIdentifier;
       $._pause = false;
       $.container = '';
@@ -991,6 +997,9 @@
       for(var i = $.files.length - 1; i >= 0; i--) {
         if($.files[i] === file) {
           $.files.splice(i, 1);
+        }
+        if($.paths[i]) {
+          $.paths.splice(i, 1);
         }
       }
     };

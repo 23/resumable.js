@@ -73,7 +73,7 @@
         var maxFiles = $.getOpt('maxFiles');
         alert('Please upload no more than ' + maxFiles + ' file' + (maxFiles === 1 ? '' : 's') + ' at a time.');
       },
-      minFileSize:1,
+      minFileSize:0,
       minFileSizeErrorCallback:function(file, errorCount) {
         alert(file.fileName||file.name +' is too small, please upload files larger than ' + $h.formatSize($.getOpt('minFileSize')) + '.');
       },
@@ -281,7 +281,6 @@
           updateQueueTotal(-1, queue);
         }
         else if (entry.isFile) {
-          //build paths array, to retrieve later
           $.paths.push(entry.fullPath);
           //this is handling to read an entry object representing a file, parsing the file object is asynchronous which is why we need the queue
           //currently entry objects will only exist in this flow for Chrome
@@ -377,19 +376,19 @@
       $h.each(fileList, function(file){
         var fileName = file.name;
         if(o.fileType.length > 0){
-			var fileTypeFound = false;
-			for(var index in o.fileType){
-				var extension = '.' + o.fileType[index];
-				if(fileName.indexOf(extension, fileName.length - extension.length) !== -1){
-					fileTypeFound = true;
-					break;
-				}
-			}
-			if (!fileTypeFound) {
-			  o.fileTypeErrorCallback(file, errorCount++);
-			  return false;
-			}
-		}
+      var fileTypeFound = false;
+      for(var index in o.fileType){
+        var extension = '.' + o.fileType[index];
+        if(fileName.indexOf(extension, fileName.length - extension.length) !== -1){
+          fileTypeFound = true;
+          break;
+        }
+      }
+      if (!fileTypeFound) {
+        o.fileTypeErrorCallback(file, errorCount++);
+        return false;
+      }
+    }
 
         if (typeof(o.minFileSize)!=='undefined' && file.size<o.minFileSize) {
           o.minFileSizeErrorCallback(file, errorCount++);
@@ -446,7 +445,7 @@
       $.file = file;
       $.fileName = file.fileName||file.name; // Some confusion in different versions of Firefox
       $.size = file.size;
-      $.relativePath = file.webkitRelativePath || file.relativePath || $.fileName;
+      $.relativePath = file.sendPath || file.webkitRelativePath || file.relativePath || $.fileName;
       $.uniqueIdentifier = uniqueIdentifier;
       $._pause = false;
       $.container = '';

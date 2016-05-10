@@ -73,7 +73,7 @@
         var maxFiles = $.getOpt('maxFiles');
         alert('Please upload no more than ' + maxFiles + ' file' + (maxFiles === 1 ? '' : 's') + ' at a time.');
       },
-      minFileSize:0,
+      minFileSize:1,
       minFileSizeErrorCallback:function(file, errorCount) {
         alert(file.fileName||file.name +' is too small, please upload files larger than ' + $h.formatSize($.getOpt('minFileSize')) + '.');
       },

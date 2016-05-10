@@ -34,6 +34,7 @@
     // PROPERTIES
     var $ = this;
     $.files = [];
+    $.paths = [];
     $.defaults = {
       chunkSize:1*1024*1024,
       forceChunkSize:false,
@@ -280,6 +281,8 @@
           updateQueueTotal(-1, queue);
         }
         else if (entry.isFile) {
+          //build paths array, to retrieve later
+          $.paths.push(entry.fullPath);
           //this is handling to read an entry object representing a file, parsing the file object is asynchronous which is why we need the queue
           //currently entry objects will only exist in this flow for Chrome
           entry.file(function(file) {
@@ -400,6 +403,7 @@
         function addFile(uniqueIdentifier){
           if (!$.getFromUniqueIdentifier(uniqueIdentifier)) {(function(){
             file.uniqueIdentifier = uniqueIdentifier;
+            file.sendPath = $.paths[pathIndex];
             var f = new ResumableFile($, file, uniqueIdentifier);
             $.files.push(f);
             files.push(f);
@@ -407,7 +411,9 @@
             window.setTimeout(function(){
               $.fire('fileAdded', f, event)
             },0);
-          })()};
+          })()} else {
+            $.paths.splice(pathIndex, 1);
+          };
         }
         // directories have size == 0
         var uniqueIdentifier = $h.generateUniqueIdentifier(file)
@@ -991,6 +997,9 @@
       for(var i = $.files.length - 1; i >= 0; i--) {
         if($.files[i] === file) {
           $.files.splice(i, 1);
+        }
+        if($.paths[i]) {
+          $.paths.splice(i, 1);
         }
       }
     };

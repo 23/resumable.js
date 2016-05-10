@@ -403,7 +403,7 @@
           var pathIndex = $.files.length ? $.files.length : 0;
           if (!$.getFromUniqueIdentifier(uniqueIdentifier)) {(function(){
             file.uniqueIdentifier = uniqueIdentifier;
-            file.sendPath = $.paths[pathIndex];
+            file.relativePath = $.paths[pathIndex];
             var f = new ResumableFile($, file, uniqueIdentifier);
             $.files.push(f);
             files.push(f);
@@ -445,7 +445,7 @@
       $.file = file;
       $.fileName = file.fileName||file.name; // Some confusion in different versions of Firefox
       $.size = file.size;
-      $.relativePath = file.sendPath || file.webkitRelativePath || file.relativePath || $.fileName;
+      $.relativePath = file.relativePath || file.webkitRelativePath || $.fileName;
       $.uniqueIdentifier = uniqueIdentifier;
       $._pause = false;
       $.container = '';

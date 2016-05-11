@@ -255,13 +255,13 @@
                 if (entry.isFile) {
                   queueLength++;
                   entry.file(function(file) {
-                    file.relativePath = '' + path + '/' + file.name;
+                    file.relativePath = '/' + path + '/' + file.name;
                     return enqueueFileAddition(file, event);
                   }, function() { // Error
                     queueLength--;
                   });
                 } else if (entry.isDirectory) {
-                  processDirectory(entry, '' + path + '/' + entry.name, event);
+                  processDirectory(entry, path + '/' + entry.name, event);
                 }
               }
               readEntries();
@@ -283,7 +283,6 @@
     var enqueueFileAddition = function(file, event){
       if (!file.relativePath) file.fullPath;
       queueFiles.push(file);
-      console.log(queueFiles.length + '-' + queueLength);
 
       // If all the files we expect have shown up, then flush the queue.
       if (queueFiles.length == queueLength) {

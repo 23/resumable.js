@@ -216,144 +216,77 @@
       e.preventDefault();
     };
 
-    // INTERNAL METHODS (both handy and responsible for the heavy load)
-    /**
-     * @summary This function loops over the files passed in from a drag and drop operation and gets them ready for appendFilesFromFileList
-     *            It attempts to use FileSystem API calls to extract files and subfolders if the dropped items include folders
-     *            That capability is only currently available in Chrome, but if it isn't available it will just pass the items along to
-     *            appendFilesFromFileList (via enqueueFileAddition to help with asynchronous processing.)
-     * @param files {Array} - the File or Entry objects to be processed depending on your browser support
-     * @param event {Object} - the drop event object
-     * @param [queue] {Object} - an object to keep track of our progress processing the dropped items
-     * @param [path] {String} - the relative path from the originally selected folder to the current files if extracting files from subfolders
-     */
-    var loadFiles = function (files, event, queue, path){
-      //initialize the queue object if it doesn't exist
-      if (!queue) {
-        queue = {
-          total: 0,
-          files: [],
-          event: event
-        };
+    var queueLength = 0;
+
+    var loadFiles = function (items, event) {
+      $.fire('beforeAdd');
+
+      var entry, item, i, ii;
+      for (i = 0, ii = items.length; i < ii; i++) {
+        item = items[i];
+        if ((item.webkitGetAsEntry != null) && (entry = item.webkitGetAsEntry())) {
+          if (entry.isFile) {
+            queueLength++;
+            enqueueFileAddition(item.getAsFile(), event);
+          } else if (entry.isDirectory) {
+            processDirectory(entry, entry.name, event);
+          }
+        } else if (item.getAsFile != null) {
+          if ((item.kind == null) || item.kind === 'file') {
+            queueLength++;
+            enqueueFileAddition(item.getAsFile(), event);
+          }
+        }
       }
+    };
 
-      //update the total number of things we plan to process
-      updateQueueTotal(files.length, queue);
+    var processDirectory = function (directory, path, event) {
+      var dirReader, readEntries;
 
-      //loop over all the passed in objects checking if they are files or folders
-      for (var i = 0; i < files.length; i++) {
-        var file = files[i];
-        var entry, reader;
+      dirReader = directory.createReader();
 
-        if (file.isFile || file.isDirectory) {
-          //this is an object we can handle below with no extra work needed up front
-          entry = file;
-        }
-        else if (file.getAsEntry) {
-          //get the file as an entry object if we can using the proposed HTML5 api (unlikely to get implemented by anyone)
-          entry = file.getAsEntry();
-        }
-        else if (file.webkitGetAsEntry) {
-          //get the file as an entry object if we can using the Chrome specific webkit implementation
-          entry = file.webkitGetAsEntry();
-        }
-        else if (typeof file.getAsFile === 'function') {
-          //if this is still a DataTransferItem object, get it as a file object
-          enqueueFileAddition(file.getAsFile(), queue, path);
-          //we just added this file object to the queue so we can go to the next object in the loop and skip the processing below
-          continue;
-        }
-        else if (File && file instanceof File) {
-          //this is already a file object so just queue it up and move on
-          enqueueFileAddition(file, queue, path);
-          //we just added this file object to the queue so we can go to the next object in the loop and skip the processing below
-          continue;
-        }
-        else {
-          //we can't do anything with this object, decrement the expected total and skip the processing below
-          updateQueueTotal(-1, queue);
-          continue;
-        }
-
-        if (!entry) {
-          //there isn't anything we can do with this so decrement the total expected
-          updateQueueTotal(-1, queue);
-        }
-        else if (entry.isFile) {
-          //this is handling to read an entry object representing a file, parsing the file object is asynchronous which is why we need the queue
-          //currently entry objects will only exist in this flow for Chrome
-          entry.file(function(file) {
-            enqueueFileAddition(file, queue, path);
-          }, function(err) {
-            console.warn(err);
+      readEntries = (function() {
+        return function() {
+          return dirReader.readEntries(function(entries) {
+            var entry, i;
+            if (entries.length > 0) {
+              for (i = 0; i < entries.length; i++) {
+                entry = entries[i];
+                if (entry.isFile) {
+                  queueLength++;
+                  entry.file(function(file) {
+                    file.relativePath = '/' + path + '/' + file.name;
+                    return enqueueFileAddition(file, event);
+                  }, function() { // Error
+                    queueLength--;
+                  });
+                } else if (entry.isDirectory) {
+                  processDirectory(entry, path + '/' + entry.name, event);
+                }
+              }
+              readEntries();
+            }
+            return null;
           });
-        }
-        else if (entry.isDirectory) {
-          //this is handling to read an entry object representing a folder, parsing the directory object is asynchronous which is why we need the queue
-          //currently entry objects will only exist in this flow for Chrome
-          reader = entry.createReader();
+        };
+      })(this);
 
-            var newEntries = [];
-            //wrap the callback in another function so we can store the path in a closure
-            var readDir = function(path){
-                reader.readEntries(
-                    //success callback: read entries out of the directory
-                    function(entries){
-                        if (entries.length>0){
-                            //add these results to the array of all the new stuff
-                            for (var i=0; i<entries.length; i++) { newEntries.push(entries[i]); }
-                            //call this function again as all the results may not have been sent yet
-                            readDir(entry.fullPath);
-                        }
-                        else {
-                            //we have now gotten all the results in newEntries so let's process them recursively
-                            loadFiles(newEntries, event, queue, path);
-                            //this was a directory rather than a file so decrement the expected file count
-                            updateQueueTotal(-1, queue);
-                        }
-                    },
-                    //error callback, most often hit if there is a directory with nothing inside it
-                    function(err) {
-                        //this was a directory rather than a file so decrement the expected file count
-                        updateQueueTotal(-1, queue);
-                        console.warn(err);
-                    }
-                );
-            };
-          readDir(entry.fullPath);
-        }
-      }
+      return readEntries();
     };
 
-    /**
-     * @summary Adjust the total number of files we are expecting to process
-     *          if decrementing and the new expected total is equal to the number processed, flush the queue
-     * @param addition {Number} - the number of additional files we expect to process (may be negative)
-     * @param queue {Object} - an object to keep track of our progress processing the dropped items
-     */
-    var updateQueueTotal = function(addition, queue){
-      queue.total += addition;
-
-      // If all the files we expect have shown up, then flush the queue.
-      if (queue.files.length === queue.total) {
-        appendFilesFromFileList(queue.files, queue.event);
-      }
-    };
-
+    var queueFiles = [];
     /**
      * @summary Add a file to the queue of processed files, if it brings the total up to the expected total, flush the queue
      * @param file {Object} - File object to be passed along to appendFilesFromFileList eventually
-     * @param queue {Object} - an object to keep track of our progress processing the dropped items
      * @param [path] {String} - the file's relative path from the originally dropped folder if we are parsing folder content (Chrome only for now)
      */
-    var enqueueFileAddition = function(file, queue, path) {
-      //store the path to this file if it came in as part of a folder
-      if (path) file.relativePath = path + '/' + file.name;
-      queue.files.push(file);
+    var enqueueFileAddition = function(file, event){
+      if (!file.relativePath) file.fullPath;
+      queueFiles.push(file);
 
       // If all the files we expect have shown up, then flush the queue.
-      if (queue.files.length === queue.total) {
-        appendFilesFromFileList(queue.files, queue.event);
+      if (queueFiles.length == queueLength) {
+        appendFilesFromFileList(queueFiles, event);
       }
     };
 
@@ -374,19 +307,19 @@
       $h.each(fileList, function(file){
         var fileName = file.name;
         if(o.fileType.length > 0){
-			var fileTypeFound = false;
-			for(var index in o.fileType){
-				var extension = '.' + o.fileType[index];
-				if(fileName.indexOf(extension, fileName.length - extension.length) !== -1){
-					fileTypeFound = true;
-					break;
-				}
-			}
-			if (!fileTypeFound) {
-			  o.fileTypeErrorCallback(file, errorCount++);
-			  return false;
-			}
-		}
+          var fileTypeFound = false;
+          for(var index in o.fileType){
+            var extension = '.' + o.fileType[index];
+            if(fileName.indexOf(extension, fileName.length - extension.length) !== -1){
+              fileTypeFound = true;
+              break;
+            }
+          }
+          if (!fileTypeFound) {
+            o.fileTypeErrorCallback(file, errorCount++);
+            return false;
+          }
+        }
 
         if (typeof(o.minFileSize)!=='undefined' && file.size<o.minFileSize) {
           o.minFileSizeErrorCallback(file, errorCount++);
@@ -398,6 +331,7 @@
         }
 
         function addFile(uniqueIdentifier){
+          var pathIndex = $.files.length ? $.files.length : 0;
           if (!$.getFromUniqueIdentifier(uniqueIdentifier)) {(function(){
             file.uniqueIdentifier = uniqueIdentifier;
             var f = new ResumableFile($, file, uniqueIdentifier);
@@ -439,7 +373,7 @@
       $.file = file;
       $.fileName = file.fileName||file.name; // Some confusion in different versions of Firefox
       $.size = file.size;
-      $.relativePath = file.webkitRelativePath || file.relativePath || $.fileName;
+      $.relativePath = file.relativePath || file.webkitRelativePath || $.fileName;
       $.uniqueIdentifier = uniqueIdentifier;
       $._pause = false;
       $.container = '';

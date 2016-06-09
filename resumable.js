@@ -305,11 +305,12 @@
       }
       var files = [];
       $h.each(fileList, function(file){
-        var fileName = file.name;
         if(o.fileType.length > 0){
+          var fileName = file.name.toLowerCase();
           var fileTypeFound = false;
           for(var index in o.fileType){
             var extension = '.' + o.fileType[index];
+			extension.toLowerCase();
             if(fileName.indexOf(extension, fileName.length - extension.length) !== -1){
               fileTypeFound = true;
               break;

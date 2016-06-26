@@ -694,7 +694,7 @@
         var method = $.getOpt('uploadMethod');
         $.xhr.open(method, target);
         if ($.getOpt('method') === 'octet') {
-          $.xhr.setRequestHeader('Content-Type', 'binary/octet-stream');
+          $.xhr.setRequestHeader('Content-Type', 'application/octet-stream');
         }
         $.xhr.timeout = $.getOpt('xhrTimeout');
         $.xhr.withCredentials = $.getOpt('withCredentials');

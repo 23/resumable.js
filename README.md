@@ -138,7 +138,7 @@ Available configuration options are:
 
 #### Events
 
-* `.fileSuccess(file)` A specific file was completed.
+* `.fileSuccess(file, message)` A specific file was completed. `message` is the response body from the server.
 * `.fileProgress(file)` Uploading progressed for a specific file.
 * `.fileAdded(file, event)` A new file was added. Optionally, you can use the browser `event` object from when the file was added.
 * `.filesAdded(array)` New files were added.

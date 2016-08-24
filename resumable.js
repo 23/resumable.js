@@ -949,6 +949,9 @@
       appendFilesFromFileList(e.target.files, e);
       e.target.value = '';
     };
+    $.updateQuery = function(query){
+        $.opts.query = query;
+    };
 
     return(this);
   };

@@ -2,6 +2,7 @@ var express = require('express');
 var resumable = require('./resumable-node.js')('/tmp/resumable.js/');
 var app = express();
 var multipart = require('connect-multiparty');
+var crypto = require('crypto');
 
 // Host most stuff in the public folder
 app.use(express.static(__dirname + '/public'));
@@ -13,6 +14,19 @@ app.use(multipart());
 //    res.header('Access-Control-Allow-Origin', '*');
 //    next();
 // });
+
+// retrieve file id. invoke with /fileid?filename=my-file.jpg
+app.get('/fileid', function(req, res){
+  if(!req.query.filename){
+    return res.status(500).end('query parameter missing');
+  }
+  // create md5 hash from filename
+  res.end(
+    crypto.createHash('md5')
+    .update(req.query.filename)
+    .digest('hex')
+  );
+});
 
 // Handle uploads through Resumable.js
 app.post('/upload', function(req, res){

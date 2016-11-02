@@ -303,7 +303,19 @@
           return false;
         }
       }
-      var files = [], filesSkipped = [];
+      var files = [], filesSkipped = [], remaining = fileList.length;
+      var decreaseReamining = function(){
+        if(!--remaining){
+          // all files processed, trigger event
+          if(!files.length && !filesSkipped.length){
+            // no succeeded files, just skip
+            return;
+          }
+          window.setTimeout(function(){
+            $.fire('filesAdded', files, filesSkipped);
+          },0);
+        }
+      };
       $h.each(fileList, function(file){
         var fileName = file.name;
         if(o.fileType.length > 0){
@@ -344,25 +356,29 @@
           })()} else {
             filesSkipped.push(f);
           };
+          decreaseReamining();
         }
         // directories have size == 0
         var uniqueIdentifier = $h.generateUniqueIdentifier(file)
-        if(uniqueIdentifier && typeof uniqueIdentifier.done === 'function' && typeof uniqueIdentifier.fail === 'function'){
+        if(uniqueIdentifier && typeof uniqueIdentifier.then === 'function'){
+          // Promise or Promise-like object provided as unique identifier
           uniqueIdentifier
-          .done(function(uniqueIdentifier){
+          .then(
+            function(uniqueIdentifier){
+              // unique identifier generation succeeded
               addFile(uniqueIdentifier);
-          })
-          .fail(function(){
-              addFile();
-          });
+            },
+           function(){
+              // unique identifier generation failed
+              // skip further processing, only decrease file count
+              decreaseReamining();
+            }
+          );
         }else{
+          // non-Promise provided as unique identifier, process synchronously
           addFile(uniqueIdentifier);
         }
-
       });
-      window.setTimeout(function(){
-        $.fire('filesAdded', files, filesSkipped);
-      },0);
     };
 
     // INTERNAL OBJECT TYPES

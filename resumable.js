@@ -289,7 +289,11 @@
 
       // If all the files we expect have shown up, then flush the queue.
       if (queueFiles.length == queueLength) {
+        // process files
         appendFilesFromFileList(queueFiles, event);
+        // flush the queue
+        queueFiles = [];
+        queueLength = 0;
       }
     };
 

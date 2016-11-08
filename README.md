@@ -77,6 +77,8 @@ The object is loaded with a configuration hash:
 
     var r = new Resumable({opt1:'val', ...});
 
+All POST parameters can be omitted by setting them to a falsy value
+(e.g. `null`, `false` or empty string).
 Available configuration options are:
 
 * `target` The target URL for the multipart POST request. This can be a `string` or a `function` that allows you you to construct and return a value, based on supplied `params`. (Default: `/`)

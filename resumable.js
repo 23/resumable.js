@@ -285,7 +285,6 @@
      * @param [path] {String} - the file's relative path from the originally dropped folder if we are parsing folder content (Chrome only for now)
      */
     var enqueueFileAddition = function(file, event){
-      if (!file.relativePath) file.fullPath;
       queueFiles.push(file);
 
       // If all the files we expect have shown up, then flush the queue.

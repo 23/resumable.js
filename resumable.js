@@ -358,7 +358,7 @@
               $.fire('fileAdded', f, event)
             },0);
           })()} else {
-            filesSkipped.push(f);
+            filesSkipped.push(file);
           };
           decreaseReamining();
         }

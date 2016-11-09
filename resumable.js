@@ -157,10 +157,10 @@
           }
         }
       },
-      generateUniqueIdentifier:function(file){
+      generateUniqueIdentifier:function(file, event){
         var custom = $.getOpt('generateUniqueIdentifier');
         if(typeof custom === 'function') {
-          return custom(file);
+          return custom(file, event);
         }
         var relativePath = file.webkitRelativePath||file.fileName||file.name; // Some confusion in different versions of Firefox
         var size = file.size;
@@ -363,7 +363,7 @@
           decreaseReamining();
         }
         // directories have size == 0
-        var uniqueIdentifier = $h.generateUniqueIdentifier(file)
+        var uniqueIdentifier = $h.generateUniqueIdentifier(file, event);
         if(uniqueIdentifier && typeof uniqueIdentifier.then === 'function'){
           // Promise or Promise-like object provided as unique identifier
           uniqueIdentifier

@@ -220,77 +220,110 @@
       e.preventDefault();
     };
 
-    var queueLength = 0;
-
-    var loadFiles = function (items, event) {
-      $.fire('beforeAdd');
-
-      var entry, item, i, ii;
-      for (i = 0, ii = items.length; i < ii; i++) {
-        item = items[i];
-        if ((item.webkitGetAsEntry != null) && (entry = item.webkitGetAsEntry())) {
-          if (entry.isFile) {
-            queueLength++;
-            enqueueFileAddition(item.getAsFile(), event);
-          } else if (entry.isDirectory) {
-            processDirectory(entry, entry.name, event);
-          }
-        } else if (item.getAsFile != null) {
-          if ((item.kind == null) || item.kind === 'file') {
-            queueLength++;
-            enqueueFileAddition(item.getAsFile(), event);
-          }
-        }
-      }
-    };
-
-    var processDirectory = function (directory, path, event) {
-      var dirReader, readEntries;
-
-      dirReader = directory.createReader();
-
-      readEntries = (function() {
-        return function() {
-          return dirReader.readEntries(function(entries) {
-            var entry, i;
-            if (entries.length > 0) {
-              for (i = 0; i < entries.length; i++) {
-                entry = entries[i];
-                if (entry.isFile) {
-                  queueLength++;
-                  entry.file(function(file) {
-                    file.relativePath = '/' + path + '/' + file.name;
-                    return enqueueFileAddition(file, event);
-                  }, function() { // Error
-                    queueLength--;
-                  });
-                } else if (entry.isDirectory) {
-                  processDirectory(entry, path + '/' + entry.name, event);
-                }
-              }
-              readEntries();
-            }
-            return null;
-          });
-        };
-      })(this);
-
-      return readEntries();
-    };
-
-    var queueFiles = [];
     /**
-     * @summary Add a file to the queue of processed files, if it brings the total up to the expected total, flush the queue
-     * @param file {Object} - File object to be passed along to appendFilesFromFileList eventually
-     * @param [path] {String} - the file's relative path from the originally dropped folder if we are parsing folder content (Chrome only for now)
+     * processes a single upload item (file or directory)
+     * @param {Object} item item to upload, may be file or directory entry
+     * @param {string} path current file path
+     * @param {File[]} items list of files to append new items to
+     * @param {Function} cb callback invoked when item is processed
      */
-    var enqueueFileAddition = function(file, event){
-      queueFiles.push(file);
-
-      // If all the files we expect have shown up, then flush the queue.
-      if (queueFiles.length == queueLength) {
-        appendFilesFromFileList(queueFiles, event);
+    function processItem(item, path, items, cb) {
+      var entry;
+      if(item.isFile){
+        // file provided
+        return item.file(function(file){
+          file.relativePath = path + file.name;
+          items.push(file);
+          cb();
+        });
+      }else if(item.isDirectory){
+        // item is already a directory entry, just assign
+        entry = item;
       }
+      if('function' === typeof item.webkitGetAsEntry){
+        // get entry from file object
+        entry = item.webkitGetAsEntry();
+      }
+      if(entry && entry.isDirectory){
+        // directory provided, process it
+        return processDirectory(entry, path + entry.name + '/', items, cb);
+      }
+      if('function' === typeof item.getAsFile){
+        // item represents a File object, convert it
+        item = item.getAsFile();
+        item.relativePath = path + item.name;
+        items.push(item);
+      }
+      cb(); // indicate processing is done
+    }
+
+
+    /**
+     * cps-style list iteration.
+     * invokes all functions in list and waits for their callback to be
+     * triggered.
+     * @param  {Function[]}   items list of functions expecting callback parameter
+     * @param  {Function} cb    callback to trigger after the last callback has been invoked
+     */
+    function processCallbacks(items, cb){
+      if(!items || items.length === 0){
+        // empty or no list, invoke callback
+        return cb();
+      }
+      // invoke current function, pass the next part as continuation
+      items[0](function(){
+        processCallbacks(items.slice(1), cb);
+      });
+    }
+
+    /**
+     * recursively traverse directory and collect files to upload
+     * @param  {Object}   directory directory to process
+     * @param  {string}   path      current path
+     * @param  {File[]}   items     target list of items
+     * @param  {Function} cb        callback invoked after traversing directory
+     */
+    function processDirectory (directory, path, items, cb) {
+      var dirReader = directory.createReader();
+      dirReader.readEntries(function(entries){
+        if(!entries.length){
+          // empty directory, skip
+          return cb();
+        }
+        // process all conversion callbacks, finally invoke own one
+        processCallbacks(
+          entries.map(function(entry){
+            // bind all properties except for callback
+            return processItem.bind(null, entry, path, items);
+          }),
+          cb
+        );
+      });
+    }
+
+    /**
+     * process items to extract files to be uploaded
+     * @param  {File[]} items items to process
+     * @param  {Event} event event that led to upload
+     */
+    function loadFiles(items, event) {
+      if(!items.length){
+        return; // nothing to do
+      }
+      $.fire('beforeAdd');
+      var files = [];
+      processCallbacks(
+          Array.prototype.map.call(items, function(item){
+            // bind all properties except for callback
+            return processItem.bind(null, item, "", files);
+          }),
+          function(){
+            if(files.length){
+              // at least one file found
+              appendFilesFromFileList(files, event);
+            }
+          }
+      );
     };
 
     var appendFilesFromFileList = function(fileList, event){

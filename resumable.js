@@ -239,6 +239,8 @@
       }else if(item.isDirectory){
         // item is already a directory entry, just assign
         entry = item;
+      }else if(item instanceof File) {
+        items.push(item);
       }
       if('function' === typeof item.webkitGetAsEntry){
         // get entry from file object

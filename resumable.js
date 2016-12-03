@@ -377,7 +377,6 @@
         }
 
         function addFile(uniqueIdentifier){
-          var pathIndex = $.files.length ? $.files.length : 0;
           if (!$.getFromUniqueIdentifier(uniqueIdentifier)) {(function(){
             file.uniqueIdentifier = uniqueIdentifier;
             var f = new ResumableFile($, file, uniqueIdentifier);

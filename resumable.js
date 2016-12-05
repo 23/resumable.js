@@ -5,12 +5,8 @@
 * Steffen Tiedemann Christensen, steffen@23company.com
 */
 
-(function($){
+(function(){
 "use strict";
-
-  if(!$){
-    throw new Error("jQuery is not defined but required by resumable.js");
-  }
 
   var Resumable = function(opts){
     if ( !(this instanceof Resumable) ) {
@@ -1049,4 +1045,4 @@
     window.Resumable = Resumable;
   }
 
-})(window.jQuery);
+})();

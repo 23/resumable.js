@@ -57,6 +57,7 @@
       testMethod: 'GET',
       prioritizeFirstAndLastChunk:false,
       target:'/',
+      testTarget:'/',
       parameterNamespace:'',
       testChunks:true,
       generateUniqueIdentifier:null,
@@ -186,17 +187,21 @@
           return (size/1024.0/1024.0/1024.0).toFixed(1) + ' GB';
         }
       },
-      getTarget:function(params){
+      getTarget:function(request, params){
         var target = $.getOpt('target');
-        if(typeof target === 'function') {
+
+        if (request === 'test') {
+          target = $.getOpt('testTarget') === '/' ? $.getOpt('target') : $.getOpt('testTarget');
+        }
+
+        if (typeof target === 'function') {
           return target(params);
         }
-        if(target.indexOf('?') < 0) {
-          target += '?';
-        } else {
-          target += '&';
-        }
-        return target + params.join('&');
+
+        var separator = target.indexOf('?') < 0 ? '?' : '&';
+        var joinedParams = params.join('&');
+
+        return target + separator + joinedParams;
       }
     };
 
@@ -645,7 +650,7 @@
           })
         );
         // Append the relevant chunk and send it
-        $.xhr.open($.getOpt('testMethod'), $h.getTarget(params));
+        $.xhr.open($.getOpt('testMethod'), $h.getTarget('test', params));
         $.xhr.timeout = $.getOpt('xhrTimeout');
         $.xhr.withCredentials = $.getOpt('withCredentials');
         // Add data from header options
@@ -745,30 +750,31 @@
           query[k] = v;
         });
 
-        var func   = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice'))),
-        bytes  = $.fileObj.file[func]($.startByte,$.endByte),
-        data   = null,
-        target = $.getOpt('target');
+        var func = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice')));
+        var bytes = $.fileObj.file[func]($.startByte, $.endByte);
+        var data = null;
+        var params = [];
 
         var parameterNamespace = $.getOpt('parameterNamespace');
         if ($.getOpt('method') === 'octet') {
           // Add data from the query options
           data = bytes;
-          var params = [];
-          $h.each(query, function(k,v){
-            params.push([encodeURIComponent(parameterNamespace+k), encodeURIComponent(v)].join('='));
+          $h.each(query, function (k, v) {
+            params.push([encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join('='));
           });
-          target = $h.getTarget(params);
         } else {
           // Add data from the query options
           data = new FormData();
-          $h.each(query, function(k,v){
-            data.append(parameterNamespace+k,v);
+          $h.each(query, function (k, v) {
+            data.append(parameterNamespace + k, v);
+            params.push([encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join('='));
           });
-          data.append(parameterNamespace+$.getOpt('fileParameterName'), bytes);
+          data.append(parameterNamespace + $.getOpt('fileParameterName'), bytes);
         }
 
+        var target = $h.getTarget('upload', params);
         var method = $.getOpt('uploadMethod');
+
         $.xhr.open(method, target);
         if ($.getOpt('method') === 'octet') {
           $.xhr.setRequestHeader('Content-Type', 'application/octet-stream');
@@ -780,9 +786,11 @@
         if(typeof customHeaders === 'function') {
           customHeaders = customHeaders($.fileObj, $);
         }
+
         $h.each(customHeaders, function(k,v) {
           $.xhr.setRequestHeader(k, v);
         });
+
         $.xhr.send(data);
       };
       $.abort = function(){

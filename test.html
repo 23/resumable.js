@@ -23,7 +23,7 @@ r.on('filesAdded', function(array){
     console.debug('filesAdded', array);
   });
 r.on('fileRetry', function(file){
-    console.debug(file);
+    console.debug('fileRetry', file);
   });
 r.on('fileError', function(file, message){
     console.debug('fileError', file, message);

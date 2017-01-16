@@ -57,7 +57,7 @@
       testMethod: 'GET',
       prioritizeFirstAndLastChunk:false,
       target:'/',
-      testTarget:'/',
+      testTarget: null,
       parameterNamespace:'',
       testChunks:true,
       generateUniqueIdentifier:null,
@@ -190,7 +190,7 @@
       getTarget:function(request, params){
         var target = $.getOpt('target');
 
-        if (request === 'test') {
+        if (request === 'test' && $.getOpt('testTarget')) {
           target = $.getOpt('testTarget') === '/' ? $.getOpt('target') : $.getOpt('testTarget');
         }
 

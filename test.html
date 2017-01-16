@@ -3,9 +3,10 @@
 <script src="resumable.js"></script>
 <script>
 var r = new Resumable({
-  target:'test.html'
+  target: 'test.html'
 });
-  
+
+
 r.assignBrowse(document.getElementById('browseButton'));
 
 r.on('fileSuccess', function(file){

@@ -341,7 +341,7 @@
       var decreaseReamining = function(){
         if(!--remaining){
           // all files processed, trigger event
-          if(!files.length && !filesSkipped.length){
+          if(!files.length && !filesSkipped.length){
             // no succeeded files, just skip
             return;
           }

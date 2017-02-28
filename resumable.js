@@ -769,7 +769,7 @@
             data.append(parameterNamespace + k, v);
             params.push([encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join('='));
           });
-          data.append(parameterNamespace + $.getOpt('fileParameterName'), new File([bytes], $.fileObj.fileName));
+          data.append(parameterNamespace + $.getOpt('fileParameterName'), bytes, $.fileObj.fileName);
         }
 
         var target = $h.getTarget('upload', params);

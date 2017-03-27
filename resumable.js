@@ -69,6 +69,7 @@
       withCredentials:false,
       xhrTimeout:0,
       clearInput:true,
+	  chunkFormat:'blob',
       maxFilesErrorCallback:function (files, errorCount) {
         var maxFiles = $.getOpt('maxFiles');
         alert('Please upload no more than ' + maxFiles + ' file' + (maxFiles === 1 ? '' : 's') + ' at a time.');
@@ -756,21 +757,31 @@
         var params = [];
 
         var parameterNamespace = $.getOpt('parameterNamespace');
-        if ($.getOpt('method') === 'octet') {
-          // Add data from the query options
-          data = bytes;
-          $h.each(query, function (k, v) {
-            params.push([encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join('='));
-          });
-        } else {
-          // Add data from the query options
-          data = new FormData();
-          $h.each(query, function (k, v) {
-            data.append(parameterNamespace + k, v);
-            params.push([encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join('='));
-          });
-          data.append(parameterNamespace + $.getOpt('fileParameterName'), bytes, $.fileObj.fileName);
-        }
+                if ($.getOpt('method') === 'octet') {
+                    // Add data from the query options
+                    data = bytes;
+                    $h.each(query, function (k, v) {
+                        params.push([encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join('='));
+                    });
+                } else {
+                    // Add data from the query options
+                    data = new FormData();
+                    $h.each(query, function (k, v) {
+                        data.append(parameterNamespace + k, v);
+                        params.push([encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join('='));
+                    });
+                    if ($.getOpt('chunkFormat') == 'blob') {
+                        data.append(parameterNamespace + $.getOpt('fileParameterName'), bytes, $.fileObj.fileName);
+                    }
+                    else if ($.getOpt('chunkFormat') == 'base64') {
+                        var fr = new FileReader();
+                        fr.onload = function (e) {
+                            data.append(parameterNamespace + $.getOpt('fileParameterName'), fr.result);
+                            $.xhr.send(data);
+                        }
+                        fr.readAsDataURL(bytes);
+                    }
+                }
 
         var target = $h.getTarget('upload', params);
         var method = $.getOpt('uploadMethod');
@@ -791,7 +802,9 @@
           $.xhr.setRequestHeader(k, v);
         });
 
-        $.xhr.send(data);
+                if ($.getOpt('chunkFormat') == 'blob') {
+                    $.xhr.send(data);
+                }
       };
       $.abort = function(){
         // Abort and reset

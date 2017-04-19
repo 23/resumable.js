@@ -54,7 +54,8 @@ public class ResumableInfo {
     public boolean checkIfUploadFinished() {
         //check if upload finished
         int count = (int) Math.ceil(((double) resumableTotalSize) / ((double) resumableChunkSize));
-        for(int i = 1; i < count; i ++) {
+        if (uploadedChunks<count) return false;
+        for(int i = 1; i < count+1; i ++) {
             if (!uploadedChunks.contains(new ResumableChunkNumber(i))) {
                 return false;
             }

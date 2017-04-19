@@ -6,7 +6,7 @@ module.exports = resumable = function(temporaryFolder){
   var $ = this;
   $.temporaryFolder = temporaryFolder;
   $.maxFileSize = null;
-  $.fileParameterName = 'file';
+  $.fileParameterName = '0';
 
   try {
     fs.mkdirSync($.temporaryFolder);
@@ -172,6 +172,8 @@ module.exports = resumable = function(temporaryFolder){
                   // When all the chunks have been piped, end the stream
                   if (options.end) writableStream.end();
                   if (options.onDone) options.onDone();
+				  //also, clear temp directory
+				  $.clean(identifier);
               }
           });
       }
@@ -191,7 +193,6 @@ module.exports = resumable = function(temporaryFolder){
           fs.exists(chunkFilename, function(exists) {
               if (exists) {
 
-                  console.log('exist removing ', chunkFilename);
                   fs.unlink(chunkFilename, function(err) {
                       if (err && options.onError) options.onError(err);
                   });

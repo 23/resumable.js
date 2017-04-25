@@ -924,6 +924,14 @@
         } else {
           input = document.createElement('input');
           input.setAttribute('type', 'file');
+          var fileTypes = $.getOpt('fileType');
+          if (fileTypes.length){
+            var acceptFileTypes = [];
+            for(var i=0; i < fileTypes.length; i++) {
+              acceptFileTypes.push("." + fileTypes[i]);
+            }
+            input.setAttribute('accept', acceptFileTypes.join(","));
+          }
           input.style.display = 'none';
           domNode.addEventListener('click', function(){
             input.style.opacity = 0;

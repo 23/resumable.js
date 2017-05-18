@@ -85,7 +85,11 @@
       fileType: [],
       fileTypeErrorCallback: function(file, errorCount) {
         alert(file.fileName||file.name +' has type not allowed, please upload files of type ' + $.getOpt('fileType') + '.');
-      }
+      },
+	  maxTotalAttachmentSize: undefined,
+	  maxTotalAttachmentSizeErrorCallback:function(file, errorCount) {
+		alert('Total uploaded files is too large, please upload less than ' + $h.formatSize($.getOpt('maxTotalAttachmentSize')) + ' size of files in total.');
+	  }
     };
     $.opts = opts||{};
     $.getOpt = function(o) {

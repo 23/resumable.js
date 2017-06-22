@@ -441,7 +441,7 @@
         // event can be 'progress', 'success', 'error' or 'retry'
         switch(event){
         case 'progress':
-          $.resumableObj.fire('fileProgress', $);
+          $.resumableObj.fire('fileProgress', $, message);
           break;
         case 'error':
           $.abort();

@@ -48,6 +48,8 @@ Add a chunks controller
 	    #Create chunks directory when not present on system
 	    if !File.directory?(dir)
 	      FileUtils.mkdir(dir, :mode => 0700)
+			elsif	params[:resumableChunkNumber].to_i == 1
+				FileUtils.rm_rf Dir.glob("#{dir}/*")
 	    end
 	
 	    #Move the uploaded chunk to the directory
@@ -76,8 +78,9 @@ Add a chunks controller
 	          #Deleting chunk
 	          FileUtils.rm "#{dir}/#{params[:resumableFilename]}.part#{i}", :force => true 
 	        end
-	        puts "File saved to #{dir}/#{params[:resumableFilename]}"
 	      end
+				#You can use the file now
+				puts "File saved to #{dir}/#{params[:resumableFilename]}"
 	    end
 	
 	    render :nothing => true, :status => 200

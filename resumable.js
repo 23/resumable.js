@@ -255,8 +255,10 @@
       if('function' === typeof item.getAsFile){
         // item represents a File object, convert it
         item = item.getAsFile();
-        item.relativePath = path + item.name;
-        items.push(item);
+        if(null !== item){
+          item.relativePath = path + item.name;
+          items.push(item);
+        }
       }
       cb(); // indicate processing is done
     }

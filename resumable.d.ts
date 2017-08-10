@@ -146,10 +146,10 @@ declare module Resumable  {
      **/
     withCredentials?: boolean;
   }
-  
+
   export class Resumable {
     constructor(options:ConfigurationHash);
-    
+
     /**
      * A boolean value indicator whether or not Resumable.js is supported by the current browser.
      **/
@@ -162,10 +162,10 @@ declare module Resumable  {
      * An array of ResumableFile file objects added by the user (see full docs for this object type below).
      **/
     files: Array<ResumableFile>;
-    
+
     events: Array<any>;
     version: number;
-    
+
     /**
      * Assign a browse action to one or more DOM nodes. Pass in true to allow directories to be selected (Chrome only).
      **/
@@ -217,7 +217,7 @@ declare module Resumable  {
      **/
     getSize(): void;
     getOpt(o: string): any;
-    
+
     // Events
     /**
      * Listen for event from Resumable.js (see below)
@@ -353,10 +353,10 @@ declare module Resumable  {
      **/
     isComplete: () => boolean;
   }
-  
+
   class ResumableChunk {}
 }
 
 declare module 'resumablejs' {
-  export = Resumable.Resumable;
+  export = Resumable;
 }

@@ -3,6 +3,7 @@
   "version": "1.0.3",
   "description": "A JavaScript library for providing multiple simultaneous, stable, fault-tolerant and resumable/restartable uploads via the HTML5 File API.",
   "main": "resumable.js",
+  "types": "./resumable.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -25,6 +25,8 @@ To allow files to be selected and drag-dropped, you need to assign a drop target
     r.assignBrowse(document.getElementById('browseButton'));
     r.assignDrop(document.getElementById('dropTarget'));
 
+It is recommended to use an HTML span for the browse button.  Using an actual button does not work reliably across all browsers, because Resumable.js creates the file input as a child of this control, and this may be invalid in the case of an HTML button.
+
 After this, interaction with Resumable.js is done by listening to events:
 
     r.on('fileAdded', function(file, event){
@@ -128,7 +130,7 @@ adding the file. (Default: `null`)
 
 #### Methods
 
-* `.assignBrowse(domNodes, isDirectory)` Assign a browse action to one or more DOM nodes.  Pass in `true` to allow directories to be selected (Chrome only).
+* `.assignBrowse(domNodes, isDirectory)` Assign a browse action to one or more DOM nodes.  Pass in `true` to allow directories to be selected (Chrome only).  See the note above about using an HTML span instead of an actual button.
 * `.assignDrop(domNodes)` Assign one or more DOM nodes as a drop target.
 * `.on(event, callback)` Listen for event from Resumable.js (see below)
 * `.upload()` Start or resume uploading.

@@ -121,7 +121,7 @@ adding the file. (Default: `null`)
 * `chunkRetryInterval` The number of milliseconds to wait before retrying a chunk on a non-permanent error.  Valid values are any positive integer and `undefined` for immediate retry.  (Default: `undefined`)
 * `withCredentials` Standard CORS requests do not send or set any cookies by default. In order to include cookies as part of the request, you need to set the `withCredentials` property to true. (Default: `false`)
 * `xhrTimeout` The timeout in milliseconds for each request (Default: `0`)
-
+* `setChunkTypeFromFile` Set chunk content-type from original file.type. (Default: `false`, if `false` default Content-Type: `application/octet-stream`)
 #### Properties
 
 * `.support` A boolean value indicator whether or not Resumable.js is supported by the current browser.

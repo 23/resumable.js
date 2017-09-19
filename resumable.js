@@ -69,7 +69,7 @@
       withCredentials:false,
       xhrTimeout:0,
       clearInput:true,
-	    chunkFormat:'blob',
+      chunkFormat:'blob',
       setChunkTypeFromFile:false,
       maxFilesErrorCallback:function (files, errorCount) {
         var maxFiles = $.getOpt('maxFiles');

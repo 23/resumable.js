@@ -145,6 +145,10 @@ declare module Resumable  {
      * Standard CORS requests do not send or set any cookies by default. In order to include cookies as part of the request, you need to set the withCredentials property to true. (Default: false)
      **/
     withCredentials?: boolean;
+    /**
+     * setChunkTypeFromFile` Set chunk content-type from original file.type. (Default: false, if false default Content-Type: application/octet-stream)
+     **/
+    setChunkTypeFromFile?: boolean;
   }
   
   export class Resumable {

@@ -69,7 +69,8 @@
       withCredentials:false,
       xhrTimeout:0,
       clearInput:true,
-	  chunkFormat:'blob',
+      chunkFormat:'blob',
+      setChunkTypeFromFile:false,
       maxFilesErrorCallback:function (files, errorCount) {
         var maxFiles = $.getOpt('maxFiles');
         alert('Please upload no more than ' + maxFiles + ' file' + (maxFiles === 1 ? '' : 's') + ' at a time.');
@@ -752,7 +753,7 @@
         });
 
         var func = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice')));
-        var bytes = $.fileObj.file[func]($.startByte, $.endByte);
+        var bytes = $.fileObj.file[func]($.startByte, $.endByte, $.getOpt('setChunkTypeFromFile') ? $.fileObj.file.type : void 0);
         var data = null;
         var params = [];
 

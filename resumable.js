@@ -755,59 +755,61 @@
         });
 
         var func = ($.fileObj.file.slice ? 'slice' : ($.fileObj.file.mozSlice ? 'mozSlice' : ($.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice')));
-        var bytes = $.fileObj.file[func]($.startByte, $.endByte, $.getOpt('setChunkTypeFromFile') ? $.fileObj.file.type : void 0);
-        var data = null;
-        var params = [];
+        Promise.resolve($.fileObj.file[func]($.startByte, $.endByte, $.getOpt('setChunkTypeFromFile') ? $.fileObj.file.type : void 0))
+        .then(function (bytes) {
+          var data = null;
+          var params = [];
 
-        var parameterNamespace = $.getOpt('parameterNamespace');
-                if ($.getOpt('method') === 'octet') {
-                    // Add data from the query options
-                    data = bytes;
-                    $h.each(query, function (k, v) {
-                        params.push([encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join('='));
-                    });
-                } else {
-                    // Add data from the query options
-                    data = new FormData();
-                    $h.each(query, function (k, v) {
-                        data.append(parameterNamespace + k, v);
-                        params.push([encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join('='));
-                    });
-                    if ($.getOpt('chunkFormat') == 'blob') {
-                        data.append(parameterNamespace + $.getOpt('fileParameterName'), bytes, $.fileObj.fileName);
-                    }
-                    else if ($.getOpt('chunkFormat') == 'base64') {
-                        var fr = new FileReader();
-                        fr.onload = function (e) {
-                            data.append(parameterNamespace + $.getOpt('fileParameterName'), fr.result);
-                            $.xhr.send(data);
-                        }
-                        fr.readAsDataURL(bytes);
-                    }
-                }
+          var parameterNamespace = $.getOpt('parameterNamespace');
+          if ($.getOpt('method') === 'octet') {
+              // Add data from the query options
+              data = bytes;
+              $h.each(query, function (k, v) {
+                  params.push([encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join('='));
+              });
+          } else {
+              // Add data from the query options
+              data = new FormData();
+              $h.each(query, function (k, v) {
+                  data.append(parameterNamespace + k, v);
+                  params.push([encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join('='));
+              });
+              if ($.getOpt('chunkFormat') == 'blob') {
+                  data.append(parameterNamespace + $.getOpt('fileParameterName'), bytes, $.fileObj.fileName);
+              }
+              else if ($.getOpt('chunkFormat') == 'base64') {
+                  var fr = new FileReader();
+                  fr.onload = function (e) {
+                      data.append(parameterNamespace + $.getOpt('fileParameterName'), fr.result);
+                      $.xhr.send(data);
+                  }
+                  fr.readAsDataURL(bytes);
+              }
+          }
 
-        var target = $h.getTarget('upload', params);
-        var method = $.getOpt('uploadMethod');
+          var target = $h.getTarget('upload', params);
+          var method = $.getOpt('uploadMethod');
 
-        $.xhr.open(method, target);
-        if ($.getOpt('method') === 'octet') {
-          $.xhr.setRequestHeader('Content-Type', 'application/octet-stream');
-        }
-        $.xhr.timeout = $.getOpt('xhrTimeout');
-        $.xhr.withCredentials = $.getOpt('withCredentials');
-        // Add data from header options
-        var customHeaders = $.getOpt('headers');
-        if(typeof customHeaders === 'function') {
-          customHeaders = customHeaders($.fileObj, $);
-        }
+          $.xhr.open(method, target);
+          if ($.getOpt('method') === 'octet') {
+            $.xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+          }
+          $.xhr.timeout = $.getOpt('xhrTimeout');
+          $.xhr.withCredentials = $.getOpt('withCredentials');
+          // Add data from header options
+          var customHeaders = $.getOpt('headers');
+          if(typeof customHeaders === 'function') {
+            customHeaders = customHeaders($.fileObj, $);
+          }
 
-        $h.each(customHeaders, function(k,v) {
-          $.xhr.setRequestHeader(k, v);
-        });
+          $h.each(customHeaders, function(k,v) {
+            $.xhr.setRequestHeader(k, v);
+          });
 
-                if ($.getOpt('chunkFormat') == 'blob') {
-                    $.xhr.send(data);
-                }
+          if ($.getOpt('chunkFormat') == 'blob') {
+              $.xhr.send(data);
+          }
+        })
       };
       $.abort = function(){
         // Abort and reset

@@ -948,6 +948,13 @@
         } else {
           input.removeAttribute('webkitdirectory');
         }
+        var fileTypes = $.getOpt('fileType');
+        if (typeof (fileTypes) !== 'undefined' && fileTypes.length >= 1) {
+          input.setAttribute('accept', fileTypes.map(function (e) { return '.' + e }).join(','));
+        }
+        else {
+          input.removeAttribute('accept');
+        }
         // When new files are added, simply append them to the overall list
         input.addEventListener('change', function(e){
           appendFilesFromFileList(e.target.files,e);

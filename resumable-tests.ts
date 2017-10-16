@@ -4,6 +4,7 @@ let resumable: Resumable = new Resumable({chunkSize: 123});
 let resumableNoOpts: Resumable = new Resumable();
 
 resumable.addFile(new File([], 'test.tmp'), {});
+resumable.addFiles([new File([], 'test.tmp')], {});
 resumable.assignBrowse(document, true);
 resumable.assignBrowse([document], true);
 resumable.assignDrop(document);

@@ -1029,6 +1029,9 @@
     $.addFile = function(file, event){
       appendFilesFromFileList([file], event);
     };
+    $.addFiles = function(file, event){
+      appendFilesFromFileList(files, event);
+    };
     $.removeFile = function(file){
       for(var i = $.files.length - 1; i >= 0; i--) {
         if($.files[i] === file) {

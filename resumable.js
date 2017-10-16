@@ -1029,7 +1029,7 @@
     $.addFile = function(file, event){
       appendFilesFromFileList([file], event);
     };
-    $.addFiles = function(file, event){
+    $.addFiles = function(files, event){
       appendFilesFromFileList(files, event);
     };
     $.removeFile = function(file){

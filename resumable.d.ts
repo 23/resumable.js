@@ -209,6 +209,10 @@ declare module Resumable  {
      **/
     addFile(file: File): void;
     /**
+     * Add an Array of HTML5 File objects to the list of files.
+     **/
+    addFiles(files: Array<File>): void;
+    /**
      * Cancel upload of a specific ResumableFile object on the list from the list.
      **/
     removeFile(file: ResumableFile): void;

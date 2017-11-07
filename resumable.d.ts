@@ -100,7 +100,7 @@ declare module Resumable  {
     /**
      * Override the function that generates unique identifiers for each file. (Default: null)
      **/
-    generateUniqueIdentifier?: () => string;
+    generateUniqueIdentifier?: (file: File, event: Event) => Promise<string> | string;
     /**
      * Indicates how many files can be uploaded in a single session. Valid values are any positive integer and undefined for no limit. (Default: undefined)
      **/

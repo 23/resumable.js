@@ -1,10 +1,10 @@
-##Java Demo for Resumable.js
+## Java Demo for Resumable.js
 
 This is a resumable.js demo for people who use java-servlet in server side.
 
 `resumable.js.upload.UploadServlet` is the servlet. 
 
-###Run
+### Run
 
 mvn jetty:run
 
@@ -12,7 +12,7 @@ http://localhost:8080/java-example/
 
 Uploaded files will appear in "upload_dir".
 
-###Upload chunks
+### Upload chunks
 
 UploadServlet accepts Resumable.js Upload with 'octet' type, gets parameters from url like 
 
@@ -25,12 +25,12 @@ and gets chunk-data from http-body.
 Besides, UploadServlet uses RandomAccessFile to speed up File-Upload progress, which avoids merging chunk-files at last.
 
 
-###testChunks
+### testChunks
 
 UploadServlet supports Resumable.js's `testChunks` feature, which makes file upload resumable.
 
 
-###Resumable.js options
+### Resumable.js options
 
 UploadServlet only supports 'octet' upload, so make sure method in your resumable options  is 'octet'.
 

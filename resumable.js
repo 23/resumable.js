@@ -342,8 +342,7 @@
         if (o.maxFiles===1 && $.files.length===1 && fileList.length===1) {
           $.removeFile($.files[0]);
         } else {
-          o.maxFilesErrorCallback(fileList, errorCount++);
-          return false;
+          return o.maxFilesErrorCallback(fileList, errorCount++);
         }
       }
       var files = [], filesSkipped = [], remaining = fileList.length;
@@ -371,18 +370,15 @@
             }
           }
           if (!fileTypeFound) {
-            o.fileTypeErrorCallback(file, errorCount++);
-            return false;
+            return o.fileTypeErrorCallback(file, errorCount++);
           }
         }
 
         if (typeof(o.minFileSize)!=='undefined' && file.size<o.minFileSize) {
-          o.minFileSizeErrorCallback(file, errorCount++);
-          return false;
+          return o.minFileSizeErrorCallback(file, errorCount++);
         }
         if (typeof(o.maxFileSize)!=='undefined' && file.size>o.maxFileSize) {
-          o.maxFileSizeErrorCallback(file, errorCount++);
-          return false;
+          return o.maxFileSizeErrorCallback(file, errorCount++);
         }
 
         function addFile(uniqueIdentifier){

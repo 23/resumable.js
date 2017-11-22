@@ -950,7 +950,13 @@
         }
         var fileTypes = $.getOpt('fileType');
         if (typeof (fileTypes) !== 'undefined' && fileTypes.length >= 1) {
-          input.setAttribute('accept', fileTypes.map(function (e) { return '.' + e }).join(','));
+          input.setAttribute('accept', fileTypes.map(function (e) {
+            e = e.replace(/\s/g, '').toLowerCase();
+            if(e.match(/^[^.][^/]+$/)){
+              e = '.' + e;
+            }
+            return e;
+          }).join(','));
         }
         else {
           input.removeAttribute('accept');

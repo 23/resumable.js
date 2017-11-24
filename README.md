@@ -55,7 +55,7 @@ To handle the state of upload chunks, a number of extra parameters are sent alon
 
 You should allow for the same chunk to be uploaded more than once; this isn't standard behaviour, but on an unstable network environment it could happen, and this case is exactly what Resumable.js is designed for.
 
-For every request, you can confirm reception in HTTP status codes (can be change through the `permanentErrors` option):
+For every request, you can confirm reception in HTTP status codes (can be changed through the `permanentErrors` option):
 
 * `200`: The chunk was accepted and correct. No need to re-upload.
 * `404`, `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload.

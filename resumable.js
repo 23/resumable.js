@@ -361,11 +361,23 @@
       };
       $h.each(fileList, function(file){
         var fileName = file.name;
+        var fileType = file.type; // e.g video/mp4
         if(o.fileType.length > 0){
           var fileTypeFound = false;
           for(var index in o.fileType){
-            var extension = '.' + o.fileType[index];
-			if(fileName.toLowerCase().indexOf(extension.toLowerCase(), fileName.length - extension.length) !== -1){
+            // For good behaviour we do some inital sanitizing. Remove spaces and lowercase all
+            o.fileType[index] = o.fileType[index].replace(/\s/g, '').toLowerCase();
+
+            // Allowing for both [extension, .extension, mime/type, mime/*]
+            var extension = ((o.fileType[index].match(/^[^.][^/]+$/)) ? '.' : '') + o.fileType[index];
+
+            if ((fileName.substr(-1 * extension.length) === extension) ||
+              //If MIME type, check for wildcard or if extension matches the files tiletype
+              (extension.indexOf('/') !== -1 && (
+                (extension.indexOf('*') !== -1 && fileType.substr(0, extension.indexOf('*')) === extension.substr(0, extension.indexOf('*')))  ||
+                fileType === extension
+              ))
+            ){
               fileTypeFound = true;
               break;
             }
@@ -919,7 +931,6 @@
     // PUBLIC METHODS FOR RESUMABLE.JS
     $.assignBrowse = function(domNodes, isDirectory){
       if(typeof(domNodes.length)=='undefined') domNodes = [domNodes];
-
       $h.each(domNodes, function(domNode) {
         var input;
         if(domNode.tagName==='INPUT' && domNode.type==='file'){

@@ -13,31 +13,37 @@ Samples and examples are available in the `samples/` folder. Please push your ow
 
 A new `Resumable` object is created with information of what and where to post:
 
-    var r = new Resumable({
-      target:'/api/photo/redeem-upload-token',
-      query:{upload_token:'my_token'}
-    });
-    // Resumable.js isn't supported, fall back on a different method
-    if(!r.support) location.href = '/some-old-crappy-uploader';
+```js
+var r = new Resumable({
+  target:'/api/photo/redeem-upload-token',
+  query:{upload_token:'my_token'}
+});
+// Resumable.js isn't supported, fall back on a different method
+if(!r.support) location.href = '/some-old-crappy-uploader';
+```
 
 To allow files to be selected and drag-dropped, you need to assign a drop target and a DOM item to be clicked for browsing:
 
-    r.assignBrowse(document.getElementById('browseButton'));
-    r.assignDrop(document.getElementById('dropTarget'));
+```js
+r.assignBrowse(document.getElementById('browseButton'));
+r.assignDrop(document.getElementById('dropTarget'));
+```
 
 It is recommended to use an HTML span for the browse button.  Using an actual button does not work reliably across all browsers, because Resumable.js creates the file input as a child of this control, and this may be invalid in the case of an HTML button.
 
 After this, interaction with Resumable.js is done by listening to events:
 
-    r.on('fileAdded', function(file, event){
-        ...
-      });
-    r.on('fileSuccess', function(file, message){
-        ...
-      });
-    r.on('fileError', function(file, message){
-        ...
-      });
+```js
+r.on('fileAdded', function(file, event){
+    ...
+  });
+r.on('fileSuccess', function(file, message){
+    ...
+  });
+r.on('fileError', function(file, message){
+    ...
+  });
+```
 
 ## How do I set it up with my server?
 
@@ -77,7 +83,9 @@ After this is done and `testChunks` enabled, an upload can quickly catch up even
 
 The object is loaded with a configuration hash:
 
-    var r = new Resumable({opt1:'val', ...});
+```js
+var r = new Resumable({opt1:'val', ...});
+```
 
 All POST parameters can be omitted by setting them to a falsy value
 (e.g. `null`, `false` or empty string).

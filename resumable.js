@@ -604,7 +604,7 @@
             }
           });
         }
-        return found;
+        return(found);
       }
 
       // Bootstrap and return
@@ -928,7 +928,7 @@
 
       // Now, simply look for the next, best thing to upload
       $h.each($.files, function(file){
-        file.upload();
+        found = file.upload();
         if(found) return(false);
       });
       if(found) return(true);

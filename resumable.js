@@ -52,6 +52,7 @@
       query:{},
       headers:{},
       preprocess:null,
+      preprocessFile:null,
       method:'multipart',
       uploadMethod: 'POST',
       testMethod: 'GET',
@@ -449,6 +450,7 @@
       $.uniqueIdentifier = uniqueIdentifier;
       $._pause = false;
       $.container = '';
+      $.preprocessState = 0; // 0 = unprocessed, 1 = processing, 2 = finished
       var _error = uniqueIdentifier !== undefined;
 
       // Callback when something happens within the chunk
@@ -557,6 +559,9 @@
       };
       $.isComplete = function(){
         var outstanding = false;
+        if ($.preprocessState === 1) {
+          return(false);
+        }
         $h.each($.chunks, function(chunk){
           var status = chunk.status();
           if(status=='pending' || status=='uploading' || chunk.preprocessState === 1) {
@@ -576,7 +581,31 @@
       $.isPaused = function() {
         return $._pause;
       };
-
+      $.preprocessFinished = function(){
+        $.preprocessState = 2;
+        $.upload();
+      };      
+      $.upload = function () {
+        var found = false;
+        if ($.isPaused() === false) {
+          var preprocess = $.getOpt('preprocessFile');
+          if(typeof preprocess === 'function') {
+            switch($.preprocessState) {
+            case 0: $.preprocessState = 1; preprocess($); return;
+            case 1: return;
+            case 2: break;
+            }
+          }
+          $h.each($.chunks, function (chunk) {
+            if (chunk.status() == 'pending' && chunk.preprocessState === 0) {
+              chunk.send();
+              found = true;
+              return (false);
+            }
+          });
+        }
+        return found;
+      }
 
       // Bootstrap and return
       $.resumableObj.fire('chunkingStart', $);
@@ -817,9 +846,9 @@
           $.xhr.setRequestHeader(k, v);
         });
 
-                if ($.getOpt('chunkFormat') == 'blob') {
-                    $.xhr.send(data);
-                }
+        if ($.getOpt('chunkFormat') == 'blob') {
+            $.xhr.send(data);
+        }
       };
       $.abort = function(){
         // Abort and reset
@@ -899,15 +928,7 @@
 
       // Now, simply look for the next, best thing to upload
       $h.each($.files, function(file){
-        if(file.isPaused()===false){
-         $h.each(file.chunks, function(chunk){
-           if(chunk.status()=='pending' && chunk.preprocessState === 0) {
-             chunk.send();
-             found = true;
-             return(false);
-           }
-          });
-        }
+        file.upload();
         if(found) return(false);
       });
       if(found) return(true);

@@ -98,6 +98,10 @@ declare module Resumable  {
      **/
     preprocess?: (chunk:ResumableChunk) => ResumableChunk;
     /**
+     * Optional function to process each file before testing & sending the corresponding chunks. Function is passed the file as parameter, and should call the preprocessFinished method on the file when finished. (Default: null)
+     **/
+    preprocessFile?: (file:ResumableFile) => ResumableFile;
+    /**
      * Override the function that generates unique identifiers for each file. (Default: null)
      **/
     generateUniqueIdentifier?: (file: File, event: Event) => Promise<string> | string;

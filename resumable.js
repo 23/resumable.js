@@ -597,7 +597,7 @@
             }
           }
           $h.each($.chunks, function (chunk) {
-            if (chunk.status() == 'pending' && chunk.preprocessState === 0) {
+            if (chunk.status() == 'pending' && chunk.preprocessState !== 1) {
               chunk.send();
               found = true;
               return (false);

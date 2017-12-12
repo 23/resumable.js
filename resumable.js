@@ -591,8 +591,8 @@
           var preprocess = $.getOpt('preprocessFile');
           if(typeof preprocess === 'function') {
             switch($.preprocessState) {
-            case 0: $.preprocessState = 1; preprocess($); return;
-            case 1: return;
+            case 0: $.preprocessState = 1; preprocess($); return(true);
+            case 1: return(true);
             case 2: break;
             }
           }
@@ -600,7 +600,7 @@
             if (chunk.status() == 'pending' && chunk.preprocessState !== 1) {
               chunk.send();
               found = true;
-              return (false);
+              return(false);
             }
           });
         }

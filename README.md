@@ -63,8 +63,8 @@ You should allow for the same chunk to be uploaded more than once; this isn't st
 
 For every request, you can confirm reception in HTTP status codes (can be changed through the `permanentErrors` option):
 
-* `200`: The chunk was accepted and correct. No need to re-upload.
-* `404`, `415`. `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload.
+* `200`, `201`: The chunk was accepted and correct. No need to re-upload.
+* `400`, `404`, `409`, `415`, `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload.
 * _Anything else_: Something went wrong, but try reuploading the file.
 
 ## Handling GET (or `test()` requests)
@@ -127,10 +127,12 @@ adding the file. (Default: `null`)
 * `fileType` The file types allowed to upload. An empty array allow any file type. (Default: `[]`)
 * `fileTypeErrorCallback(file, errorCount)` A function which displays an error a selected file has type not allowed. (Default: displays an alert for every bad file.)
 * `maxChunkRetries` The maximum number of retries for a chunk before the upload is failed. Valid values are any positive integer and `undefined` for no limit. (Default: `undefined`)
+* `permanentErrors` List of HTTP status codes that define if the chunk upload was a permanent error and should not retry the upload. (Default: `[400, 404, 409, 415, 500, 501]`)
 * `chunkRetryInterval` The number of milliseconds to wait before retrying a chunk on a non-permanent error.  Valid values are any positive integer and `undefined` for immediate retry.  (Default: `undefined`)
 * `withCredentials` Standard CORS requests do not send or set any cookies by default. In order to include cookies as part of the request, you need to set the `withCredentials` property to true. (Default: `false`)
 * `xhrTimeout` The timeout in milliseconds for each request (Default: `0`)
 * `setChunkTypeFromFile` Set chunk content-type from original file.type. (Default: `false`, if `false` default Content-Type: `application/octet-stream`)
+
 #### Properties
 
 * `.support` A boolean value indicator whether or not Resumable.js is supported by the current browser.

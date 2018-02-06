@@ -871,7 +871,7 @@
             // HTTP 200, 201 (created)
             return('success');
           } else if($h.contains($.getOpt('permanentErrors'), $.xhr.status) || $.retries >= $.getOpt('maxChunkRetries')) {
-            // HTTP 415/500/501, permanent error
+            // HTTP 400, 404, 409, 415, 500, 501 (permanent error)
             return('error');
           } else {
             // this should never happen, but we'll reset and queue a retry

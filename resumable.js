@@ -372,7 +372,7 @@
             // Allowing for both [extension, .extension, mime/type, mime/*]
             var extension = ((o.fileType[index].match(/^[^.][^/]+$/)) ? '.' : '') + o.fileType[index];
 
-            if ((fileName.substr(-1 * extension.length) === extension) ||
+            if ((fileName.substr(-1 * extension.length).toLowerCase() === extension) ||
               //If MIME type, check for wildcard or if extension matches the files tiletype
               (extension.indexOf('/') !== -1 && (
                 (extension.indexOf('*') !== -1 && fileType.substr(0, extension.indexOf('*')) === extension.substr(0, extension.indexOf('*')))  ||

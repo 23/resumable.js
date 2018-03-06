@@ -375,7 +375,7 @@
             if ((fileName.substr(-1 * extension.length).toLowerCase() === extension) ||
               //If MIME type, check for wildcard or if extension matches the files tiletype
               (extension.indexOf('/') !== -1 && (
-                (extension.indexOf('*') !== -1 && fileType.substr(0, extension.indexOf('*')) === extension.substr(0, extension.indexOf('*')))  ||
+                (extension.indexOf('*') !== -1 && fileType.substr(0, extension.indexOf('*')) === extension.substr(0, extension.indexOf('*'))) ||
                 fileType === extension
               ))
             ){

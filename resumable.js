@@ -293,20 +293,27 @@
      */
     function processDirectory (directory, path, items, cb) {
       var dirReader = directory.createReader();
-      dirReader.readEntries(function(entries){
-        if(!entries.length){
-          // empty directory, skip
-          return cb();
-        }
-        // process all conversion callbacks, finally invoke own one
-        processCallbacks(
-          entries.map(function(entry){
-            // bind all properties except for callback
-            return processItem.bind(null, entry, path, items);
-          }),
-          cb
-        );
-      });
+      var allEntries = [];
+
+      function readEntries () {
+        dirReader.readEntries(function(entries){
+          if (entries.length) {
+            allEntries = allEntries.concat(entries);
+            return readEntries();
+          }
+
+          // process all conversion callbacks, finally invoke own one
+          processCallbacks(
+            allEntries.map(function(entry){
+              // bind all properties except for callback
+              return processItem.bind(null, entry, path, items);
+            }),
+            cb
+          );
+        });
+      }
+
+      readEntries();
     }
 
     /**
@@ -375,7 +382,7 @@
             if ((fileName.substr(-1 * extension.length).toLowerCase() === extension) ||
               //If MIME type, check for wildcard or if extension matches the files tiletype
               (extension.indexOf('/') !== -1 && (
-                (extension.indexOf('*') !== -1 && fileType.substr(0, extension.indexOf('*')) === extension.substr(0, extension.indexOf('*')))  ||
+                (extension.indexOf('*') !== -1 && fileType.substr(0, extension.indexOf('*')) === extension.substr(0, extension.indexOf('*'))) ||
                 fileType === extension
               ))
             ){
@@ -584,7 +591,7 @@
       $.preprocessFinished = function(){
         $.preprocessState = 2;
         $.upload();
-      };      
+      };
       $.upload = function () {
         var found = false;
         if ($.isPaused() === false) {

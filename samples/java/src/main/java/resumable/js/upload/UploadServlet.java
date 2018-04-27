@@ -66,7 +66,9 @@ public class UploadServlet extends HttpServlet {
 
     ResumableInfo info = getResumableInfo(request);
 
-    if (info.uploadedChunks.contains(new ResumableInfo.ResumableChunkNumber(resumableChunkNumber))) {
+    String orginalPath = info.resumableFilePath.substring(0, info.resumableFilePath.length() - ".temp".length());
+    if (info.uploadedChunks.contains(new ResumableInfo.ResumableChunkNumber(resumableChunkNumber))
+      || new File(orginalPath).exists()) {
       response.getWriter().print("Uploaded."); //This Chunk has been Uploaded.
     } else {
       response.setStatus(HttpServletResponse.SC_NOT_FOUND);

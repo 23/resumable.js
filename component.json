@@ -1,7 +1,7 @@
 {
     "name": "resumable.js",
     "repo": "23/resumable.js",
-    "version": "1.0.3",
+    "version": "1.1.1",
     "main": "resumable.js",
     "scripts": ["resumable.js"]
 }

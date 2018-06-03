@@ -513,6 +513,7 @@
         });
         $.resumableObj.removeFile($);
         $.resumableObj.fire('fileProgress', $);
+        $.resumableObj.fire('fileCancel', $);
       };
       $.retry = function(){
         $.bootstrap();

@@ -906,7 +906,7 @@
         if(typeof(relative)==='undefined') relative = false;
         var factor = (relative ? ($.endByte-$.startByte)/$.fileObjSize : 1);
         if($.pendingRetry) return(0);
-        if(!$.xhr || !$.xhr.status) factor*=.95;
+        if((!$.xhr || !$.xhr.status) && !$.markComplete) factor*=.95;
         var s = $.status();
         switch(s){
         case 'success':

@@ -17,7 +17,7 @@ import java.io.RandomAccessFile;
  */
 public class UploadServlet extends HttpServlet {
 
-    public static final String UPLOAD_DIR = "e:\\";
+    public static final String UPLOAD_DIR = "upload_dir";
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int resumableChunkNumber        = getResumableChunkNumber(request);
@@ -27,7 +27,7 @@ public class UploadServlet extends HttpServlet {
         RandomAccessFile raf = new RandomAccessFile(info.resumableFilePath, "rw");
 
         //Seek to position
-        raf.seek((resumableChunkNumber - 1) * info.resumableChunkSize);
+        raf.seek((resumableChunkNumber - 1) * (long)info.resumableChunkSize);
 
         //Save to file
         InputStream is = request.getInputStream();
@@ -80,6 +80,7 @@ public class UploadServlet extends HttpServlet {
         String resumableFilename        = request.getParameter("resumableFilename");
         String resumableRelativePath    = request.getParameter("resumableRelativePath");
         //Here we add a ".temp" to every upload file to indicate NON-FINISHED
+        new File(base_dir).mkdir();
         String resumableFilePath        = new File(base_dir, resumableFilename).getAbsolutePath() + ".temp";
 
         ResumableInfoStorage storage = ResumableInfoStorage.getInstance();

@@ -613,14 +613,14 @@
         }
         return(found);
       }
-    $.setStartChunk = function (startChunkNumber) {
-      if (!$.chunks || $.chunks.length < startChunkNumber) {
-          return;
-      }
-      for (var num = 0; num < startChunkNumber-1; num++) {
-          $.chunks[num].markComplete = true;
-      }
-  };
+      $.markChunksCompleted = function (chunkNumber) {
+        if (!$.chunks || $.chunks.length <= chunkNumber) {
+            return;
+        }
+        for (var num = 0; num < chunkNumber; num++) {
+            $.chunks[num].markComplete = true;
+        }
+      };
 
       // Bootstrap and return
       $.resumableObj.fire('chunkingStart', $);

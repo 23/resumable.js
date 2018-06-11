@@ -195,6 +195,7 @@ adding the file. (Default: `null`)
 * `.bootstrap()` Rebuild the state of a `ResumableFile` object, including reassigning chunks and XMLHttpRequest instances.
 * `.isUploading()` Returns a boolean indicating whether file chunks is uploading.
 * `.isComplete()` Returns a boolean indicating whether the file has completed uploading and received a server response.
+* `.setStartChunk()` starts upload from this chunk number while marking all previous chunks complete.
 
 ## Alternatives
 

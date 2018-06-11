@@ -613,6 +613,14 @@
         }
         return(found);
       }
+      $.markChunksCompleted = function (chunkNumber) {
+        if (!$.chunks || $.chunks.length <= chunkNumber) {
+            return;
+        }
+        for (var num = 0; num < chunkNumber; num++) {
+            $.chunks[num].markComplete = true;
+        }
+      };
 
       // Bootstrap and return
       $.resumableObj.fire('chunkingStart', $);
@@ -636,6 +644,7 @@
       $.retries = 0;
       $.pendingRetry = false;
       $.preprocessState = 0; // 0 = unprocessed, 1 = processing, 2 = finished
+      $.markComplete = false;
 
       // Computed properties
       var chunkSize = $.getOpt('chunkSize');
@@ -868,6 +877,8 @@
           // if pending retry then that's effectively the same as actively uploading,
           // there might just be a slight delay before the retry starts
           return('uploading');
+        } else if($.markComplete) {
+          return 'success';
         } else if(!$.xhr) {
           return('pending');
         } else if($.xhr.readyState<4) {
@@ -895,7 +906,7 @@
         if(typeof(relative)==='undefined') relative = false;
         var factor = (relative ? ($.endByte-$.startByte)/$.fileObjSize : 1);
         if($.pendingRetry) return(0);
-        if(!$.xhr || !$.xhr.status) factor*=.95;
+        if((!$.xhr || !$.xhr.status) && !$.markComplete) factor*=.95;
         var s = $.status();
         switch(s){
         case 'success':

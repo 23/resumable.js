@@ -475,7 +475,7 @@
           break;
         case 'success':
           if(_error) return;
-          $.resumableObj.fire('fileProgress', $); // it's at least progress
+          $.resumableObj.fire('fileProgress', $, message); // it's at least progress
           if($.isComplete()) {
             $.resumableObj.fire('fileSuccess', $, message);
           }

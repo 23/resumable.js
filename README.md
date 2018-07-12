@@ -158,7 +158,7 @@ adding the file. (Default: `null`)
 #### Events
 
 * `.fileSuccess(file, message)` A specific file was completed. `message` is the response body from the server.
-* `.fileProgress(file)` Uploading progressed for a specific file.
+* `.fileProgress(file, message)` Uploading progressed for a specific file.
 * `.fileAdded(file, event)` A new file was added. Optionally, you can use the browser `event` object from when the file was added.
 * `.filesAdded(arrayAdded, arraySkipped)` New files were added (and maybe some have been skipped).
 * `.fileRetry(file)` Something went wrong during upload of a specific file, uploading is being retried.

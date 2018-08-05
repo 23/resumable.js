@@ -162,7 +162,7 @@
         if(typeof custom === 'function') {
           return custom(file, event);
         }
-        var relativePath = file.webkitRelativePath||file.fileName||file.name; // Some confusion in different versions of Firefox
+        var relativePath = file.webkitRelativePath||file.relativePath||file.fileName||file.name; // Some confusion in different versions of Firefox
         var size = file.size;
         return(size + '-' + relativePath.replace(/[^0-9a-zA-Z_-]/img, ''));
       },

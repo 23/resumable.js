@@ -392,17 +392,17 @@
           }
           if (!fileTypeFound) {
             o.fileTypeErrorCallback(file, errorCount++);
-            return false;
+            return true;
           }
         }
 
         if (typeof(o.minFileSize)!=='undefined' && file.size<o.minFileSize) {
           o.minFileSizeErrorCallback(file, errorCount++);
-          return false;
+          return true;
         }
         if (typeof(o.maxFileSize)!=='undefined' && file.size>o.maxFileSize) {
           o.maxFileSizeErrorCallback(file, errorCount++);
-          return false;
+          return true;
         }
 
         function addFile(uniqueIdentifier){

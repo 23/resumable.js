@@ -132,6 +132,7 @@ adding the file. (Default: `null`)
 * `withCredentials` Standard CORS requests do not send or set any cookies by default. In order to include cookies as part of the request, you need to set the `withCredentials` property to true. (Default: `false`)
 * `xhrTimeout` The timeout in milliseconds for each request (Default: `0`)
 * `setChunkTypeFromFile` Set chunk content-type from original file.type. (Default: `false`, if `false` default Content-Type: `application/octet-stream`)
+* `dragOverClass` The class name to add on drag over an assigned drop done (Default: `dragover`)
 
 #### Properties
 

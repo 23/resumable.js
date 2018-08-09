@@ -48,6 +48,7 @@
       fileNameParameterName: 'resumableFilename',
       relativePathParameterName: 'resumableRelativePath',
       totalChunksParameterName: 'resumableTotalChunks',
+      dragOverClass: 'dragover',
       throttleProgressCallbacks: 0.5,
       query:{},
       headers:{},
@@ -114,6 +115,13 @@
         else { return $opt.defaults[o]; }
       }
     };
+    $.indexOf = function(array, obj) {
+    	if (array.indexOf) { return array.indexOf(obj); }     
+    	for (var i = 0; i < array.length; i++) {
+            if (array[i] === obj) { return i; }
+        }
+        return -1;
+    }
 
     // EVENTS
     // catchAll(event, ...)
@@ -208,20 +216,34 @@
       }
     };
 
-    var onDrop = function(event){
-      $h.stopEvent(event);
+    var onDrop = function(e){
+      e.currentTarget.classList.remove($.getOpt('dragOverClass'));
+      $h.stopEvent(e);
 
       //handle dropped things as items if we can (this lets us deal with folders nicer in some cases)
-      if (event.dataTransfer && event.dataTransfer.items) {
-        loadFiles(event.dataTransfer.items, event);
+      if (e.dataTransfer && e.dataTransfer.items) {
+        loadFiles(e.dataTransfer.items, event);
       }
       //else handle them as files
-      else if (event.dataTransfer && event.dataTransfer.files) {
-        loadFiles(event.dataTransfer.files, event);
+      else if (e.dataTransfer && e.dataTransfer.files) {
+        loadFiles(e.dataTransfer.files, event);
       }
     };
-    var preventDefault = function(e) {
+    var onDragLeave = function(e){
+      e.currentTarget.classList.remove($.getOpt('dragOverClass'));
+    };
+    var onDragOverEnter = function(e) {
       e.preventDefault();
+      var dt = e.dataTransfer;
+      if ($.indexOf(dt.types, "Files") >= 0) { // only for file drop
+        e.stopPropagation();
+        dt.dropEffect = "copy";
+        dt.effectAllowed = "copy";
+        e.currentTarget.classList.add($.getOpt('dragOverClass'));
+      } else { // not work on IE/Edge....
+        dt.dropEffect = "none";
+        dt.effectAllowed = "none";
+      }
     };
 
     /**
@@ -1025,8 +1047,9 @@
       if(typeof(domNodes.length)=='undefined') domNodes = [domNodes];
 
       $h.each(domNodes, function(domNode) {
-        domNode.addEventListener('dragover', preventDefault, false);
-        domNode.addEventListener('dragenter', preventDefault, false);
+        domNode.addEventListener('dragover', onDragOverEnter, false);
+        domNode.addEventListener('dragenter', onDragOverEnter, false);
+        domNode.addEventListener('dragleave', onDragLeave, false);
         domNode.addEventListener('drop', onDrop, false);
       });
     };
@@ -1034,8 +1057,9 @@
       if (typeof(domNodes.length) == 'undefined') domNodes = [domNodes];
 
       $h.each(domNodes, function(domNode) {
-        domNode.removeEventListener('dragover', preventDefault);
-        domNode.removeEventListener('dragenter', preventDefault);
+        domNode.removeEventListener('dragover', onDragOverEnter);
+        domNode.removeEventListener('dragenter', onDragOverEnter);
+        domNode.removeEventListener('dragleave', onDragLeave);
         domNode.removeEventListener('drop', onDrop);
       });
     };

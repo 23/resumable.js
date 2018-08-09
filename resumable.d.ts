@@ -153,6 +153,10 @@ declare module Resumable  {
      * setChunkTypeFromFile` Set chunk content-type from original file.type. (Default: false, if false default Content-Type: application/octet-stream)
      **/
     setChunkTypeFromFile?: boolean;
+    /**
+     * The class name to add on drag over an assigned drop zone. (Default: dragover)
+     **/
+    dragOverClass?: string;
   }
   
   export class Resumable {

@@ -352,7 +352,7 @@
       processCallbacks(
           Array.prototype.map.call(items, function(item){
             // bind all properties except for callback
-            let entry = item;
+            var entry = item;
             if('function' === typeof item.webkitGetAsEntry){
               entry = item.webkitGetAsEntry();
             }

@@ -352,7 +352,11 @@
       processCallbacks(
           Array.prototype.map.call(items, function(item){
             // bind all properties except for callback
-            return processItem.bind(null, item, "", files);
+            let entry = item;
+            if('function' === typeof item.webkitGetAsEntry){
+              entry = item.webkitGetAsEntry();
+            }
+            return processItem.bind(null, entry, "", files);
           }),
           function(){
             if(files.length){

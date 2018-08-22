@@ -212,7 +212,9 @@
         var separator = target.indexOf('?') < 0 ? '?' : '&';
         var joinedParams = params.join('&');
 
-        return target + separator + joinedParams;
+        if (joinedParams) target = target + separator + joinedParams;
+
+        return target;
       }
     };
 

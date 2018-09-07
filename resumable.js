@@ -66,7 +66,7 @@
       getTarget:null,
       maxChunkRetries:100,
       chunkRetryInterval:undefined,
-      permanentErrors:[400, 404, 409, 415, 500, 501],
+      permanentErrors:[400, 401, 403, 404, 409, 415, 500, 501],
       maxFiles:undefined,
       withCredentials:false,
       xhrTimeout:0,

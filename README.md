@@ -53,7 +53,7 @@ To handle the state of upload chunks, a number of extra parameters are sent alon
 
 * `resumableChunkNumber`: The index of the chunk in the current upload. First chunk is `1` (no base-0 counting here).
 * `resumableTotalChunks`: The total number of chunks.
-* `resumableChunkSize`: The general chunk size. Using this value and `resumableTotalSize` you can calculate the total number of chunks. Please note that the size of the data received in the HTTP might be lower than `resumableChunkSize` of this for the last chunk for a file.
+* `resumableChunkSize`: The general chunk size. Using this value and `resumableTotalSize` you can calculate the total number of chunks. Please note that the size of the data received in the HTTP might be higher than `resumableChunkSize` for the last chunk for a file.
 * `resumableTotalSize`: The total file size.
 * `resumableIdentifier`: A unique identifier for the file contained in the request.
 * `resumableFilename`: The original file name (since a bug in Firefox results in the file name not being transmitted in chunk multipart posts).

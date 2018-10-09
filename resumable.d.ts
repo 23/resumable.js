@@ -231,7 +231,7 @@ declare module Resumable  {
     /**
      * Returns the total size of the upload in bytes.
      **/
-    getSize(): void;
+    getSize(): number;
     getOpt(o: string): any;
 
     // Events

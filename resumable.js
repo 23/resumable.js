@@ -224,11 +224,11 @@
 
       //handle dropped things as items if we can (this lets us deal with folders nicer in some cases)
       if (e.dataTransfer && e.dataTransfer.items) {
-        loadFiles(e.dataTransfer.items, event);
+        loadFiles(e.dataTransfer.items, e);
       }
       //else handle them as files
       else if (e.dataTransfer && e.dataTransfer.files) {
-        loadFiles(e.dataTransfer.files, event);
+        loadFiles(e.dataTransfer.files, e);
       }
     };
     var onDragLeave = function(e){
@@ -458,7 +458,7 @@
               // unique identifier generation succeeded
               addFile(uniqueIdentifier);
             },
-           function(){
+            function(){
               // unique identifier generation failed
               // skip further processing, only decrease file count
               decreaseReamining();

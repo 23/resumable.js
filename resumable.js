@@ -116,7 +116,7 @@
       }
     };
     $.indexOf = function(array, obj) {
-    	if (array.indexOf) { return array.indexOf(obj); }     
+    	if (array.indexOf) { return array.indexOf(obj); }
     	for (var i = 0; i < array.length; i++) {
             if (array[i] === obj) { return i; }
         }
@@ -871,8 +871,8 @@
                     }
                 }
 
-        var target = $h.getTarget('upload', params);
         var method = $.getOpt('uploadMethod');
+        var target = method === "POST" ? this.getOpt('target') : this.getTarget('upload', params);
 
         $.xhr.open(method, target);
         if ($.getOpt('method') === 'octet') {

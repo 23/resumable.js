@@ -30,6 +30,9 @@
                    );
     if(!this.support) return(false);
 
+    // stores ignored files list
+    this.ignoredFiles = [];
+
 
     // PROPERTIES
     var $ = this;
@@ -116,7 +119,7 @@
       }
     };
     $.indexOf = function(array, obj) {
-    	if (array.indexOf) { return array.indexOf(obj); }     
+    	if (array.indexOf) { return array.indexOf(obj); }
     	for (var i = 0; i < array.length; i++) {
             if (array[i] === obj) { return i; }
         }
@@ -372,7 +375,8 @@
     var appendFilesFromFileList = function(fileList, event){
       // check for uploading too many files
       var errorCount = 0;
-      var o = $.getOpt(['maxFiles', 'minFileSize', 'maxFileSize', 'maxFilesErrorCallback', 'minFileSizeErrorCallback', 'maxFileSizeErrorCallback', 'fileType', 'fileTypeErrorCallback']);
+      var o = $.getOpt(['maxFiles', 'minFileSize', 'maxFileSize', 'maxFilesErrorCallback', 'minFileSizeErrorCallback',
+        'maxFileSizeErrorCallback', 'fileType', 'fileTypeErrorCallback', 'onFileTypeErrorContinue']);
       if (typeof(o.maxFiles)!=='undefined' && o.maxFiles<(fileList.length+$.files.length)) {
         // if single-file upload, file is already added, and trying to add 1 new file, simply replace the already-added file
         if (o.maxFiles===1 && $.files.length===1 && fileList.length===1) {
@@ -400,7 +404,7 @@
         var fileType = file.type; // e.g video/mp4
         if(o.fileType.length > 0){
           var fileTypeFound = false;
-          for(var index in o.fileType){
+          for(var index in o.fileType) {
             // For good behaviour we do some inital sanitizing. Remove spaces and lowercase all
             o.fileType[index] = o.fileType[index].replace(/\s/g, '').toLowerCase();
 
@@ -420,7 +424,9 @@
           }
           if (!fileTypeFound) {
             o.fileTypeErrorCallback(file, errorCount++);
-            return true;
+            $.ignoredFiles.push(file.name);
+            if (!o.onFileTypeErrorContinue)
+              return true;
           }
         }
 
@@ -469,6 +475,10 @@
           addFile(uniqueIdentifier);
         }
       });
+      // we want to let the user know that the files pre-processing is donde
+      window.setTimeout(function(){
+        $.fire('fileProcessComplete');
+      },0);
     };
 
     // INTERNAL OBJECT TYPES

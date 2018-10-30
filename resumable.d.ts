@@ -157,6 +157,11 @@ declare module Resumable  {
      * The class name to add on drag over an assigned drop zone. (Default: dragover)
      **/
     dragOverClass?: string;
+    /**
+     * Let the process continue when some file types are not allowed
+     */
+    onFileTypeErrorContinue?: boolean;
+
   }
 
   export class Resumable {
@@ -174,6 +179,11 @@ declare module Resumable  {
      * An array of ResumableFile file objects added by the user (see full docs for this object type below).
      **/
     files: Array<ResumableFile>;
+
+    /**
+     * An array of File names ignored because of the file type
+     */
+    ignoredFiles: Array<string>;
 
     events: Array<any>;
     version: number;
@@ -307,6 +317,11 @@ declare module Resumable  {
      * Listen to all the events listed above with the same callback function.
      **/
     on(event: 'catchAll', callback: () => void);
+
+    /**
+     * Files added to the list completed
+     */
+    on(event: 'fileProcessComplete', callback: (ignoredFiles: Array<string>) => void): void;
   }
 
   export interface ResumableFile {

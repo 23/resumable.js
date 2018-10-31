@@ -116,7 +116,7 @@
       }
     };
     $.indexOf = function(array, obj) {
-    	if (array.indexOf) { return array.indexOf(obj); }     
+    	if (array.indexOf) { return array.indexOf(obj); }
     	for (var i = 0; i < array.length; i++) {
             if (array[i] === obj) { return i; }
         }
@@ -873,6 +873,9 @@
 
         var target = $h.getTarget('upload', params);
         var method = $.getOpt('uploadMethod');
+        if (method.toLowerCase() === 'post') {
+          target = $h.getTarget('upload', []);
+        }
 
         $.xhr.open(method, target);
         if ($.getOpt('method') === 'octet') {

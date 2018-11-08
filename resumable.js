@@ -1053,37 +1053,37 @@
       });
     };
     $.assignDrop = function(domNodes){
-      // if(typeof(domNodes.length)=='undefined') domNodes = [domNodes];
+      if(typeof(domNodes.length)=='undefined') domNodes = [domNodes];
 
-      // $h.each(domNodes, function(domNode) {
-      //   domNode.addEventListener('dragover', onDragOverEnter, false);
-      //   domNode.addEventListener('dragenter', onDragOverEnter, false);
-      //   domNode.addEventListener('dragleave', onDragLeave, false);
-      //   domNode.addEventListener('drop', onDrop, false);
-      // });
-      if (domNodes.length !== undefined) {
-        document.addEventListener('dragover', onDragOverEnter, false);
-        document.addEventListener('dragenter', onDragOverEnter, false);
-        document.addEventListener('dragleave', onDragLeave, false);
-        document.addEventListener('drop', onDrop, false);
-      }
+      $h.each(domNodes, function(domNode) {
+        domNode.addEventListener('dragover', onDragOverEnter, false);
+        domNode.addEventListener('dragenter', onDragOverEnter, false);
+        domNode.addEventListener('dragleave', onDragLeave, false);
+        domNode.addEventListener('drop', onDrop, false);
+      });
     };
     $.unAssignDrop = function(domNodes) {
-      // if (typeof(domNodes.length) == 'undefined') domNodes = [domNodes];
+      if (typeof(domNodes.length) == 'undefined') domNodes = [domNodes];
 
-      // $h.each(domNodes, function(domNode) {
-      //   domNode.removeEventListener('dragover', onDragOverEnter);
-      //   domNode.removeEventListener('dragenter', onDragOverEnter);
-      //   domNode.removeEventListener('dragleave', onDragLeave);
-      //   domNode.removeEventListener('drop', onDrop);
-      // });
-      if (domNodes.length !== undefined) {
-        document.removeEventListener('dragover', onDragOverEnter);
-        document.removeEventListener('dragenter', onDragOverEnter);
-        document.removeEventListener('dragleave', onDragLeave);
-        document.removeEventListener('drop', onDrop);
-      }
+      $h.each(domNodes, function(domNode) {
+        domNode.removeEventListener('dragover', onDragOverEnter);
+        domNode.removeEventListener('dragenter', onDragOverEnter);
+        domNode.removeEventListener('dragleave', onDragLeave);
+        domNode.removeEventListener('drop', onDrop);
+      });
     };
+    $.endableDropOnDocument = function() {
+      document.addEventListener('dragover', onDragOverEnter);
+      document.addEventListener('dragenter', onDragOverEnter);
+      document.addEventListener('dragleave', onDragLeave);
+      document.addEventListener('drop', onDrop);
+    }
+    $.disableDropOnDocument = function() {
+      document.removeEventListener('dragover', onDragOverEnter);
+      document.removeEventListener('dragenter', onDragOverEnter);
+      document.removeEventListener('dragleave', onDragLeave);
+      document.removeEventListener('drop', onDrop);
+    }
     $.isUploading = function(){
       var uploading = false;
       $h.each($.files, function(file){

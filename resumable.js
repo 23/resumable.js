@@ -219,7 +219,7 @@
     };
 
     var onDrop = function(e){
-      e.currentTarget.classList.remove($.getOpt('dragOverClass'));
+      // e.currentTarget.classList.remove($.getOpt('dragOverClass'));
       $h.stopEvent(e);
 
       //handle dropped things as items if we can (this lets us deal with folders nicer in some cases)
@@ -232,7 +232,7 @@
       }
     };
     var onDragLeave = function(e){
-      e.currentTarget.classList.remove($.getOpt('dragOverClass'));
+      // e.currentTarget.classList.remove($.getOpt('dragOverClass'));
     };
     var onDragOverEnter = function(e) {
       e.preventDefault();
@@ -241,7 +241,7 @@
         e.stopPropagation();
         dt.dropEffect = "copy";
         dt.effectAllowed = "copy";
-        e.currentTarget.classList.add($.getOpt('dragOverClass'));
+        // e.currentTarget.classList.add($.getOpt('dragOverClass'));
       } else { // not work on IE/Edge....
         dt.dropEffect = "none";
         dt.effectAllowed = "none";
@@ -1072,7 +1072,7 @@
         domNode.removeEventListener('drop', onDrop);
       });
     };
-    $.endableDropOnDocument = function() {
+    $.enableDropOnDocument = function() {
       document.addEventListener('dragover', onDragOverEnter, false);
       document.addEventListener('dragenter', onDragOverEnter, false);
       document.addEventListener('dragleave', onDragLeave, false);

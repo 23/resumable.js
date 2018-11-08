@@ -469,6 +469,9 @@
           addFile(uniqueIdentifier);
         }
       });
+      window.setTimeout(function(){
+        $.fire('filesAddedComplete', $)
+      },0);
     };
 
     // INTERNAL OBJECT TYPES

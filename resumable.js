@@ -1073,10 +1073,10 @@
       });
     };
     $.endableDropOnDocument = function() {
-      document.addEventListener('dragover', onDragOverEnter);
-      document.addEventListener('dragenter', onDragOverEnter);
-      document.addEventListener('dragleave', onDragLeave);
-      document.addEventListener('drop', onDrop);
+      document.addEventListener('dragover', onDragOverEnter, false);
+      document.addEventListener('dragenter', onDragOverEnter, false);
+      document.addEventListener('dragleave', onDragLeave, false);
+      document.addEventListener('drop', onDrop, false);
     }
     $.disableDropOnDocument = function() {
       document.removeEventListener('dragover', onDragOverEnter);

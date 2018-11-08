@@ -1072,6 +1072,18 @@
         domNode.removeEventListener('drop', onDrop);
       });
     };
+    $.endableDropOnDocument = function() {
+      document.addEventListener('dragover', onDragOverEnter);
+      document.addEventListener('dragenter', onDragOverEnter);
+      document.addEventListener('dragleave', onDragLeave);
+      document.addEventListener('drop', onDrop);
+    }
+    $.disableDropOnDocument = function() {
+      document.removeEventListener('dragover', onDragOverEnter);
+      document.removeEventListener('dragenter', onDragOverEnter);
+      document.removeEventListener('dragleave', onDragLeave);
+      document.removeEventListener('drop', onDrop);
+    }
     $.isUploading = function(){
       var uploading = false;
       $h.each($.files, function(file){

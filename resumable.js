@@ -470,7 +470,7 @@
         }
       });
       window.setTimeout(function(){
-        $.fire('filesAddedComplete', $)
+        $.fire('filesAddedComplete', $, files);
       },0);
     };
 

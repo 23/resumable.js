@@ -441,7 +441,7 @@
             files.push(f);
             f.container = (typeof event != 'undefined' ? event.srcElement : null);
             window.setTimeout(function(){
-              $.fire('fileAdded', f, event)
+              $.fire('fileAdded', f, files)
             },0);
           })()} else {
             filesSkipped.push(file);

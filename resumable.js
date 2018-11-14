@@ -230,6 +230,7 @@
       else if (e.dataTransfer && e.dataTransfer.files) {
         loadFiles(e.dataTransfer.files, event);
       }
+      $.dragstart = false;
     };
     var onDragLeave = function(e){
       // e.currentTarget.classList.remove($.getOpt('dragOverClass'));
@@ -241,6 +242,10 @@
         e.stopPropagation();
         dt.dropEffect = "copy";
         dt.effectAllowed = "copy";
+        if (!$.dragstart) {
+          $.fire('dragstart', $);
+          $.dragstart = true;
+        }
         // e.currentTarget.classList.add($.getOpt('dragOverClass'));
       } else { // not work on IE/Edge....
         dt.dropEffect = "none";

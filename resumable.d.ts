@@ -157,6 +157,13 @@ declare module Resumable  {
      * The class name to add on drag over an assigned drop zone. (Default: dragover)
      **/
     dragOverClass?: string;
+    /**
+     * List of requests HTTP status codes
+     * 200, 201: The chunk was accepted and correct. No need to re-upload.
+     * 400, 404, 409, 415, 500, 501: The file for which the chunk was uploaded is not supported, cancel the entire upload.
+     * Anything else: Something went wrong, but try reuploading the file.
+     **/
+    permanentErrors?: number[]
   }
 
   export class Resumable {
@@ -181,15 +188,12 @@ declare module Resumable  {
     /**
      * Assign a browse action to one or more DOM nodes. Pass in true to allow directories to be selected (Chrome only).
      **/
-    assignBrowse(domNode: Element, isDirectory: boolean): void;
-    assignBrowse(domNodes: Array<Element>, isDirectory: boolean): void;
+    assignBrowse(domNode: Element | Array<Element>, isDirectory: boolean): void;
     /**
      * Assign one or more DOM nodes as a drop target.
      **/
-    assignDrop(domNode: Element): void;
-    assignDrop(domNodes: Array<Element>): void;
-    unAssignDrop(domNode: Element): void;
-    unAssignDrop(domNodes: Array<Element>): void;
+    assignDrop(domNode: Element |  Array<Element>): void;
+    unAssignDrop(domNode: Element | Array<Element>): void;
     /**
      * Start or resume uploading.
      **/
@@ -374,5 +378,5 @@ declare module Resumable  {
 }
 
 declare module 'resumablejs' {
-  export = Resumable;
+  export = Resumable.Resumable;
 }

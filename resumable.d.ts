@@ -378,5 +378,5 @@ declare module Resumable  {
 }
 
 declare module 'resumablejs' {
-  export = Resumable;
+  export = Resumable.Resumable;
 }

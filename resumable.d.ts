@@ -3,7 +3,8 @@
 // Definitions by: Bazyli Brzóska <https://invent.life/>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
-declare module Resumable  {
+declare module 'resumablejs' {
+
   export interface ConfigurationHash {
     /**
      * The target URL for the multipart POST request. This can be a string or a function that allows you you to construct and return a value, based on supplied params. (Default: /)
@@ -342,8 +343,6 @@ declare module Resumable  {
      * An array of ResumableChunk items. You shouldn't need to dig into these.
      **/
     chunks: Array<ResumableChunk>;
-
-
     /**
      * Returns a float between 0 and 1 indicating the current upload progress of the file. If relative is true, the value is returned relative to all files in the Resumable.js instance.
      **/
@@ -374,9 +373,7 @@ declare module Resumable  {
     isComplete: () => boolean;
   }
 
-  class ResumableChunk {}
-}
+  export interface ResumableChunk {}
 
-declare module 'resumablejs' {
-  export = Resumable.Resumable;
+  export default Resumable;
 }

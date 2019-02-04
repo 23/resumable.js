@@ -3,7 +3,157 @@
 // Definitions by: Bazyli Brzóska <https://invent.life/>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
-declare module Resumable  {
+export as namespace Resumable;
+export default Resumable;
+
+declare class Resumable {
+  constructor(options: Resumable.ConfigurationHash);
+
+  /**
+   * A boolean value indicator whether or not Resumable.js is supported by the current browser.
+   **/
+  support: boolean;
+  /**
+   * A hash object of the configuration of the Resumable.js instance.
+   **/
+  opts: Resumable.ConfigurationHash;
+  /**
+   * An array of ResumableFile file objects added by the user (see full docs for this object type below).
+   **/
+  files: Array<Resumable.ResumableFile>;
+
+  events: Array<any>;
+  version: number;
+
+  /**
+   * Assign a browse action to one or more DOM nodes. Pass in true to allow directories to be selected (Chrome only).
+   **/
+  assignBrowse(domNode: Element | Array<Element>, isDirectory: boolean): void;
+  /**
+   * Assign one or more DOM nodes as a drop target.
+   **/
+  assignDrop(domNode: Element |  Array<Element>): void;
+  unAssignDrop(domNode: Element | Array<Element>): void;
+  /**
+   * Start or resume uploading.
+   **/
+  upload(): void;
+  uploadNextChunk(): void;
+  /**
+   * Pause uploading.
+   **/
+  pause(): void;
+  /**
+   * Cancel upload of all ResumableFile objects and remove them from the list.
+   **/
+  cancel(): void;
+  fire(): void;
+  /**
+   * Returns a float between 0 and 1 indicating the current upload progress of all files.
+   **/
+  progress(): number;
+  /**
+   * Returns a boolean indicating whether or not the instance is currently uploading anything.
+   **/
+  isUploading(): boolean;
+  /**
+   * Add a HTML5 File object to the list of files.
+   **/
+  addFile(file: File): void;
+  /**
+   * Add an Array of HTML5 File objects to the list of files.
+   **/
+  addFiles(files: Array<File>): void;
+  /**
+   * Cancel upload of a specific ResumableFile object on the list from the list.
+   **/
+  removeFile(file: Resumable.ResumableFile): void;
+  /**
+   * Look up a ResumableFile object by its unique identifier.
+   **/
+  getFromUniqueIdentifier(uniqueIdentifier: string): void;
+  /**
+   * Returns the total size of the upload in bytes.
+   **/
+  getSize(): number;
+  getOpt(o: string): any;
+
+  // Events
+  /**
+   * Listen for event from Resumable.js (see below)
+   **/
+  on(event: string, callback: Function): void;
+  /**
+   *  A specific file was completed.
+   **/
+  on(event: 'fileSuccess', callback: (file: Resumable.ResumableFile) => void); void;
+  /**
+   *  Uploading progressed for a specific file.
+   **/
+  on(event: 'fileProgress', callback: (file: Resumable.ResumableFile) => void): void;
+  /**
+   *  A new file was added. Optionally, you can use the browser event object from when the file was added.
+   **/
+  on(event: 'fileAdded', callback: (file: Resumable.ResumableFile, event: DragEvent) => void): void;
+  /**
+   *  New files were added.
+   **/
+  on(event: 'filesAdded', callback: (files: Array<Resumable.ResumableFile>) => void): void;
+  /**
+   *  Something went wrong during upload of a specific file, uploading is being retried.
+   **/
+  on(event: 'fileRetry', callback: (file: Resumable.ResumableFile) => void): void;
+  /**
+   *  An error occurred during upload of a specific file.
+   **/
+  on(event: 'fileError', callback: (file: Resumable.ResumableFile, message: string) => void): void;
+  /**
+   *  Upload has been started on the Resumable object.
+   **/
+  on(event: 'uploadStart', callback: () => void): void;
+  /**
+   *  Uploading completed.
+   **/
+  on(event: 'complete', callback: () => void): void;
+  /**
+   *  Uploading progress.
+   **/
+  on(event: 'progress', callback: () => void): void;
+  /**
+   *  An error, including fileError, occurred.
+   **/
+  on(event: 'error', callback: (message: string, file: Resumable.ResumableFile) => void): void;
+  /**
+   *  Uploading was paused.
+   **/
+  on(event: 'pause', callback: () => void): void;
+  /**
+   *  Triggers before the items are cancelled allowing to do any processing on uploading files.
+   **/
+  on(event: 'beforeCancel', callback: () => void): void;
+  /**
+   *  Uploading was canceled.
+   **/
+  on(event: 'cancel', callback: () => void): void;
+  /**
+   *  Started preparing file for upload
+   **/
+  on(event: 'chunkingStart', callback: (file: Resumable.ResumableFile) => void): void;
+  /**
+   *  Show progress in file preparation
+   **/
+  on(event: 'chunkingProgress', callback: (file: Resumable.ResumableFile, ratio) => void): void;
+  /**
+   *  File is ready for upload
+   **/
+  on(event: 'chunkingComplete', callback: (file: Resumable.ResumableFile) => void): void;
+  /**
+   * Listen to all the events listed above with the same callback function.
+   **/
+  on(event: 'catchAll', callback: () => void);
+}
+
+declare namespace Resumable  {
   export interface ConfigurationHash {
     /**
      * The target URL for the multipart POST request. This can be a string or a function that allows you you to construct and return a value, based on supplied params. (Default: /)
@@ -166,153 +316,6 @@ declare module Resumable  {
     permanentErrors?: number[]
   }
 
-  export class Resumable {
-    constructor(options:ConfigurationHash);
-
-    /**
-     * A boolean value indicator whether or not Resumable.js is supported by the current browser.
-     **/
-    support: boolean;
-    /**
-     * A hash object of the configuration of the Resumable.js instance.
-     **/
-    opts: ConfigurationHash;
-    /**
-     * An array of ResumableFile file objects added by the user (see full docs for this object type below).
-     **/
-    files: Array<ResumableFile>;
-
-    events: Array<any>;
-    version: number;
-
-    /**
-     * Assign a browse action to one or more DOM nodes. Pass in true to allow directories to be selected (Chrome only).
-     **/
-    assignBrowse(domNode: Element | Array<Element>, isDirectory: boolean): void;
-    /**
-     * Assign one or more DOM nodes as a drop target.
-     **/
-    assignDrop(domNode: Element |  Array<Element>): void;
-    unAssignDrop(domNode: Element | Array<Element>): void;
-    /**
-     * Start or resume uploading.
-     **/
-    upload(): void;
-    uploadNextChunk(): void;
-    /**
-     * Pause uploading.
-     **/
-    pause(): void;
-    /**
-     * Cancel upload of all ResumableFile objects and remove them from the list.
-     **/
-    cancel(): void;
-    fire(): void;
-    /**
-     * Returns a float between 0 and 1 indicating the current upload progress of all files.
-     **/
-    progress(): number;
-    /**
-     * Returns a boolean indicating whether or not the instance is currently uploading anything.
-     **/
-    isUploading(): boolean;
-    /**
-     * Add a HTML5 File object to the list of files.
-     **/
-    addFile(file: File): void;
-    /**
-     * Add an Array of HTML5 File objects to the list of files.
-     **/
-    addFiles(files: Array<File>): void;
-    /**
-     * Cancel upload of a specific ResumableFile object on the list from the list.
-     **/
-    removeFile(file: ResumableFile): void;
-    /**
-     * Look up a ResumableFile object by its unique identifier.
-     **/
-    getFromUniqueIdentifier(uniqueIdentifier: string): void;
-    /**
-     * Returns the total size of the upload in bytes.
-     **/
-    getSize(): number;
-    getOpt(o: string): any;
-
-    // Events
-    /**
-     * Listen for event from Resumable.js (see below)
-     **/
-    on(event: string, callback: Function): void;
-    /**
-     *  A specific file was completed.
-     **/
-    on(event: 'fileSuccess', callback: (file: ResumableFile) => void); void;
-    /**
-     *  Uploading progressed for a specific file.
-     **/
-    on(event: 'fileProgress', callback: (file: ResumableFile) => void): void;
-    /**
-     *  A new file was added. Optionally, you can use the browser event object from when the file was added.
-     **/
-    on(event: 'fileAdded', callback: (file: ResumableFile, event: DragEvent) => void): void;
-    /**
-     *  New files were added.
-     **/
-    on(event: 'filesAdded', callback: (files: Array<ResumableFile>) => void): void;
-    /**
-     *  Something went wrong during upload of a specific file, uploading is being retried.
-     **/
-    on(event: 'fileRetry', callback: (file: ResumableFile) => void): void;
-    /**
-     *  An error occurred during upload of a specific file.
-     **/
-    on(event: 'fileError', callback: (file: ResumableFile, message: string) => void): void;
-    /**
-     *  Upload has been started on the Resumable object.
-     **/
-    on(event: 'uploadStart', callback: () => void): void;
-    /**
-     *  Uploading completed.
-     **/
-    on(event: 'complete', callback: () => void): void;
-    /**
-     *  Uploading progress.
-     **/
-    on(event: 'progress', callback: () => void): void;
-    /**
-     *  An error, including fileError, occurred.
-     **/
-    on(event: 'error', callback: (message: string, file: ResumableFile) => void): void;
-    /**
-     *  Uploading was paused.
-     **/
-    on(event: 'pause', callback: () => void): void;
-    /**
-     *  Triggers before the items are cancelled allowing to do any processing on uploading files.
-     **/
-    on(event: 'beforeCancel', callback: () => void): void;
-    /**
-     *  Uploading was canceled.
-     **/
-    on(event: 'cancel', callback: () => void): void;
-    /**
-     *  Started preparing file for upload
-     **/
-    on(event: 'chunkingStart', callback: (file: ResumableFile) => void): void;
-    /**
-     *  Show progress in file preparation
-     **/
-    on(event: 'chunkingProgress', callback: (file: ResumableFile, ratio) => void): void;
-    /**
-     *  File is ready for upload
-     **/
-    on(event: 'chunkingComplete', callback: (file: ResumableFile) => void): void;
-    /**
-     * Listen to all the events listed above with the same callback function.
-     **/
-    on(event: 'catchAll', callback: () => void);
-  }
-
   export interface ResumableFile {
     /**
      * A back-reference to the parent Resumable object.
@@ -375,8 +378,4 @@ declare module Resumable  {
   }
 
   class ResumableChunk {}
-}
-
-declare module 'resumablejs' {
-  export = Resumable.Resumable;
 }

@@ -337,9 +337,9 @@ declare namespace Resumable {
 
 
     /**
-     * Returns a float between 0 and 1 indicating the current upload progress of the file. If relative is true, the value is returned relative to all files in the Resumable.js instance.
+     * Returns a float between 0 and 1 indicating the current upload progress of the file.
      **/
-    progress: (relative: boolean) => number;
+    progress: () => number;
     /**
      * Abort uploading the file.
      **/
@@ -366,7 +366,12 @@ declare namespace Resumable {
     isComplete: () => boolean;
   }
 
-  interface ResumableChunk { }
+  interface ResumableChunk {
+    /**
+     * Returns a float between 0 and 1 indicating the current upload progress of the file. If relative is true, the value is returned relative to all files in the Resumable.js instance.
+     **/
+    progress: (relative?: boolean) => number;
+  }
 }
 
 declare module 'resumablejs' {

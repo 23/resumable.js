@@ -222,6 +222,10 @@
       // e.currentTarget.classList.remove($.getOpt('dragOverClass'));
       $h.stopEvent(e);
 
+      if (e.dataTransfer.getData('text/plain') === 'move-dirent-item') {
+        return;
+      }
+
       //handle dropped things as items if we can (this lets us deal with folders nicer in some cases)
       if (e.dataTransfer && e.dataTransfer.items) {
         loadFiles(e.dataTransfer.items, e);
@@ -237,6 +241,13 @@
     };
     var onDragOverEnter = function(e) {
       e.preventDefault();
+
+      if (e.type === 'dragover') {
+        if (e.dataTransfer.getData('text/plain') === 'move-dirent-item') {
+          return;
+        }
+      }
+
       var dt = e.dataTransfer;
       if ($.indexOf(dt.types, "Files") >= 0) { // only for file drop
         e.stopPropagation();
@@ -246,11 +257,12 @@
           $.fire('dragstart', $);
           $.dragstart = true;
         }
-        // e.currentTarget.classList.add($.getOpt('dragOverClass'));
-      } else { // not work on IE/Edge....
-        dt.dropEffect = "none";
-        dt.effectAllowed = "none";
       }
+      // e.currentTarget.classList.add($.getOpt('dragOverClass'));
+      // } else { // not work on IE/Edge....
+      //   dt.dropEffect = "none";
+      //   dt.effectAllowed = "none";
+      // }
     };
 
     /**

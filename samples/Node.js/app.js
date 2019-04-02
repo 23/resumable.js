@@ -1,5 +1,5 @@
 var express = require('express');
-var resumable = require('./resumable-node.js')('/tmp/resumable.js/');
+var resumable = require('./resumable-node.js')(process.env.UPLOAD_DIR);
 var app = express();
 var multipart = require('connect-multiparty');
 var crypto = require('crypto');
@@ -51,7 +51,7 @@ app.get('/download/:identifier', function(req, res){
 app.get('/resumable.js', function (req, res) {
   var fs = require('fs');
   res.setHeader("content-type", "application/javascript");
-  fs.createReadStream("../../resumable.js").pipe(res);
+  fs.createReadStream(process.env.RESUMEABLE_DIR).pipe(res);
 });
 
-app.listen(3000);
+app.listen(process.env.PORT);

@@ -21,7 +21,7 @@ module.exports = resumable = function(temporaryFolder){
     // Clean up the identifier
     identifier = cleanIdentifier(identifier);
     // What would the file name be?
-    return path.join($.temporaryFolder, './resumable-'+identifier+'.'+chunkNumber);
+    return path.join($.temporaryFolder, identifier+'.'+chunkNumber);
   }
 
   var validateRequest = function(chunkNumber, chunkSize, totalSize, identifier, filename, fileSize){
@@ -106,7 +106,7 @@ module.exports = resumable = function(temporaryFolder){
     }
     var validation = validateRequest(chunkNumber, chunkSize, totalSize, identifier, files[$.fileParameterName].size);
     if(validation=='valid') {
-      var chunkFilename = getChunkFilename(chunkNumber, identifier);
+      var chunkFilename = getChunkFilename(chunkNumber, filename);
 
       // Save the chunk (TODO: OVERWRITE)
       fs.rename(files[$.fileParameterName].path, chunkFilename, function(){

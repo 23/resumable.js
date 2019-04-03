@@ -7,7 +7,7 @@ module.exports = resumable = function(temporaryFolder){
   $.temporaryFolder = temporaryFolder;
   $.maxFileSize = null;
   $.fileParameterName = 'file';
-  $.files = [];
+  $.files = new Map();
 
   try {
     fs.mkdirSync($.temporaryFolder);
@@ -22,7 +22,7 @@ module.exports = resumable = function(temporaryFolder){
     // Clean up the identifier
     identifier = cleanIdentifier(identifier);
     // What would the file name be?
-    return path.join($.temporaryFolder, identifier+'.'+chunkNumber);
+    return path.join($.temporaryFolder, './resumable-'+identifier+'.'+chunkNumber);
   }
 
   var validateRequest = function(chunkNumber, chunkSize, totalSize, identifier, filename, fileSize){
@@ -107,36 +107,39 @@ module.exports = resumable = function(temporaryFolder){
     }
     var validation = validateRequest(chunkNumber, chunkSize, totalSize, identifier, files[$.fileParameterName].size);
     if(validation=='valid') {
-      var chunkFilename = getChunkFilename(chunkNumber, filename);
+      if (chunkNumber === 1) {
+        $.files.clear();
+      }
+      var chunkFilename = getChunkFilename(chunkNumber, identifier);
 
       // Save the chunk (TODO: OVERWRITE)
       fs.rename(files[$.fileParameterName].path, chunkFilename, function(){
 
         // Do we have all the chunks?
-        $.files.push(chunkFilename);
+        $.files[chunkNumber] = chunkFilename;
         var currentTestChunk = 1;
         var numberOfChunks = Math.max(Math.floor(totalSize/(chunkSize*1.0)), 1);
         var testChunkExists = function(){
-              fs.exists(getChunkFilename(currentTestChunk, filename), function(exists){
+              fs.exists(getChunkFilename(currentTestChunk, identifier), function(exists){
                 if(exists){
                   currentTestChunk++;
                   if(currentTestChunk>numberOfChunks) {
-                    let num_files = $.files.length;
-                    for (let i = 0; i < num_files; ++i) {
-                      let content = fs.readFileSync($.files[i])
+                    for (var i = 0; i < numberOfChunks; ++i) {
+                      var file_path = $.files[i + 1];
+                      var content = fs.readFileSync(file_path)
                       fs.appendFile(path.join($.temporaryFolder, filename), content);
-                      fs.unlinkSync($.files[i]);
+                      fs.unlinkSync(file_path);
                     }
-                    callback('done', filename, original_filename, filename);
+                    callback('done', filename, original_filename, identifier);
                   } else {
                     // Recursion
                     testChunkExists();
                   }
                 } else {
-                  callback('partly_done', filename, original_filename, filename);
+                  callback('partly_done', filename, original_filename, identifier);
                 }
-              });
-            }
+          });
+        }
         testChunkExists();
       });
     } else {

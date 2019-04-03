@@ -126,7 +126,7 @@ module.exports = resumable = function(temporaryFolder){
                   if(currentTestChunk>numberOfChunks) {
                     for (var i = 0; i < numberOfChunks; ++i) {
                       var file_path = $.files[i + 1];
-                      var content = fs.readFileSync(file_path)
+                      var content = fs.readFileSync(file_path);
                       fs.appendFile(path.join($.temporaryFolder, filename), content);
                       fs.unlinkSync(file_path);
                     }
@@ -143,7 +143,7 @@ module.exports = resumable = function(temporaryFolder){
         testChunkExists();
       });
     } else {
-          callback(validation, filename, original_filename, filename);
+          callback(validation, filename, original_filename, identifier);
     }
   }
 

@@ -5,11 +5,11 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}/samples/Node.js/app.js",
+            "program": "${workspaceFolder}/app.js",
             "env": {
                 "PORT": 3000,
-                "UPLOAD_DIR": "/Users/zhangjun/work/simright/upload",
-                "RESUMEABLE_DIR": "${workspaceFolder}/resumable.js"
+                "UPLOAD_DIR": "${workspaceFolder}/upload",
+                "RESUMEABLE_DIR": "${workspaceFolder}/../../resumable.js"
             },
         }
     ]

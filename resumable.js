@@ -116,7 +116,7 @@
       }
     };
     $.indexOf = function(array, obj) {
-    	if (array.indexOf) { return array.indexOf(obj); }     
+    	if (array.indexOf) { return array.indexOf(obj); }
     	for (var i = 0; i < array.length; i++) {
             if (array[i] === obj) { return i; }
         }
@@ -198,7 +198,7 @@
           return (size/1024.0/1024.0/1024.0).toFixed(1) + ' GB';
         }
       },
-      getTarget:function(request, params){
+      getTarget:function(request, params, file){
         var target = $.getOpt('target');
 
         if (request === 'test' && $.getOpt('testTarget')) {
@@ -206,7 +206,7 @@
         }
 
         if (typeof target === 'function') {
-          return target(params);
+          return target(params, file);
         }
 
         var separator = target.indexOf('?') < 0 ? '?' : '&';
@@ -739,7 +739,7 @@
           })
         );
         // Append the relevant chunk and send it
-        $.xhr.open($.getOpt('testMethod'), $h.getTarget('test', params));
+        $.xhr.open($.getOpt('testMethod'), $h.getTarget('test', params, $.fileObj));
         $.xhr.timeout = $.getOpt('xhrTimeout');
         $.xhr.withCredentials = $.getOpt('withCredentials');
         // Add data from header options
@@ -871,7 +871,7 @@
                     }
                 }
 
-        var target = $h.getTarget('upload', params);
+        var target = $h.getTarget('upload', params, $.fileObj);
         var method = $.getOpt('uploadMethod');
 
         $.xhr.open(method, target);

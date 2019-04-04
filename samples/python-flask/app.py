@@ -4,11 +4,11 @@ import os
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.debug = True
 
-temp_base = os.path.expanduser("/home/parallels/work/workroot/uploads")
+temp_base = os.path.expanduser("/home/tmp/uploads")
 
 
 # landing page
-@app.route("/")
+@app.route("/api/upload")
 def resumable_example():
     return render_template("index.html")
 
@@ -83,7 +83,7 @@ def resumable_post():
     return 'OK'
 
 
-@app.route("/resumable.js", methods=['GET'])
+@app.route("/api/resumable.js", methods=['GET'])
 def resumable_js():
   js_file = open('../../resumable.js', 'rb')
   resp = make_response()

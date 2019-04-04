@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, abort, jsonify
+from flask import Flask, render_template, request, abort, make_response, jsonify
 import os
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
@@ -8,7 +8,7 @@ temp_base = os.path.expanduser("/home/parallels/work/workroot/uploads")
 
 
 # landing page
-@app.route("/resumable")
+@app.route("/")
 def resumable_example():
     return render_template("index.html")
 
@@ -16,7 +16,7 @@ def resumable_example():
 # resumable.js uses a GET request to check if it uploaded the file already.
 # NOTE: your validation here needs to match whatever you do in the POST (otherwise it will NEVER find the files)
 @app.route("/upload", methods=['GET'])
-def resumable():
+def resumable_get():
     resumableIdentfier = request.args.get('resumableIdentifier', type=str)
     resumableFilename = request.args.get('resumableFilename', type=str)
     resumableChunkNumber = request.args.get('resumableChunkNumber', type=int)
@@ -81,6 +81,15 @@ def resumable_post():
         app.logger.debug('File saved to: %s', target_file_name)
 
     return 'OK'
+
+
+@app.route("/resumable.js", methods=['GET'])
+def resumable_js():
+  js_file = open('../../resumable.js', 'rb')
+  resp = make_response()
+  resp.headers["content-type"] = "application/javascript"
+  resp.set_data(js_file.read())
+  return resp
 
 
 def get_chunk_name(uploaded_filename, chunk_number):

@@ -142,6 +142,10 @@ declare namespace Resumable {
      **/
     chunkRetryInterval?: number;
     /**
+     * List of error codes that will immediately terminate the file upload
+     */
+    permanentErrors?: number[];
+    /**
      * Standard CORS requests do not send or set any cookies by default. In order to include cookies as part of the request, you need to set the withCredentials property to true. (Default: false)
      **/
     withCredentials?: boolean;

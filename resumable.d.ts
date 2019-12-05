@@ -78,9 +78,9 @@ declare namespace Resumable {
      **/
     parameterNamespace?: string;
     /**
-     * Extra headers to include in the multipart POST with data. This can be an object or a function that allows you to construct and return a value, based on supplied file (Default: {})
+     * Extra headers to include in the multipart POST with data. This can be an object or a function that allows you to construct and return a value or a Promise, based on supplied file (Default: {})
      **/
-    headers?: Object | ((file: ResumableFile) => Object);
+    headers?: Object | ((file: ResumableFile) => Object) | ((file) => Promise<Object>);
     /**
      * Method to use when POSTing chunks to the server (multipart or octet) (Default: multipart)
      **/
@@ -250,11 +250,11 @@ declare namespace Resumable {
     /**
      *  Something went wrong during upload of a specific file, uploading is being retried.
      **/
-    on(event: 'fileRetry', callback: (file: ResumableFile) => void): void;
+    on(event: 'fileRetry', callback: (file: ResumableFile, message: string, chunk: ResumableChunk) => void): void;
     /**
      *  An error occurred during upload of a specific file.
      **/
-    on(event: 'fileError', callback: (file: ResumableFile, message: string) => void): void;
+    on(event: 'fileError', callback: (file: ResumableFile, message: string, chunk: ResumableChunk) => void): void;
     /**
      *  Upload has been started on the Resumable object.
      **/
@@ -366,7 +366,10 @@ declare namespace Resumable {
     isComplete: () => boolean;
   }
 
-  interface ResumableChunk { }
+  interface ResumableChunk {
+    offset: number;
+    retries: number;
+  }
 }
 
 declare module 'resumablejs' {

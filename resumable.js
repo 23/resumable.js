@@ -116,7 +116,7 @@
       }
     };
     $.indexOf = function(array, obj) {
-    	if (array.indexOf) { return array.indexOf(obj); }     
+    	if (array.indexOf) { return array.indexOf(obj); }
     	for (var i = 0; i < array.length; i++) {
             if (array[i] === obj) { return i; }
         }
@@ -215,6 +215,9 @@
         if (joinedParams) target = target + separator + joinedParams;
 
         return target;
+      },
+      isPromise: function(o){
+        return o && typeof o.then === 'function'
       }
     };
 
@@ -450,7 +453,7 @@
         }
         // directories have size == 0
         var uniqueIdentifier = $h.generateUniqueIdentifier(file, event);
-        if(uniqueIdentifier && typeof uniqueIdentifier.then === 'function'){
+        if($h.isPromise(uniqueIdentifier)){
           // Promise or Promise-like object provided as unique identifier
           uniqueIdentifier
           .then(
@@ -499,7 +502,7 @@
           $.abort();
           _error = true;
           $.chunks = [];
-          $.resumableObj.fire('fileError', $, message);
+          $.resumableObj.fire('fileError', $, message, this);
           break;
         case 'success':
           if(_error) return;
@@ -509,7 +512,7 @@
           }
           break;
         case 'retry':
-          $.resumableObj.fire('fileRetry', $);
+          $.resumableObj.fire('fileRetry', $, message, this);
           break;
         }
       };
@@ -670,6 +673,7 @@
       $.lastProgressCallback = (new Date);
       $.tested = false;
       $.retries = 0;
+      $.headersErr = false;
       $.pendingRetry = false;
       $.preprocessState = 0; // 0 = unprocessed, 1 = processing, 2 = finished
       $.markComplete = false;
@@ -747,10 +751,25 @@
         if(typeof customHeaders === 'function') {
           customHeaders = customHeaders($.fileObj, $);
         }
-        $h.each(customHeaders, function(k,v) {
-          $.xhr.setRequestHeader(k, v);
-        });
-        $.xhr.send(null);
+        if($h.isPromise(customHeaders)) {
+          $.headersErr = false;
+          customHeaders
+            .then(headers => {
+              $h.each(headers, function (k, v) {
+                $.xhr.setRequestHeader(k, v)
+              })
+              $.xhr.send(null)
+            })
+            .catch(() => {
+              $.headersErr = true;
+              testHandler()
+            })
+        } else {
+          $h.each(customHeaders, function (k, v) {
+            $.xhr.setRequestHeader(k, v);
+          });
+          $.xhr.send(null);
+        }
       };
 
       $.preprocessFinished = function(){
@@ -798,6 +817,7 @@
             $.callback('retry', $.message());
             $.abort();
             $.retries++;
+            $.headersErr = false;
             var retryInterval = $.getOpt('chunkRetryInterval');
             if(retryInterval !== undefined) {
               $.pendingRetry = true;
@@ -886,12 +906,29 @@
           customHeaders = customHeaders($.fileObj, $);
         }
 
-        $h.each(customHeaders, function(k,v) {
-          $.xhr.setRequestHeader(k, v);
-        });
+        if($h.isPromise(customHeaders)) {
+          $.headersErr = false;
+          customHeaders
+            .then(headers => {
+              $h.each(headers, function (k, v) {
+                $.xhr.setRequestHeader(k, v)
+              })
+              if ($.getOpt('chunkFormat') == 'blob') {
+                $.xhr.send(data)
+              }
+            })
+            .catch(() => {
+              $.headersErr = true;
+              doneHandler()
+            })
+        } else {
+          $h.each(customHeaders, function (k, v) {
+            $.xhr.setRequestHeader(k, v);
+          });
 
-        if ($.getOpt('chunkFormat') == 'blob') {
+          if ($.getOpt('chunkFormat') == 'blob') {
             $.xhr.send(data);
+          }
         }
       };
       $.abort = function(){
@@ -901,6 +938,13 @@
       };
       $.status = function(){
         // Returns: 'pending', 'uploading', 'success', 'error'
+        if($.headersErr) {
+          if($.retries >= $.getOpt('maxChunkRetries')) {
+            return 'error';
+          }
+          $.abort();
+          return 'pending';
+        }
         if($.pendingRetry) {
           // if pending retry then that's effectively the same as actively uploading,
           // there might just be a slight delay before the retry starts

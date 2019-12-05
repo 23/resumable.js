@@ -205,7 +205,7 @@ declare namespace Resumable {
     /**
      * Add a HTML5 File object to the list of files.
      **/
-    addFile(file: File, event: Event): void;
+    addFile(file: File, event?: Event): void;
     /**
      * Cancel upload of a specific ResumableFile object on the list from the list.
      **/

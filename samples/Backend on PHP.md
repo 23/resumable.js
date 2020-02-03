@@ -95,7 +95,7 @@ function createFileFromChunks($temp_dir, $fileName, $chunkSize, $totalSize,$tota
     // If the Size of all the chunks on the server is equal to the size of the file uploaded.
     if ($total_files_on_server_size >= $totalSize) {
     // create the final destination file 
-        if (($fp = fopen('temp/'.$fileName, 'w')) !== false) {
+        if (($fp = fopen($temp_dir.'/'.$fileName, 'w')) !== false) {
             for ($i=1; $i<=$total_files; $i++) {
                 fwrite($fp, file_get_contents($temp_dir.'/'.$fileName.'.part'.$i));
                 _log('writing chunk '.$i);

@@ -20,7 +20,7 @@ you want to see this in action, but the pieces are:
 * Finally, some HTML elements for the glue script to use.
 
 ```html
-<div class="resumable-drop" ondragenter="jQuery(this).addClass('resumable-dragover');" ondragend="jQuery(this).removeClass('resumable-dragover');" ondrop="jQuery(this).removeClass('resumable-dragover');">
+<div class="resumable-drop">
   Drop video files here to upload or <a class="resumable-browse"><u>select from your computer</u></a>
 </div>
 

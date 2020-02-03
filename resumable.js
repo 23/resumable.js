@@ -48,6 +48,7 @@
       fileNameParameterName: 'resumableFilename',
       relativePathParameterName: 'resumableRelativePath',
       totalChunksParameterName: 'resumableTotalChunks',
+      dragOverClass: 'dragover',
       throttleProgressCallbacks: 0.5,
       query:{},
       headers:{},
@@ -65,7 +66,7 @@
       getTarget:null,
       maxChunkRetries:100,
       chunkRetryInterval:undefined,
-      permanentErrors:[400, 404, 409, 415, 500, 501],
+      permanentErrors:[400, 401, 403, 404, 409, 415, 500, 501],
       maxFiles:undefined,
       withCredentials:false,
       xhrTimeout:0,
@@ -114,6 +115,13 @@
         else { return $opt.defaults[o]; }
       }
     };
+    $.indexOf = function(array, obj) {
+    	if (array.indexOf) { return array.indexOf(obj); }     
+    	for (var i = 0; i < array.length; i++) {
+            if (array[i] === obj) { return i; }
+        }
+        return -1;
+    }
 
     // EVENTS
     // catchAll(event, ...)
@@ -162,7 +170,7 @@
         if(typeof custom === 'function') {
           return custom(file, event);
         }
-        var relativePath = file.webkitRelativePath||file.fileName||file.name; // Some confusion in different versions of Firefox
+        var relativePath = file.webkitRelativePath||file.relativePath||file.fileName||file.name; // Some confusion in different versions of Firefox
         var size = file.size;
         return(size + '-' + relativePath.replace(/[^0-9a-zA-Z_-]/img, ''));
       },
@@ -204,24 +212,40 @@
         var separator = target.indexOf('?') < 0 ? '?' : '&';
         var joinedParams = params.join('&');
 
-        return target + separator + joinedParams;
+        if (joinedParams) target = target + separator + joinedParams;
+
+        return target;
       }
     };
 
-    var onDrop = function(event){
-      $h.stopEvent(event);
+    var onDrop = function(e){
+      e.currentTarget.classList.remove($.getOpt('dragOverClass'));
+      $h.stopEvent(e);
 
       //handle dropped things as items if we can (this lets us deal with folders nicer in some cases)
-      if (event.dataTransfer && event.dataTransfer.items) {
-        loadFiles(event.dataTransfer.items, event);
+      if (e.dataTransfer && e.dataTransfer.items) {
+        loadFiles(e.dataTransfer.items, e);
       }
       //else handle them as files
-      else if (event.dataTransfer && event.dataTransfer.files) {
-        loadFiles(event.dataTransfer.files, event);
+      else if (e.dataTransfer && e.dataTransfer.files) {
+        loadFiles(e.dataTransfer.files, e);
       }
     };
-    var preventDefault = function(e) {
+    var onDragLeave = function(e){
+      e.currentTarget.classList.remove($.getOpt('dragOverClass'));
+    };
+    var onDragOverEnter = function(e) {
       e.preventDefault();
+      var dt = e.dataTransfer;
+      if ($.indexOf(dt.types, "Files") >= 0) { // only for file drop
+        e.stopPropagation();
+        dt.dropEffect = "copy";
+        dt.effectAllowed = "copy";
+        e.currentTarget.classList.add($.getOpt('dragOverClass'));
+      } else { // not work on IE/Edge....
+        dt.dropEffect = "none";
+        dt.effectAllowed = "none";
+      }
     };
 
     /**
@@ -330,7 +354,11 @@
       processCallbacks(
           Array.prototype.map.call(items, function(item){
             // bind all properties except for callback
-            return processItem.bind(null, item, "", files);
+            var entry = item;
+            if('function' === typeof item.webkitGetAsEntry){
+              entry = item.webkitGetAsEntry();
+            }
+            return processItem.bind(null, entry, "", files);
           }),
           function(){
             if(files.length){
@@ -392,17 +420,17 @@
           }
           if (!fileTypeFound) {
             o.fileTypeErrorCallback(file, errorCount++);
-            return false;
+            return true;
           }
         }
 
         if (typeof(o.minFileSize)!=='undefined' && file.size<o.minFileSize) {
           o.minFileSizeErrorCallback(file, errorCount++);
-          return false;
+          return true;
         }
         if (typeof(o.maxFileSize)!=='undefined' && file.size>o.maxFileSize) {
           o.maxFileSizeErrorCallback(file, errorCount++);
-          return false;
+          return true;
         }
 
         function addFile(uniqueIdentifier){
@@ -475,7 +503,7 @@
           break;
         case 'success':
           if(_error) return;
-          $.resumableObj.fire('fileProgress', $); // it's at least progress
+          $.resumableObj.fire('fileProgress', $, message); // it's at least progress
           if($.isComplete()) {
             $.resumableObj.fire('fileSuccess', $, message);
           }
@@ -614,6 +642,14 @@
         }
         return(found);
       }
+      $.markChunksCompleted = function (chunkNumber) {
+        if (!$.chunks || $.chunks.length <= chunkNumber) {
+            return;
+        }
+        for (var num = 0; num < chunkNumber; num++) {
+            $.chunks[num].markComplete = true;
+        }
+      };
 
       // Bootstrap and return
       $.resumableObj.fire('chunkingStart', $);
@@ -637,6 +673,7 @@
       $.retries = 0;
       $.pendingRetry = false;
       $.preprocessState = 0; // 0 = unprocessed, 1 = processing, 2 = finished
+      $.markComplete = false;
 
       // Computed properties
       var chunkSize = $.getOpt('chunkSize');
@@ -869,6 +906,8 @@
           // if pending retry then that's effectively the same as actively uploading,
           // there might just be a slight delay before the retry starts
           return('uploading');
+        } else if($.markComplete) {
+          return 'success';
         } else if(!$.xhr) {
           return('pending');
         } else if($.xhr.readyState<4) {
@@ -896,7 +935,7 @@
         if(typeof(relative)==='undefined') relative = false;
         var factor = (relative ? ($.endByte-$.startByte)/$.fileObjSize : 1);
         if($.pendingRetry) return(0);
-        if(!$.xhr || !$.xhr.status) factor*=.95;
+        if((!$.xhr || !$.xhr.status) && !$.markComplete) factor*=.95;
         var s = $.status();
         switch(s){
         case 'success':
@@ -1015,8 +1054,9 @@
       if(typeof(domNodes.length)=='undefined') domNodes = [domNodes];
 
       $h.each(domNodes, function(domNode) {
-        domNode.addEventListener('dragover', preventDefault, false);
-        domNode.addEventListener('dragenter', preventDefault, false);
+        domNode.addEventListener('dragover', onDragOverEnter, false);
+        domNode.addEventListener('dragenter', onDragOverEnter, false);
+        domNode.addEventListener('dragleave', onDragLeave, false);
         domNode.addEventListener('drop', onDrop, false);
       });
     };
@@ -1024,8 +1064,9 @@
       if (typeof(domNodes.length) == 'undefined') domNodes = [domNodes];
 
       $h.each(domNodes, function(domNode) {
-        domNode.removeEventListener('dragover', preventDefault);
-        domNode.removeEventListener('dragenter', preventDefault);
+        domNode.removeEventListener('dragover', onDragOverEnter);
+        domNode.removeEventListener('dragenter', onDragOverEnter);
+        domNode.removeEventListener('dragleave', onDragLeave);
         domNode.removeEventListener('drop', onDrop);
       });
     };
@@ -1116,7 +1157,9 @@
 
   // Node.js-style export for Node and Component
   if (typeof module != 'undefined') {
+    // left here for backwards compatibility
     module.exports = Resumable;
+    module.exports.Resumable = Resumable;
   } else if (typeof define === "function" && define.amd) {
     // AMD/requirejs: Define the module
     define(function(){

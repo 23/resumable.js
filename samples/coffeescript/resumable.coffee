@@ -45,6 +45,7 @@ window.Resumable = class Resumable
       maxFileSizeErrorCallback: (file, errorCount) ->
         #TODO @getOpt
         alert(file.fileName +' is too large, please upload files less than ' + @formatSize(@getOpt('maxFileSize')) + '.')
+      dragOverClass: 'dragover'
     @opt = {} if not @opt?
     @events = []
 

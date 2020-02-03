@@ -53,7 +53,7 @@ To handle the state of upload chunks, a number of extra parameters are sent alon
 
 * `resumableChunkNumber`: The index of the chunk in the current upload. First chunk is `1` (no base-0 counting here).
 * `resumableTotalChunks`: The total number of chunks.
-* `resumableChunkSize`: The general chunk size. Using this value and `resumableTotalSize` you can calculate the total number of chunks. Please note that the size of the data received in the HTTP might be lower than `resumableChunkSize` of this for the last chunk for a file.
+* `resumableChunkSize`: The general chunk size. Using this value and `resumableTotalSize` you can calculate the total number of chunks. Please note that the size of the data received in the HTTP might be higher than `resumableChunkSize` for the last chunk for a file.
 * `resumableTotalSize`: The total file size.
 * `resumableIdentifier`: A unique identifier for the file contained in the request.
 * `resumableFilename`: The original file name (since a bug in Firefox results in the file name not being transmitted in chunk multipart posts).
@@ -132,6 +132,7 @@ adding the file. (Default: `null`)
 * `withCredentials` Standard CORS requests do not send or set any cookies by default. In order to include cookies as part of the request, you need to set the `withCredentials` property to true. (Default: `false`)
 * `xhrTimeout` The timeout in milliseconds for each request (Default: `0`)
 * `setChunkTypeFromFile` Set chunk content-type from original file.type. (Default: `false`, if `false` default Content-Type: `application/octet-stream`)
+* `dragOverClass` The class name to add on drag over an assigned drop zone. (Default: `dragover`)
 
 #### Properties
 
@@ -158,7 +159,7 @@ adding the file. (Default: `null`)
 #### Events
 
 * `.fileSuccess(file, message)` A specific file was completed. `message` is the response body from the server.
-* `.fileProgress(file)` Uploading progressed for a specific file.
+* `.fileProgress(file, message)` Uploading progressed for a specific file.
 * `.fileAdded(file, event)` A new file was added. Optionally, you can use the browser `event` object from when the file was added.
 * `.filesAdded(arrayAdded, arraySkipped)` New files were added (and maybe some have been skipped).
 * `.fileRetry(file)` Something went wrong during upload of a specific file, uploading is being retried.
@@ -195,6 +196,7 @@ adding the file. (Default: `null`)
 * `.bootstrap()` Rebuild the state of a `ResumableFile` object, including reassigning chunks and XMLHttpRequest instances.
 * `.isUploading()` Returns a boolean indicating whether file chunks is uploading.
 * `.isComplete()` Returns a boolean indicating whether the file has completed uploading and received a server response.
+* `.markChunksCompleted()` starts upload from the next chunk number while marking all previous chunks complete. Must be called before upload() method.
 
 ## Alternatives
 

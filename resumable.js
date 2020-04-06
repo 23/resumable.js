@@ -172,7 +172,7 @@
         }
         var relativePath = file.webkitRelativePath||file.relativePath||file.fileName||file.name; // Some confusion in different versions of Firefox
         var size = file.size;
-        return(size + '-' + relativePath.replace(/[^0-9a-zA-Z_-]/img, ''));
+        return(size + '-' + relativePath.replace(/[^\w-]+/g, ''));
       },
       contains:function(array,test) {
         var result = false;
@@ -367,7 +367,7 @@
             }
           }
       );
-    };
+    }
 
     var appendFilesFromFileList = function(fileList, event){
       // check for uploading too many files
@@ -383,7 +383,7 @@
         }
       }
       var files = [], filesSkipped = [], remaining = fileList.length;
-      var decreaseReamining = function(){
+      var decreaseRemaining = function(){
         if(!--remaining){
           // all files processed, trigger event
           if(!files.length && !filesSkipped.length){
@@ -402,7 +402,7 @@
           var fileTypeFound = false;
           for(var index in o.fileType){
             // For good behaviour we do some inital sanitizing. Remove spaces and lowercase all
-            o.fileType[index] = o.fileType[index].replace(/\s/g, '').toLowerCase();
+            o.fileType[index] = o.fileType[index].replace(/\s+/g, '').toLowerCase();
 
             // Allowing for both [extension, .extension, mime/type, mime/*]
             var extension = ((o.fileType[index].match(/^[^.][^/]+$/)) ? '.' : '') + o.fileType[index];
@@ -446,7 +446,7 @@
           })()} else {
             filesSkipped.push(file);
           };
-          decreaseReamining();
+          decreaseRemaining();
         }
         // directories have size == 0
         var uniqueIdentifier = $h.generateUniqueIdentifier(file, event);
@@ -461,7 +461,7 @@
            function(){
               // unique identifier generation failed
               // skip further processing, only decrease file count
-              decreaseReamining();
+              decreaseRemaining();
             }
           );
         }else{
@@ -521,7 +521,7 @@
         // Stop current uploads
         var abortCount = 0;
         $h.each($.chunks, function(c){
-          if(c.status()=='uploading') {
+          if(c.status()==='uploading') {
             c.abort();
             abortCount++;
           }
@@ -534,7 +534,7 @@
         $.chunks = [];
         // Stop current uploads
         $h.each(_chunks, function(c){
-          if(c.status()=='uploading')  {
+          if(c.status()==='uploading')  {
             c.abort();
             $.resumableObj.uploadNextChunk();
           }
@@ -574,7 +574,7 @@
         var ret = 0;
         var error = false;
         $h.each($.chunks, function(c){
-          if(c.status()=='error') error = true;
+          if(c.status()==='error') error = true;
           ret += c.progress(true); // get chunk progress relative to entire file
         });
         ret = (error ? 1 : (ret>0.99999 ? 1 : ret));
@@ -585,7 +585,7 @@
       $.isUploading = function(){
         var uploading = false;
         $h.each($.chunks, function(chunk){
-          if(chunk.status()=='uploading') {
+          if(chunk.status()==='uploading') {
             uploading = true;
             return(false);
           }
@@ -599,7 +599,7 @@
         }
         $h.each($.chunks, function(chunk){
           var status = chunk.status();
-          if(status=='pending' || status=='uploading' || chunk.preprocessState === 1) {
+          if(status==='pending' || status==='uploading' || chunk.preprocessState === 1) {
             outstanding = true;
             return(false);
           }
@@ -632,7 +632,7 @@
             }
           }
           $h.each($.chunks, function (chunk) {
-            if (chunk.status() == 'pending' && chunk.preprocessState !== 1) {
+            if (chunk.status() === 'pending' && chunk.preprocessState !== 1) {
               chunk.send();
               found = true;
               return(false);
@@ -640,7 +640,7 @@
           });
         }
         return(found);
-      }
+      };
       $.markChunksCompleted = function (chunkNumber) {
         if (!$.chunks || $.chunks.length <= chunkNumber) {
             return;
@@ -693,7 +693,7 @@
         var testHandler = function(e){
           $.tested = true;
           var status = $.status();
-          if(status=='success') {
+          if(status==='success') {
             $.callback(status, $.message());
             $.resumableObj.uploadNextChunk();
           } else {
@@ -791,7 +791,7 @@
         // Done (either done, failed or retry)
         var doneHandler = function(e){
           var status = $.status();
-          if(status=='success'||status=='error') {
+          if(status==='success'||status==='error') {
             $.callback(status, $.message());
             $.resumableObj.uploadNextChunk();
           } else {
@@ -891,7 +891,7 @@
         });
 
         if ($.getOpt('chunkFormat') == 'blob') {
-            $.xhr.send(data);
+          $.xhr.send(data);
         }
       };
       $.abort = function(){
@@ -906,14 +906,14 @@
           // there might just be a slight delay before the retry starts
           return('uploading');
         } else if($.markComplete) {
-          return 'success';
+          return('success');
         } else if(!$.xhr) {
           return('pending');
         } else if($.xhr.readyState<4) {
           // Status is really 'OPENED', 'HEADERS_RECEIVED' or 'LOADING' - meaning that stuff is happening
           return('uploading');
         } else {
-          if($.xhr.status == 200 || $.xhr.status == 201) {
+          if($.xhr.status === 200 || $.xhr.status === 201) {
             // HTTP 200, 201 (created)
             return('success');
           } else if($h.contains($.getOpt('permanentErrors'), $.xhr.status) || $.retries >= $.getOpt('maxChunkRetries')) {
@@ -958,12 +958,12 @@
       // metadata and determine if there's even a point in continuing.
       if ($.getOpt('prioritizeFirstAndLastChunk')) {
         $h.each($.files, function(file){
-          if(file.chunks.length && file.chunks[0].status()=='pending' && file.chunks[0].preprocessState === 0) {
+          if(file.chunks.length && file.chunks[0].status()==='pending' && file.chunks[0].preprocessState === 0) {
             file.chunks[0].send();
             found = true;
             return(false);
           }
-          if(file.chunks.length>1 && file.chunks[file.chunks.length-1].status()=='pending' && file.chunks[file.chunks.length-1].preprocessState === 0) {
+          if(file.chunks.length>1 && file.chunks[file.chunks.length-1].status()==='pending' && file.chunks[file.chunks.length-1].preprocessState === 0) {
             file.chunks[file.chunks.length-1].send();
             found = true;
             return(false);
@@ -1029,7 +1029,7 @@
         var fileTypes = $.getOpt('fileType');
         if (typeof (fileTypes) !== 'undefined' && fileTypes.length >= 1) {
           input.setAttribute('accept', fileTypes.map(function (e) {
-            e = e.replace(/\s/g, '').toLowerCase();
+            e = e.replace(/\s+/g, '').toLowerCase();
             if(e.match(/^[^.][^/]+$/)){
               e = '.' + e;
             }

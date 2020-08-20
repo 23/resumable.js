@@ -559,10 +559,8 @@
         var round = $.getOpt('forceChunkSize') ? Math.ceil : Math.floor;
         var maxOffset = Math.max(round($.file.size/$.getOpt('chunkSize')),1);
         for (var offset=0; offset<maxOffset; offset++) {(function(offset){
-            window.setTimeout(function(){
-                $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
-                $.resumableObj.fire('chunkingProgress',$,offset/maxOffset);
-            },0);
+            $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
+            $.resumableObj.fire('chunkingProgress',$,offset/maxOffset);
         })(offset)}
         window.setTimeout(function(){
             $.resumableObj.fire('chunkingComplete',$);

@@ -100,7 +100,7 @@ declare namespace Resumable {
     /**
      * Override the function that generates unique identifiers for each file. (Default: null)
      **/
-    generateUniqueIdentifier?: () => string;
+    generateUniqueIdentifier?: (() => string) | ((file: BackwardCompatibleDOMFile) => string) | ((file: BackwardCompatibleDOMFile, event: Event) => string);
     /**
      * Indicates how many files can be uploaded in a single session. Valid values are any positive integer and undefined for no limit. (Default: undefined)
      **/
@@ -367,6 +367,13 @@ declare namespace Resumable {
   }
 
   interface ResumableChunk { }
+
+  /* To deal with some confusion in different versions of Firefox*/
+  interface BackwardCompatibleDOMFile extends File {
+    readonly webkitRelativePath: string;
+    readonly relativePath: string;
+    readonly fileName: string;
+  }
 }
 
 declare module 'resumablejs' {

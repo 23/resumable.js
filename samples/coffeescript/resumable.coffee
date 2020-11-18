@@ -31,7 +31,8 @@ window.Resumable = class Resumable
       generateUniqueIdentifier: null
       maxChunkRetries: undefined
       chunkRetryInterval: undefined
-      permanentErrors: [415, 500, 501]
+      permanentErrors: [415, 500, 501],
+      permanentSuccess:[200,201,204],
       maxFiles: undefined
       maxFilesErrorCallback: (files, errorCount)->
         #TODO @getOpt
@@ -499,8 +500,10 @@ window.ResumableChunk = class ResumableChunk
     #Returns: 'pending', 'uploading', 'success', 'error'
 
     permanentErrors = @getOpt('permanentErrors')
+    permanentSuccess = @getOpt('permanentSuccess')
     maxChunkRetries = @getOpt('maxChunkRetries')
     permanentErrors = {} if not permanentErrors?
+    permanentSuccess = {} if not permanentSuccess?
     maxChunkRetries = 0 if not maxChunkRetries?
 
     if not @xhr?
@@ -508,7 +511,7 @@ window.ResumableChunk = class ResumableChunk
     else if @xhr.readyState < 4
       # Status is really 'OPENED', 'HEADERS_RECEIVED' or 'LOADING' - meaning that stuff is happening
       return 'uploading'
-    else if @xhr.status is 200
+    else if @xhr.status in permanentSuccess
       return 'success'
     else if (@xhr.status in permanentErrors) or (@retries >= maxChunkRetries)
       #HTTP 415/500/501, permanent error

@@ -67,7 +67,7 @@
       maxChunkRetries:100,
       chunkRetryInterval:undefined,
       permanentErrors:[400, 404, 409, 415, 500, 501],
-      permanentSuccess:[200,201,204],
+      permanentSuccess:[200,201],
       maxFiles:undefined,
       withCredentials:false,
       xhrTimeout:0,
@@ -909,7 +909,7 @@
           return('uploading');
         } else {
           if($h.contains($.getOpt('permanentSuccess'), $.xhr.status)) {
-            // HTTP 200, 201 (created), 204 (no content) by default (permanent success)
+            // HTTP 200, 201 (created) (permanent success)
             return('success');
           } else if($h.contains($.getOpt('permanentErrors'), $.xhr.status) || $.retries >= $.getOpt('maxChunkRetries')) {
             // HTTP 400, 404, 409, 415, 500, 501 (permanent error)

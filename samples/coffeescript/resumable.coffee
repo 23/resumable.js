@@ -32,7 +32,7 @@ window.Resumable = class Resumable
       maxChunkRetries: undefined
       chunkRetryInterval: undefined
       permanentErrors: [415, 500, 501],
-      permanentSuccess:[200,201,204],
+      permanentSuccess:[200,201],
       maxFiles: undefined
       maxFilesErrorCallback: (files, errorCount)->
         #TODO @getOpt

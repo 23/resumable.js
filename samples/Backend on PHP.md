@@ -139,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (file_exists($chunk_file)) {
          header("HTTP/1.0 200 Ok");
        } else {
-         header("HTTP/1.0 404 Not Found");
+         header("HTTP/1.0 204 No Content");
        }
 }
 

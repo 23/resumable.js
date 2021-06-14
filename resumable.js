@@ -1,8 +1,8 @@
 /*
 * MIT Licensed
-* http://www.23developer.com/opensource
-* http://github.com/23/resumable.js
-* Steffen Tiedemann Christensen, steffen@23company.com
+* https://www.twentythree.com
+* https://github.com/23/resumable.js
+* Steffen Fagerström Christensen, steffen@twentythree.com
 */
 
 (function(){

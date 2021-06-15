@@ -1,0 +1,3 @@
+[submodule "samples/resumable-vue"]
+	path = samples/resumable-vue
+	url = git@github.com:AbrahamBrookes/resumable-vue.git

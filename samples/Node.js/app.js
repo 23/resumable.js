@@ -54,4 +54,7 @@ app.get('/resumable.js', function (req, res) {
   fs.createReadStream("../../resumable.js").pipe(res);
 });
 
-app.listen(3000);
+module.exports = app;
+if (require.main === module) {
+    app.listen(3000);
+}

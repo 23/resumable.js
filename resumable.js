@@ -1000,6 +1000,19 @@
         var input;
         if(domNode.tagName==='INPUT' && domNode.type==='file'){
           input = domNode;
+        } else if(domNode.tagName==='LABEL'){
+            if (domNode.htmlFor)
+                input = document.getElementById(domNode.htmlFor);
+            if (!input || input.tagName!=='INPUT' || input.type!=='file') {
+                domNode.setAttribute('for', domNode.id + 'input');
+                input = document.createElement('input');
+                input.setAttribute('id', domNode.id + 'input');
+                input.setAttribute('type', 'file');
+                input.style.opacity = 0;
+                input.style.width = 0;
+                input.style.height = 0;
+                domNode.appendChild(input);
+            }
         } else {
           input = document.createElement('input');
           input.setAttribute('type', 'file');

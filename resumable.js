@@ -88,7 +88,11 @@
       fileType: [],
       fileTypeErrorCallback: function(file, errorCount) {
         alert(file.fileName||file.name +' has type not allowed, please upload files of type ' + $.getOpt('fileType') + '.');
-      }
+      },
+	  maxTotalAttachmentSize: undefined,
+	  maxTotalAttachmentSizeErrorCallback:function(file, errorCount) {
+		alert('Total uploaded files is too large, please upload less than ' + $h.formatSize($.getOpt('maxTotalAttachmentSize')) + ' size of files in total.');
+	  }
     };
     $.opts = opts||{};
     $.getOpt = function(o) {
@@ -372,7 +376,7 @@
     var appendFilesFromFileList = function(fileList, event){
       // check for uploading too many files
       var errorCount = 0;
-      var o = $.getOpt(['maxFiles', 'minFileSize', 'maxFileSize', 'maxFilesErrorCallback', 'minFileSizeErrorCallback', 'maxFileSizeErrorCallback', 'fileType', 'fileTypeErrorCallback']);
+      var o = $.getOpt(['maxFiles', 'minFileSize', 'maxFileSize', 'maxFilesErrorCallback', 'minFileSizeErrorCallback', 'maxFileSizeErrorCallback', 'fileType', 'fileTypeErrorCallback', 'maxTotalAttachmentSize', 'maxTotalAttachmentSizeErrorCallback']);
       if (typeof(o.maxFiles)!=='undefined' && o.maxFiles<(fileList.length+$.files.length)) {
         // if single-file upload, file is already added, and trying to add 1 new file, simply replace the already-added file
         if (o.maxFiles===1 && $.files.length===1 && fileList.length===1) {
@@ -382,6 +386,21 @@
           return false;
         }
       }
+	  
+	var totalSize = 0;
+	$.files.forEach(function (resumeableFile) {
+		totalSize += resumeableFile.file.size;
+	});
+	jQuery.each(fileList, function(k, v) {
+		if (k != 'length') {
+			totalSize += v.size;
+			}
+	});
+	if (typeof (o.maxTotalAttachmentSize) != 'undefined' && totalSize > o.maxTotalAttachmentSize) {
+        o.maxTotalAttachmentSizeErrorCallback(fileList, errorCount++);
+        return false;
+    }
+
       var files = [], filesSkipped = [], remaining = fileList.length;
       var decreaseReamining = function(){
         if(!--remaining){

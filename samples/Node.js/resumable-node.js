@@ -7,6 +7,7 @@ module.exports = resumable = function(temporaryFolder){
   $.temporaryFolder = temporaryFolder;
   $.maxFileSize = null;
   $.fileParameterName = 'file';
+  $.files = new Map();
 
   try {
     fs.mkdirSync($.temporaryFolder);
@@ -106,12 +107,16 @@ module.exports = resumable = function(temporaryFolder){
     }
     var validation = validateRequest(chunkNumber, chunkSize, totalSize, identifier, files[$.fileParameterName].size);
     if(validation=='valid') {
+      if (chunkNumber === 1) {
+        $.files.clear();
+      }
       var chunkFilename = getChunkFilename(chunkNumber, identifier);
 
       // Save the chunk (TODO: OVERWRITE)
       fs.rename(files[$.fileParameterName].path, chunkFilename, function(){
 
         // Do we have all the chunks?
+        $.files[chunkNumber] = chunkFilename;
         var currentTestChunk = 1;
         var numberOfChunks = Math.max(Math.floor(totalSize/(chunkSize*1.0)), 1);
         var testChunkExists = function(){
@@ -119,6 +124,12 @@ module.exports = resumable = function(temporaryFolder){
                 if(exists){
                   currentTestChunk++;
                   if(currentTestChunk>numberOfChunks) {
+                    for (var i = 0; i < numberOfChunks; ++i) {
+                      var file_path = $.files[i + 1];
+                      var content = fs.readFileSync(file_path);
+                      fs.appendFile(path.join($.temporaryFolder, filename), content);
+                      fs.unlinkSync(file_path);
+                    }
                     callback('done', filename, original_filename, identifier);
                   } else {
                     // Recursion
@@ -127,8 +138,8 @@ module.exports = resumable = function(temporaryFolder){
                 } else {
                   callback('partly_done', filename, original_filename, identifier);
                 }
-              });
-            }
+          });
+        }
         testChunkExists();
       });
     } else {

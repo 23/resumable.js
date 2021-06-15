@@ -63,7 +63,7 @@ public class UploadServlet extends HttpServlet {
         if (info.uploadedChunks.contains(new ResumableInfo.ResumableChunkNumber(resumableChunkNumber))) {
             response.getWriter().print("Uploaded."); //This Chunk has been Uploaded.
         } else {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         }
     }
 

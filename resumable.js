@@ -67,6 +67,7 @@
       maxChunkRetries:100,
       chunkRetryInterval:undefined,
       permanentErrors:[400, 401, 403, 404, 409, 415, 500, 501],
+      permanentSuccess:[200,201],
       maxFiles:undefined,
       withCredentials:false,
       xhrTimeout:0,
@@ -911,8 +912,8 @@
           // Status is really 'OPENED', 'HEADERS_RECEIVED' or 'LOADING' - meaning that stuff is happening
           return('uploading');
         } else {
-          if($.xhr.status == 200 || $.xhr.status == 201) {
-            // HTTP 200, 201 (created)
+          if($h.contains($.getOpt('permanentSuccess'), $.xhr.status)) {
+            // HTTP 200, 201 (created) (permanent success)
             return('success');
           } else if($h.contains($.getOpt('permanentErrors'), $.xhr.status) || $.retries >= $.getOpt('maxChunkRetries')) {
             // HTTP 400, 404, 409, 415, 500, 501 (permanent error)

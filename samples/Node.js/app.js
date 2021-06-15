@@ -1,45 +1,49 @@
 var express = require('express');
 var resumable = require('./resumable-node.js')('/tmp/resumable.js/');
 var app = express();
+var multipart = require('connect-multiparty');
+var crypto = require('crypto');
 
 // Host most stuff in the public folder
 app.use(express.static(__dirname + '/public'));
 
-app.use(express.bodyParser());
+app.use(multipart());
+
+// Uncomment to allow CORS
+// app.use(function (req, res, next) {
+//    res.header('Access-Control-Allow-Origin', '*');
+//    next();
+// });
+
+// retrieve file id. invoke with /fileid?filename=my-file.jpg
+app.get('/fileid', function(req, res){
+  if(!req.query.filename){
+    return res.status(500).end('query parameter missing');
+  }
+  // create md5 hash from filename
+  res.end(
+    crypto.createHash('md5')
+    .update(req.query.filename)
+    .digest('hex')
+  );
+});
 
 // Handle uploads through Resumable.js
 app.post('/upload', function(req, res){
-
-	// console.log(req);
-
     resumable.post(req, function(status, filename, original_filename, identifier){
         console.log('POST', status, original_filename, identifier);
 
-        res.send(status, {
-            // NOTE: Uncomment this funciton to enable cross-domain request.
-            //'Access-Control-Allow-Origin': '*'
-        });
+        res.send(status);
     });
 });
-
-// Handle cross-domain requests
-// NOTE: Uncomment this funciton to enable cross-domain request.
-/*
-  app.options('/upload', function(req, res){
-  console.log('OPTIONS');
-  res.send(true, {
-  'Access-Control-Allow-Origin': '*'
-  }, 200);
-  });
-*/
 
 // Handle status checks on chunks through Resumable.js
 app.get('/upload', function(req, res){
     resumable.get(req, function(status, filename, original_filename, identifier){
         console.log('GET', status);
-        res.send(status, (status == 'found' ? 200 : 404));
-      });
-  });
+        res.send((status == 'found' ? 200 : 404), status);
+    });
+});
 
 app.get('/download/:identifier', function(req, res){
 	resumable.write(req.params.identifier, res);

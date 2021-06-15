@@ -17,7 +17,7 @@
 
       <hr/>
 
-      <h3>Demo</h3>
+      <h3>Demo with async id generation</h3>
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
       <script src="resumable.js"></script>
 
@@ -28,7 +28,7 @@
       <div class="resumable-drop" ondragenter="jQuery(this).addClass('resumable-dragover');" ondragend="jQuery(this).removeClass('resumable-dragover');" ondrop="jQuery(this).removeClass('resumable-dragover');">
         Drop video files here to upload or <a class="resumable-browse"><u>select from your computer</u></a>
       </div>
-      
+
       <div class="resumable-progress">
         <table>
           <tr>
@@ -37,22 +37,28 @@
             <td class="progress-pause" nowrap="nowrap">
               <a href="#" onclick="r.upload(); return(false);" class="progress-resume-link"><img src="resume.png" title="Resume upload" /></a>
               <a href="#" onclick="r.pause(); return(false);" class="progress-pause-link"><img src="pause.png" title="Pause upload" /></a>
+              <a href="#" onclick="r.cancel(); return(false);" class="progress-cancel-link"><img src="cancel.png" title="Cancel upload" /></a>
             </td>
           </tr>
         </table>
       </div>
-      
+
       <ul class="resumable-list"></ul>
 
       <script>
+        function generateId(file){
+          // generate id by asynchronously calling express endpoint
+          return $.get("/fileid?filename=" + encodeURI(file.name));
+        }
         var r = new Resumable({
-            target:'/test/upload',
+            target:'/upload',
             chunkSize:1*1024*1024,
             simultaneousUploads:4,
-            testChunks: true,
+            testChunks:false,
             throttleProgressCallbacks:1,
-            method: "octet"
+            generateUniqueIdentifier:generateId
           });
+
         // Resumable.js isn't supported, fall back on a different method
         if(!r.support) {
           $('.resumable-error').show();
@@ -97,12 +103,17 @@
               $('.resumable-file-'+file.uniqueIdentifier+' .resumable-file-progress').html(Math.floor(file.progress()*100) + '%');
               $('.progress-bar').css({width:Math.floor(r.progress()*100) + '%'});
             });
+          r.on('cancel', function(){
+            $('.resumable-file-progress').html('canceled');
+          });
+          r.on('uploadStart', function(){
+              // Show pause, hide resume
+              $('.resumable-progress .progress-resume-link').hide();
+              $('.resumable-progress .progress-pause-link').show();
+          });
         }
       </script>
 
     </div>
   </body>
 </html>
-
-
-    

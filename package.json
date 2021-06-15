@@ -1,0 +1,25 @@
+{
+  "name": "resumablejs",
+  "version": "1.1.2",
+  "description": "A JavaScript library for providing multiple simultaneous, stable, fault-tolerant and resumable/restartable uploads via the HTML5 File API.",
+  "main": "resumable.js",
+  "types": "./resumable.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/23/resumable.js.git"
+  },
+  "keywords": [
+    "html5",
+    "file",
+    "upload"
+  ],
+  "author": "https://github.com/23/resumable.js/graphs/contributors",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/23/resumable.js/issues"
+  },
+  "homepage": "https://github.com/23/resumable.js#readme"
+}

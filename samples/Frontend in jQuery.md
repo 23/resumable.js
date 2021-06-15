@@ -1,7 +1,7 @@
 # Resumable.js front-end in jQuery
 [@steffentchr](http://twitter.com/steffentchr)
 
-This library is originally built to work with [23 Video](http://www.23video.com), and the 23 uploader is a good example of:
+This library is originally built to work with [TwentyThree](https://www.twentythree.com), and the 23 uploader is a good example of:
 
 * Selecing files or drag-dropping them in
 * Using events to build UI and progress bar
@@ -11,16 +11,16 @@ This library is originally built to work with [23 Video](http://www.23video.com)
 * Building thumbnails from chunks to give better feedback during upload
 * Falling back to alternative upload options when Resumable.js is not supported.
 
-There's [a free trial for 23 Video](http://www.23video.com/signup) if
+There's [a free trial for TwentyThree](https://www.twentythree.com) if
 you want to see this in action, but the pieces are:
 
 * Resumable.js itself.
-* [A piece of jQuery](http://reinvent.23video.com/resources/um/script/resumable-uploader.js), which sets up Resumable.js and glues it to the UI.
-* [An API methods](http://www.23developer.com/api/photo-redeem-upload-token) with support for Resumable.js chunks and feedback.
+* [A piece of jQuery](https://videos.twentythree.com/resources/um/script/resumable-uploader.js), which sets up Resumable.js and glues it to the UI.
+* [An API methods](https://www.twentythree.com/api/photo-redeem-upload-token) with support for Resumable.js chunks and feedback.
 * Finally, some HTML elements for the glue script to use.
 
 ```html
-<div class="resumable-drop" ondragenter="jQuery(this).addClass('resumable-dragover');" ondragend="jQuery(this).removeClass('resumable-dragover');" ondrop="jQuery(this).removeClass('resumable-dragover');">
+<div class="resumable-drop">
   Drop video files here to upload or <a class="resumable-browse"><u>select from your computer</u></a>
 </div>
 

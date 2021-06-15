@@ -1,0 +1,13 @@
+{
+	"name": "resumable.js",
+	"main": "resumable.js",
+	"ignore": [
+		".gitignore",
+                "*.md"
+	],
+        "keywords": [
+            "HTML5 File API",
+            "Upload",
+            "Large files"
+        ]
+}

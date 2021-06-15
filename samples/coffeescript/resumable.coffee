@@ -11,6 +11,15 @@ window.Resumable = class Resumable
       forceChunkSize: false
       simultaneousUploads: 3
       fileParameterName: 'file'
+      chunkNumberParameterName: 'resumableChunkNumber'
+      chunkSizeParameterName: 'resumableChunkSize'
+      currentChunkSizeParameterName: 'resumableCurrentChunkSize'
+      totalSizeParameterName: 'resumableTotalSize'
+      typeParameterName: 'resumableType'
+      identifierParameterName: 'resumableIdentifier'
+      fileNameParameterName: 'resumableFilename'
+      relativePathParameterName: 'resumableRelativePath'
+      totalChunksParameterName: 'resumableTotalChunks'
       throttleProgressCallbacks: 0.5
       query: {}
       headers: {}
@@ -36,6 +45,7 @@ window.Resumable = class Resumable
       maxFileSizeErrorCallback: (file, errorCount) ->
         #TODO @getOpt
         alert(file.fileName +' is too large, please upload files less than ' + @formatSize(@getOpt('maxFileSize')) + '.')
+      dragOverClass: 'dragover'
     @opt = {} if not @opt?
     @events = []
 
@@ -352,13 +362,15 @@ window.ResumableChunk = class ResumableChunk
         pushParams key, value
 
     #Add extra data to identify chunk
-    @pushParams params, 'resumableChunkNumber',      (@offset + 1)
-    @pushParams params, 'resumableChunkSize',        @chunkSize
-    @pushParams params, 'resumableCurrentChunkSize', (@endByte - @startByte)
-    @pushParams params, 'resumableTotalSize',        @fileObjSize
-    @pushParams params, 'resumableIdentifier',       @fileObj.uniqueIdentifier
-    @pushParams params, 'resumableFilename',         @fileObj.fileName
-    @pushParams params, 'resumableRelativePath',     @fileObj.relativePath
+    @pushParams params, (@getOpt 'chunkNumberParameterName'),      (@offset + 1)
+    @pushParams params, (@getOpt 'chunkSizeParameterName'),        @chunkSize
+    @pushParams params, (@getOpt 'currentChunkSizeParameterName'), (@endByte - @startByte)
+    @pushParams params, (@getOpt 'totalSizeParameterName'),        @fileObjSize
+    #TODO: @pushParams params, (@getOpt 'typeParameterName'),
+    @pushParams params, (@getOpt 'identifierParameterName'),       @fileObj.uniqueIdentifier
+    @pushParams params, (@getOpt 'fileNameParameterName'),         @fileObj.fileName
+    @pushParams params, (@getOpt 'relativePathParameterName'),     @fileObj.relativePath
+    #TODO: @pushParams params, (@getOpt 'totalChunksParameterName'),
 
     #Append the relevant chunk and send it
     @xhr.open 'GET', @getOpt('target') + '?' + params.join('&')
@@ -415,7 +427,7 @@ window.ResumableChunk = class ResumableChunk
         @callback 'retry', @message()
         @abort()
         @retries++
-        retryInterval = getOpt('chunkRetryInterval')
+        retryInterval = @getOpt('chunkRetryInterval')
         if retryInterval?
           setTimeout @send, retryInterval
 
@@ -442,15 +454,17 @@ window.ResumableChunk = class ResumableChunk
     target = @getOpt 'target'
 
     #Set up the basic query data from Resumable
-    query =
-      resumableChunkNumber:       @offset+1
-      resumableChunkSize:         @getOpt('chunkSize')
-      resumableCurrentChunkSize:  @endByte - @startByte
-      resumableTotalSize:         @fileObjSize
-      resumableIdentifier:        @fileObj.uniqueIdentifier
-      resumableFilename:          @fileObj.fileName
-      resumableRelativePath:      @fileObj.relativePath
+    query = {}
 
+    query[(@getOpt 'chunkNumber')] =       @offset+1
+    query[(@getOpt 'chunkSize')] =         @getOpt('chunkSize')
+    query[(@getOpt 'currentChunkSize')] =  @endByte - @startByte
+    query[(@getOpt 'totalSize')] =         @fileObjSize
+    #TODO: query[(@getOpt 'typeParameterName')] =
+    query[(@getOpt 'identifier')] =        @fileObj.uniqueIdentifier
+    query[(@getOpt 'filename')] =          @fileObj.fileName
+    query[(@getOpt 'relativePath')] =      @fileObj.relativePath
+    #TODO: query[(@getOpt 'totalChunksParameterName')] =
 
     customQuery = @getOpt 'query'
     customQuery = customQuery(@fileObj, @) if typeof customQuery is 'function'

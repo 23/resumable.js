@@ -1,4 +1,3 @@
-import ResumableChunk from './resumableChunk';
 import ResumableFile from './resumableFile';
 import {ResumableHelpers as Helpers} from './resumableHelpers';
 
@@ -23,9 +22,40 @@ export default class Resumable {
 
 	get defaults() {
 		return {
-			chunkSize: 1 * 1024 * 1024, // 1 MB
-			forceChunkSize: false,
+			// General
+			forceChunkSize: false, // Chunk & File
+
+			// Resumable
 			simultaneousUploads: 3,
+			dragOverClass: 'dragover',
+			prioritizeFirstAndLastChunk: false,
+			clearInput: true,
+			maxFiles: undefined,
+			maxFilesErrorCallback(files, errorCount) {
+				var maxFiles = this.getOpt('maxFiles');
+				alert('Please upload no more than ' + maxFiles + ' file' + (maxFiles === 1 ? '' : 's') + ' at a time.');
+			},
+			minFileSize: 1,
+			minFileSizeErrorCallback(file, errorCount) {
+				alert(file.fileName || file.name + ' is too small, please upload files larger than ' +
+					Helpers.formatSize(this.getOpt('minFileSize')) + '.');
+			},
+			maxFileSize: undefined,
+			maxFileSizeErrorCallback(file, errorCount) {
+				alert(file.fileName || file.name + ' is too large, please upload files less than ' +
+					Helpers.formatSize(this.getOpt('maxFileSize')) + '.');
+			},
+			fileType: [],
+			fileTypeErrorCallback(file, errorCount) {
+				alert(file.fileName || file.name + ' has type not allowed, please upload files of type ' +
+					this.getOpt('fileType') + '.');
+			},
+
+			// File
+			preprocessFile: null,
+
+			// Chunk
+			chunkSize: 1 * 1024 * 1024, // 1 MB
 			fileParameterName: 'file',
 			chunkNumberParameterName: 'resumableChunkNumber',
 			chunkSizeParameterName: 'resumableChunkSize',
@@ -36,50 +66,27 @@ export default class Resumable {
 			fileNameParameterName: 'resumableFilename',
 			relativePathParameterName: 'resumableRelativePath',
 			totalChunksParameterName: 'resumableTotalChunks',
-			dragOverClass: 'dragover',
 			throttleProgressCallbacks: 0.5,
 			query: {},
 			headers: {},
 			preprocess: null,
-			preprocessFile: null,
 			method: 'multipart',
 			uploadMethod: 'POST',
 			testMethod: 'GET',
-			prioritizeFirstAndLastChunk: false,
-			target: '/',
-			testTarget: null,
 			parameterNamespace: '',
 			testChunks: true,
-			generateUniqueIdentifier: null,
-			getTarget: null,
 			maxChunkRetries: 100,
 			chunkRetryInterval: undefined,
 			permanentErrors: [400, 401, 403, 404, 409, 415, 500, 501],
-			maxFiles: undefined,
 			withCredentials: false,
 			xhrTimeout: 0,
-			clearInput: true,
 			chunkFormat: 'blob',
 			setChunkTypeFromFile: false,
-			maxFilesErrorCallback: function(files, errorCount) {
-				var maxFiles = this.getOpt('maxFiles');
-				alert('Please upload no more than ' + maxFiles + ' file' + (maxFiles === 1 ? '' : 's') + ' at a time.');
-			},
-			minFileSize: 1,
-			minFileSizeErrorCallback: function(file, errorCount) {
-				alert(file.fileName || file.name + ' is too small, please upload files larger than ' +
-					Helpers.formatSize(this.getOpt('minFileSize')) + '.');
-			},
-			maxFileSize: undefined,
-			maxFileSizeErrorCallback: function(file, errorCount) {
-				alert(file.fileName || file.name + ' is too large, please upload files less than ' +
-					Helpers.formatSize(this.getOpt('maxFileSize')) + '.');
-			},
-			fileType: [],
-			fileTypeErrorCallback: function(file, errorCount) {
-				alert(file.fileName || file.name + ' has type not allowed, please upload files of type ' +
-					this.getOpt('fileType') + '.');
-			},
+			target: '/',
+			testTarget: null,
+
+			// Helpers
+			generateUniqueIdentifier: null, // & Resumable
 		};
 	}
 
@@ -90,7 +97,7 @@ export default class Resumable {
 	 * @param {File[]} items list of files to append new items to
 	 * @param {Function} cb callback invoked when item is processed
 	 */
-	static processItem(item, path, items, cb) {
+	static processItem(item, path, items, cb = () => {}) {
 		var entry;
 		if (item.isFile) {
 			// file provided
@@ -111,7 +118,7 @@ export default class Resumable {
 		}
 		if (entry && entry.isDirectory) {
 			// directory provided, process it
-			return processDirectory(entry, path + entry.name + '/', items, cb);
+			return this.processDirectory(entry, path + entry.name + '/', items, cb);
 		}
 		if ('function' === typeof item.getAsFile) {
 			// item represents a File object, convert it
@@ -137,8 +144,8 @@ export default class Resumable {
 			return cb();
 		}
 		// invoke current function, pass the next part as continuation
-		items[0](function() {
-			processCallbacks(items.slice(1), cb);
+		items[0](() => {
+			this.processCallbacks(items.slice(1), cb);
 		});
 	}
 
@@ -153,23 +160,23 @@ export default class Resumable {
 		var dirReader = directory.createReader();
 		var allEntries = [];
 
-		function readEntries() {
-			dirReader.readEntries(function(entries) {
+		const readEntries = () => {
+			dirReader.readEntries((entries) => {
 				if (entries.length) {
 					allEntries = allEntries.concat(entries);
 					return readEntries();
 				}
 
 				// process all conversion callbacks, finally invoke own one
-				processCallbacks(
-					allEntries.map(function(entry) {
+				this.processCallbacks(
+					allEntries.map((entry) => {
 						// bind all properties except for callback
-						return processItem.bind(null, entry, path, items);
+						return this.processItem(entry, path, items);
 					}),
 					cb,
 				);
 			});
-		}
+		};
 
 		readEntries();
 	}
@@ -185,19 +192,19 @@ export default class Resumable {
 		}
 		this.fire('beforeAdd');
 		var files = [];
-		processCallbacks(
-			Array.prototype.map.call(items, function(item) {
+		this.processCallbacks(
+			Array.prototype.map.call(items, (item) => {
 				// bind all properties except for callback
 				var entry = item;
 				if ('function' === typeof item.webkitGetAsEntry) {
 					entry = item.webkitGetAsEntry();
 				}
-				return processItem.bind(null, entry, '', files);
+				return this.processItem(entry, '', files);
 			}),
-			function() {
+			() => {
 				if (files.length) {
 					// at least one file found
-					appendFilesFromFileList(files, event);
+					this.appendFilesFromFileList(files, event);
 				}
 			},
 		);
@@ -220,38 +227,17 @@ export default class Resumable {
 		}
 	}
 
-	getOpt(o) {
-		var thisopt = this;
+	getOpt(option) {
 		// Get multiple option if passed an array
-		if (o instanceof Array) {
+		if (option instanceof Array) {
 			var options = {};
-			Helpers.each(o, (option) => {
-				options[option] = this.getOpt(option);
+			Helpers.each(option, (o) => {
+				options[o] = this.getOpt(o);
 			});
 			return options;
 		}
 		// Otherwise, just return a simple option
-		if (thisopt instanceof ResumableChunk) {
-			if (typeof thisopt.opts[o] !== 'undefined') {
-				return thisopt.opts[o];
-			} else {
-				thisopt = thisopt.fileObj;
-			}
-		}
-		if (thisopt instanceof ResumableFile) {
-			if (typeof thisopt.opts[o] !== 'undefined') {
-				return thisopt.opts[o];
-			} else {
-				thisopt = thisopt.resumableObj;
-			}
-		}
-		if (thisopt instanceof Resumable) {
-			if (typeof thisopt.opts[o] !== 'undefined') {
-				return thisopt.opts[o];
-			} else {
-				return thisopt.defaults[o];
-			}
-		}
+		return this.opts[option] !== undefined ? this.opts[option] : this.defaults[o];
 	}
 
 	indexOf(array, obj) {
@@ -290,11 +276,11 @@ export default class Resumable {
 
 		//handle dropped things as items if we can (this lets us deal with folders nicer in some cases)
 		if (e.dataTransfer && e.dataTransfer.items) {
-			loadFiles(e.dataTransfer.items, e);
+			this.loadFiles(e.dataTransfer.items, e);
 		}
 		//else handle them as files
 		else if (e.dataTransfer && e.dataTransfer.files) {
-			loadFiles(e.dataTransfer.files, e);
+			this.loadFiles(e.dataTransfer.files, e);
 		}
 	}
 
@@ -527,22 +513,22 @@ export default class Resumable {
 	assignDrop(domNodes) {
 		if (typeof (domNodes.length) == 'undefined') domNodes = [domNodes];
 
-		Helpers.each(domNodes, function(domNode) {
-			domNode.addEventListener('dragover', onDragOverEnter, false);
-			domNode.addEventListener('dragenter', onDragOverEnter, false);
-			domNode.addEventListener('dragleave', onDragLeave, false);
-			domNode.addEventListener('drop', onDrop, false);
+		Helpers.each(domNodes, (domNode) => {
+			domNode.addEventListener('dragover', this.onDragOverEnter, false);
+			domNode.addEventListener('dragenter', this.onDragOverEnter, false);
+			domNode.addEventListener('dragleave', this.onDragLeave, false);
+			domNode.addEventListener('drop', this.onDrop, false);
 		});
 	}
 
 	unAssignDrop(domNodes) {
 		if (typeof (domNodes.length) == 'undefined') domNodes = [domNodes];
 
-		Helpers.each(domNodes, function(domNode) {
-			domNode.removeEventListener('dragover', onDragOverEnter);
-			domNode.removeEventListener('dragenter', onDragOverEnter);
-			domNode.removeEventListener('dragleave', onDragLeave);
-			domNode.removeEventListener('drop', onDrop);
+		Helpers.each(domNodes, (domNode) => {
+			domNode.removeEventListener('dragover', this.onDragOverEnter);
+			domNode.removeEventListener('dragenter', this.onDragOverEnter);
+			domNode.removeEventListener('dragleave', this.onDragLeave);
+			domNode.removeEventListener('drop', this.onDrop);
 		});
 	}
 
@@ -559,6 +545,7 @@ export default class Resumable {
 			this.uploadNextChunk();
 		}
 	}
+
 	pause() {
 		// Resume all chunks currently being uploaded
 		Helpers.each(this.files, function(file) {
@@ -566,6 +553,7 @@ export default class Resumable {
 		});
 		this.fire('pause');
 	};
+
 	cancel() {
 		this.fire('beforeCancel');
 		for (var i = this.files.length - 1; i >= 0; i--) {
@@ -573,6 +561,7 @@ export default class Resumable {
 		}
 		this.fire('cancel');
 	};
+
 	progress() {
 		var totalDone = 0;
 		var totalSize = 0;
@@ -581,14 +570,17 @@ export default class Resumable {
 			totalDone += file.progress() * file.size;
 			totalSize += file.size;
 		});
-		return (totalSize > 0 ? totalDone / totalSize : 0);
+		return totalSize > 0 ? totalDone / totalSize : 0;
 	};
+
 	addFile(file, event) {
-		appendFilesFromFileList([file], event);
+		this.appendFilesFromFileList([file], event);
 	};
+
 	addFiles(files, event) {
-		appendFilesFromFileList(files, event);
+		this.appendFilesFromFileList(files, event);
 	};
+
 	removeFile(file) {
 		for (var i = this.files.length - 1; i >= 0; i--) {
 			if (this.files[i] === file) {
@@ -596,19 +588,13 @@ export default class Resumable {
 			}
 		}
 	};
+
 	getFromUniqueIdentifier(uniqueIdentifier) {
-		var ret = false;
-		Helpers.each(this.files, function(f) {
-			if (f.uniqueIdentifier == uniqueIdentifier) ret = f;
-		});
-		return (ret);
+		return _.find(this.files, {uniqueIdentifier})
 	};
+
 	getSize() {
-		var totalSize = 0;
-		Helpers.each(this.files, function(file) {
-			totalSize += file.size;
-		});
-		return (totalSize);
+		this.files.reduce((accumulator, file) => accumulator + file.size, 0);
 	}
 
 	handleDropEvent(e) {

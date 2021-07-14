@@ -55,19 +55,26 @@ export default class ResumableHelpers {
 		}
 	}
 
-	static getTarget(request, params) {
-		var target = $.getOpt('target');
+	/**
+	 * Get the target url for the specified request type and params
+	 * @param {string} requestType
+	 * @param {string} sendTarget
+	 * @param {string}testTarget
+	 * @param {Object} params
+	 * @param {string} parameterNamespace
+	 */
+	static getTarget(requestType, sendTarget, testTarget, params, parameterNamespace = '') {
+		let target = sendTarget;
 
-		if (request === 'test' && $.getOpt('testTarget')) {
-			target = $.getOpt('testTarget') === '/' ? $.getOpt('target') : $.getOpt('testTarget');
+		if (requestType === 'test' && testTarget) {
+			target = testTarget === '/' ? sendTarget : testTarget;
 		}
 
-		if (typeof target === 'function') {
-			return target(params);
-		}
-
-		var separator = target.indexOf('?') < 0 ? '?' : '&';
-		var joinedParams = params.join('&');
+		let separator = target.indexOf('?') < 0 ? '?' : '&';
+		let joinedParams = Object.entries(params).map(([key, value]) => [
+			encodeURIComponent(parameterNamespace + key),
+			encodeURIComponent(value),
+		].join('=')).join('&');
 
 		if (joinedParams) target = target + separator + joinedParams;
 

@@ -5,7 +5,6 @@ import {ResumableHelpers as Helpers} from './resumableHelpers';
 export default class ResumableFile {
 	constructor(resumableObj, file, uniqueIdentifier) {
 		this.opts = {};
-		this.getOpt = resumableObj.getOpt;
 		this._prevProgress = 0;
 		this.resumableObj = resumableObj;
 		this.file = file;
@@ -17,6 +16,9 @@ export default class ResumableFile {
 		this.container = '';
 		this.preprocessState = 0; // 0 = unprocessed, 1 = processing, 2 = finished
 
+		// Default Options
+		this.preprocessFile = null;
+
 		// Main code to set up a file object with chunks,
 		// packaged to be able to handle retries if needed.
 		this.chunks = [];
@@ -26,6 +28,10 @@ export default class ResumableFile {
 		this.bootstrap();
 		return this;
 	}
+
+	get pause() {
+		return this._pause;
+	};
 
 	// Callback when something happens within the chunk
 	chunkEvent(event, message) {
@@ -149,7 +155,7 @@ export default class ResumableFile {
 		return !outstanding;
 	};
 
-	pause(pause) {
+	set pause(pause) {
 		if (pause === undefined) {
 			this._pause = !this._pause;
 		} else {
@@ -157,9 +163,19 @@ export default class ResumableFile {
 		}
 	};
 
-	isPaused() {
-		return this._pause;
-	};
+	getOpt(option) {
+		// Get multiple option if passed an array
+		if (option instanceof Array) {
+			var collectedOptions = {};
+			Helpers.each(option, (o) => {
+				collectedOptions[o] = this.getOpt(o);
+			});
+			return collectedOptions;
+		}
+
+		// Otherwise, just return a simple option
+		return this.opts[option] !== undefined ? this.opts[option] : this.resumableObj.getOpt(option);
+	}
 
 	preprocessFinished() {
 		this.preprocessState = 2;
@@ -167,29 +183,30 @@ export default class ResumableFile {
 	};
 
 	upload() {
-		var found = false;
-		if (this.isPaused() === false) {
-			var preprocess = this.getOpt('preprocessFile');
-			if (typeof preprocess === 'function') {
-				switch (this.preprocessState) {
-					case 0:
-						this.preprocessState = 1;
-						preprocess(this);
-						return true;
-					case 1:
-						return true;
-					case 2:
-						break;
-				}
-			}
-			Helpers.each(this.chunks, function(chunk) {
-				if (chunk.status() === 'pending' && chunk.preprocessState !== 1) {
-					chunk.send();
-					found = true;
-					return false;
-				}
-			});
+		let found = false;
+		if (this.pause) {
+			return false;
 		}
+		let preprocess = this.preprocessFile;
+		if (typeof preprocess === 'function') {
+			switch (this.preprocessState) {
+				case 0:
+					this.preprocessState = 1;
+					preprocess(this);
+					return true;
+				case 1:
+					return true;
+				case 2:
+					break;
+			}
+		}
+		Helpers.each(this.chunks, (chunk) => {
+			if (chunk.status() === 'pending' && chunk.preprocessState !== 1) {
+				chunk.send();
+				found = true;
+				return false;
+			}
+		});
 		return found;
 	};
 

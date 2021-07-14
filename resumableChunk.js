@@ -3,7 +3,6 @@ import {ResumableHelpers as Helpers} from './resumableHelpers';
 export default class ResumableChunk {
 	constructor(resumableObj, fileObj, offset, callback) {
 		this.opts = {};
-		this.getOpt = resumableObj.getOpt;
 		this.resumableObj = resumableObj;
 		this.fileObj = fileObj;
 		this.fileObjSize = fileObj.size;
@@ -17,16 +16,80 @@ export default class ResumableChunk {
 		this.preprocessState = 0; // 0 = unprocessed, 1 = processing, 2 = finished
 		this.markComplete = false;
 
+		// Default Options
+		this.chunkSize = 1 * 1024 * 1024;
+		this.fileParameterName = 'file';
+		this.chunkNumberParameterName = 'resumableChunkNumber';
+		this.chunkSizeParameterName = 'resumableChunkSize';
+		this.currentChunkSizeParameterName = 'resumableCurrentChunkSize';
+		this.totalSizeParameterName = 'resumableTotalSize';
+		this.typeParameterName = 'resumableType';
+		this.identifierParameterName = 'resumableIdentifier';
+		this.fileNameParameterName = 'resumableFilename';
+		this.relativePathParameterName = 'resumableRelativePath';
+		this.totalChunksParameterName = 'resumableTotalChunks';
+		this.throttleProgressCallbacks = 0.5;
+		this.query = {};
+		this.headers = {};
+		this.preprocess = null;
+		this.method = 'multipart';
+		this.uploadMethod = 'POST';
+		this.testMethod = 'GET';
+		this.parameterNamespace = '';
+		this.testChunks = true;
+		this.maxChunkRetries = 100;
+		this.chunkRetryInterval = undefined;
+		this.permanentErrors= [400, 401, 403, 404, 409, 415, 500, 501];
+		this.withCredentials = false;
+		this.xhrTimeout = 0;
+		this.chunkFormat = 'blob';
+		this.setChunkTypeFromFile = false;
+		this.target = '/';
+		this.testTarget = null;
+
 		// Computed properties
-		var chunkSize = this.getOpt('chunkSize');
 		this.loaded = 0;
-		this.startByte = this.offset * chunkSize;
-		this.endByte = Math.min(this.fileObjSize, (this.offset + 1) * chunkSize);
-		if (this.fileObjSize - this.endByte < chunkSize && !this.getOpt('forceChunkSize')) {
+		this.startByte = this.offset * this.chunkSize;
+		this.endByte = Math.min(this.fileObjSize, (this.offset + 1) * this.chunkSize);
+		if (this.fileObjSize - this.endByte < this.chunkSize && !this.forceChunkSize) {
 			// The last chunk will be bigger than the chunk size, but less than 2*chunkSize
 			this.endByte = this.fileObjSize;
 		}
 		this.xhr = null;
+	}
+
+	get formattedQuery() {
+		var customQuery = this.query;
+		if (typeof customQuery == 'function') customQuery = customQuery(this.fileObj, this);
+
+		// Add extra data to identify chunk
+		const extraData = {
+			// define key/value pairs for additional parameters
+			[this.chunkNumberParameterName]: this.offset + 1,
+			[this.chunkSizeParameterName]: this.chunkSize,
+			[this.currentChunkSizeParameterName]: this.endByte - this.startByte,
+			[this.totalSizeParameterName]: this.fileObjSize,
+			[this.typeParameterName]: this.fileObjType,
+			[this.identifierParameterName]: this.fileObj.uniqueIdentifier,
+			[this.fileNameParameterName]: this.fileObj.fileName,
+			[this.relativePathParameterName]: this.fileObj.relativePath,
+			[this.totalChunksParameterName]: this.fileObj.chunks.length,
+		};
+		return {...extraData, ...customQuery};
+	}
+
+	getOpt(option) {
+		// Get multiple option if passed an array
+		if (option instanceof Array) {
+			var options = {};
+			Helpers.each(option, (o) => {
+				options[o] = this.getOpt(o);
+			});
+			return options;
+		}
+
+		// Otherwise, just return a simple option
+		return this.opts[option] !== undefined ? this.opts[option] : this.fileObj.getOpt(option);
 	}
 
 	// test() makes a GET request without any data to see if the chunk has already been uploaded in a previous session
@@ -48,54 +111,33 @@ export default class ResumableChunk {
 		this.xhr.addEventListener('error', testHandler, false);
 		this.xhr.addEventListener('timeout', testHandler, false);
 
-		// Add data from the query options
-		var params = [];
-		var parameterNamespace = this.getOpt('parameterNamespace');
-		var customQuery = this.getOpt('query');
-		if (typeof customQuery == 'function') customQuery = customQuery(this.fileObj, this);
-		Helpers.each(customQuery, function(k, v) {
-			params.push([encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join('='));
-		});
-		// Add extra data to identify chunk
-		params = params.concat(
-			[
-				// define key/value pairs for additional parameters
-				['chunkNumberParameterName', this.offset + 1],
-				['chunkSizeParameterName', this.getOpt('chunkSize')],
-				['currentChunkSizeParameterName', this.endByte - this.startByte],
-				['totalSizeParameterName', this.fileObjSize],
-				['typeParameterName', this.fileObjType],
-				['identifierParameterName', this.fileObj.uniqueIdentifier],
-				['fileNameParameterName', this.fileObj.fileName],
-				['relativePathParameterName', this.fileObj.relativePath],
-				['totalChunksParameterName', this.fileObj.chunks.length],
-			].filter(function(pair) {
-				// include items that resolve to truthy values
-				// i.e. exclude false, null, undefined and empty strings
-				return this.getOpt(pair[0]);
-			}).map(function(pair) {
-				// map each key/value pair to its final form
-				return [
-					parameterNamespace + this.getOpt(pair[0]),
-					encodeURIComponent(pair[1]),
-				].join('=');
-			}),
-		);
 		// Append the relevant chunk and send it
-		this.xhr.open(this.getOpt('testMethod'), Helpers.getTarget('test', params));
-		this.xhr.timeout = this.getOpt('xhrTimeout');
-		this.xhr.withCredentials = this.getOpt('withCredentials');
+		this.xhr.open(this.testMethod, this.getTarget('test'));
+		this.xhr.timeout = this.xhrTimeout;
+		this.xhr.withCredentials = this.withCredentials;
 		// Add data from header options
-		var customHeaders = this.getOpt('headers');
+		this.setCustomHeaders();
+
+		this.xhr.send(null);
+	}
+
+	setCustomHeaders() {
+		if (!this.xhr) {
+			return;
+		}
+		let customHeaders = this.headers;
 		if (typeof customHeaders === 'function') {
 			customHeaders = customHeaders(this.fileObj, this);
 		}
 		Helpers.each(customHeaders, (k, v) => {
 			this.xhr.setRequestHeader(k, v);
 		});
-		this.xhr.send(null);
 	}
 
+	getTarget(requestType) {
+		return Helpers.getTarget(requestType, this.target, this.testTarget, this.formattedQuery,
+			this.parameterNamespace);
+	}
 
 	preprocessFinished() {
 		this.preprocessState = 2;
@@ -104,12 +146,12 @@ export default class ResumableChunk {
 
 	// send() uploads the actual data in a POST call
 	send() {
-		var preprocess = this.getOpt('preprocess');
+		let preprocess = this.preprocess;
 		if (typeof preprocess === 'function') {
 			switch (this.preprocessState) {
 				case 0:
 					this.preprocessState = 1;
-					preprocess($);
+					preprocess(this);
 					return;
 				case 1:
 					return;
@@ -117,7 +159,7 @@ export default class ResumableChunk {
 					break;
 			}
 		}
-		if (this.getOpt('testChunks') && !this.tested) {
+		if (this.testChunks && !this.tested) {
 			this.test();
 			return;
 		}
@@ -126,8 +168,8 @@ export default class ResumableChunk {
 		this.xhr = new XMLHttpRequest();
 
 		// Progress
-		this.xhr.upload.addEventListener('progress', function(e) {
-			if ((new Date) - this.lastProgressCallback > this.getOpt('throttleProgressCallbacks') * 1000) {
+		this.xhr.upload.addEventListener('progress', (e) => {
+			if ((new Date) - this.lastProgressCallback > this.throttleProgressCallbacks * 1000) {
 				this.callback('progress');
 				this.lastProgressCallback = (new Date);
 			}
@@ -138,16 +180,16 @@ export default class ResumableChunk {
 		this.callback('progress');
 
 		// Done (either done, failed or retry)
-		var doneHandler = function(e) {
+		let doneHandler = (e) => {
 			var status = this.status();
-			if (status == 'success' || status == 'error') {
+			if (status === 'success' || status === 'error') {
 				this.callback(status, this.message());
 				this.resumableObj.uploadNextChunk();
 			} else {
 				this.callback('retry', this.message());
 				this.abort();
 				this.retries++;
-				var retryInterval = this.getOpt('chunkRetryInterval');
+				var retryInterval = this.chunkRetryInterval;
 				if (retryInterval !== undefined) {
 					this.pendingRetry = true;
 					setTimeout(this.send, retryInterval);
@@ -161,86 +203,48 @@ export default class ResumableChunk {
 		this.xhr.addEventListener('timeout', doneHandler, false);
 
 		// Set up the basic query data from Resumable
-		var query = [
-			['chunkNumberParameterName', this.offset + 1],
-			['chunkSizeParameterName', this.getOpt('chunkSize')],
-			['currentChunkSizeParameterName', this.endByte - this.startByte],
-			['totalSizeParameterName', this.fileObjSize],
-			['typeParameterName', this.fileObjType],
-			['identifierParameterName', this.fileObj.uniqueIdentifier],
-			['fileNameParameterName', this.fileObj.fileName],
-			['relativePathParameterName', this.fileObj.relativePath],
-			['totalChunksParameterName', this.fileObj.chunks.length],
-		].filter(function(pair) {
-			// include items that resolve to truthy values
-			// i.e. exclude false, null, undefined and empty strings
-			return this.getOpt(pair[0]);
-		}).reduce(function(query, pair) {
-			// assign query key/value
-			query[this.getOpt(pair[0])] = pair[1];
-			return query;
-		}, {});
-		// Mix in custom data
-		var customQuery = this.getOpt('query');
-		if (typeof customQuery == 'function') customQuery = customQuery(this.fileObj, $);
-		Helpers.each(customQuery, function(k, v) {
-			query[k] = v;
-		});
-
-		var func = (this.fileObj.file.slice ?
+		let func = (this.fileObj.file.slice ?
 			'slice' :
 			(this.fileObj.file.mozSlice ? 'mozSlice' : (this.fileObj.file.webkitSlice ? 'webkitSlice' : 'slice')));
-		var bytes = this.fileObj.file[func](this.startByte, this.endByte,
-			this.getOpt('setChunkTypeFromFile') ? this.fileObj.file.type : '');
-		var data = null;
-		var params = [];
+		let bytes = this.fileObj.file[func](this.startByte, this.endByte,
+			this.setChunkTypeFromFile ? this.fileObj.file.type : '');
+		let data = null;
 
-		var parameterNamespace = this.getOpt('parameterNamespace');
-		if (this.getOpt('method') === 'octet') {
+		let parameterNamespace = this.parameterNamespace;
+		if (this.method === 'octet') {
 			// Add data from the query options
 			data = bytes;
-			Helpers.each(query, function(k, v) {
-				params.push([encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join('='));
-			});
 		} else {
 			// Add data from the query options
 			data = new FormData();
-			Helpers.each(query, function(k, v) {
+			Helpers.each(this.formattedQuery, function(k, v) {
 				data.append(parameterNamespace + k, v);
-				params.push([encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join('='));
 			});
-			if (this.getOpt('chunkFormat') === 'blob') {
-				data.append(parameterNamespace + this.getOpt('fileParameterName'), bytes, this.fileObj.fileName);
-			} else if (this.getOpt('chunkFormat') === 'base64') {
+			if (this.chunkFormat === 'blob') {
+				data.append(parameterNamespace + this.fileParameterName, bytes, this.fileObj.fileName);
+			} else if (this.chunkFormat === 'base64') {
 				var fr = new FileReader();
 				fr.onload = function(e) {
-					data.append(parameterNamespace + this.getOpt('fileParameterName'), fr.result);
+					data.append(parameterNamespace + this.fileParameterName, fr.result);
 					this.xhr.send(data);
 				};
 				fr.readAsDataURL(bytes);
 			}
 		}
 
-		var target = Helpers.getTarget('upload', params);
-		var method = this.getOpt('uploadMethod');
+		let target = this.getTarget('upload');
+		let method = this.uploadMethod;
 
 		this.xhr.open(method, target);
-		if (this.getOpt('method') === 'octet') {
+		if (this.method === 'octet') {
 			this.xhr.setRequestHeader('Content-Type', 'application/octet-stream');
 		}
-		this.xhr.timeout = this.getOpt('xhrTimeout');
-		this.xhr.withCredentials = this.getOpt('withCredentials');
+		this.xhr.timeout = this.xhrTimeout;
+		this.xhr.withCredentials = this.withCredentials;
 		// Add data from header options
-		var customHeaders = this.getOpt('headers');
-		if (typeof customHeaders === 'function') {
-			customHeaders = customHeaders(this.fileObj, $);
-		}
+		this.setCustomHeaders();
 
-		Helpers.each(customHeaders, function(k, v) {
-			this.xhr.setRequestHeader(k, v);
-		});
-
-		if (this.getOpt('chunkFormat') === 'blob') {
+		if (this.chunkFormat === 'blob') {
 			this.xhr.send(data);
 		}
 	}
@@ -256,28 +260,25 @@ export default class ResumableChunk {
 		if (this.pendingRetry) {
 			// if pending retry then that's effectively the same as actively uploading,
 			// there might just be a slight delay before the retry starts
-			return ('uploading');
+			return 'uploading';
 		} else if (this.markComplete) {
 			return 'success';
 		} else if (!this.xhr) {
-			return ('pending');
+			return 'pending';
 		} else if (this.xhr.readyState < 4) {
 			// Status is really 'OPENED', 'HEADERS_RECEIVED' or 'LOADING' - meaning that stuff is happening
-			return ('uploading');
+			return 'uploading';
+		} else if (this.xhr.status === 200 || this.xhr.status === 201) {
+			// HTTP 200, 201 (created)
+			return 'success';
+		} else if (Helpers.contains(this.permanentErrors, this.xhr.status) || this.retries >= this.maxChunkRetries) {
+			// HTTP 400, 404, 409, 415, 500, 501 (permanent error)
+			return 'error';
 		} else {
-			if (this.xhr.status === 200 || this.xhr.status === 201) {
-				// HTTP 200, 201 (created)
-				return ('success');
-			} else if (Helpers.contains(this.getOpt('permanentErrors'), this.xhr.status) || this.retries >=
-				this.getOpt('maxChunkRetries')) {
-				// HTTP 400, 404, 409, 415, 500, 501 (permanent error)
-				return ('error');
-			} else {
-				// this should never happen, but we'll reset and queue a retry
-				// a likely case for this would be 503 service unavailable
-				this.abort();
-				return ('pending');
-			}
+			// this should never happen, but we'll reset and queue a retry
+			// a likely case for this would be 503 service unavailable
+			this.abort();
+			return 'pending';
 		}
 	};
 
@@ -285,10 +286,9 @@ export default class ResumableChunk {
 		return this.xhr ? this.xhr.responseText : '';
 	};
 
-	progress(relative) {
-		if (typeof (relative) === 'undefined') relative = false;
-		var factor = (relative ? (this.endByte - this.startByte) / this.fileObjSize : 1);
-		if (this.pendingRetry) return (0);
+	progress(relative = false) {
+		var factor = relative ? (this.endByte - this.startByte) / this.fileObjSize : 1;
+		if (this.pendingRetry) return 0;
 		if ((!this.xhr || !this.xhr.status) && !this.markComplete) factor *= .95;
 		var s = this.status();
 		switch (s) {

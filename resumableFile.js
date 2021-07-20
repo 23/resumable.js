@@ -1,10 +1,11 @@
 // INTERNAL OBJECT TYPES
-import ResumableChunk from './resumableChunk';
-import {ResumableHelpers as Helpers} from './resumableHelpers';
+import ResumableChunk from './resumableChunk.js';
+import {ResumableHelpers as Helpers} from './resumableHelpers.js';
 
 export default class ResumableFile {
 	constructor(resumableObj, file, uniqueIdentifier) {
-		this.opts = {};
+		this.opts = options;
+		this.setOptions(options)
 		this._prevProgress = 0;
 		this.resumableObj = resumableObj;
 		this.file = file;
@@ -29,6 +30,17 @@ export default class ResumableFile {
 		return this;
 	}
 
+	/**
+	 * @param {{forceChunkSize: boolean, preprocessFile: null}} options
+	 */
+	setOptions(options) {
+		// Options
+		({
+			chunkSize: this.chunkSize = 1 * 1024 * 1024, // 1 MB
+			forceChunkSize: this.forceChunkSize = false,
+			preprocessFile: this.preprocessFile = null,
+		} = options);
+	}
 	get pause() {
 		return this._pause;
 	};
@@ -90,8 +102,8 @@ export default class ResumableFile {
 
 	retry() {
 		this.bootstrap();
-		var firedRetry = false;
-		this.resumableObj.on('chunkingComplete', function() {
+		let firedRetry = false;
+		this.resumableObj.on('chunkingComplete', () => {
 			if (!firedRetry) this.resumableObj.upload();
 			firedRetry = true;
 		});
@@ -103,8 +115,8 @@ export default class ResumableFile {
 		// Rebuild stack of chunks from file
 		this.chunks = [];
 		this._prevProgress = 0;
-		var round = this.getOpt('forceChunkSize') ? Math.ceil : Math.floor;
-		var maxOffset = Math.max(round(this.file.size / this.getOpt('chunkSize')), 1);
+		var round = this.forceChunkSize ? Math.ceil : Math.floor;
+		var maxOffset = Math.max(round(this.file.size / this.chunkSize), 1);
 		for (var offset = 0; offset < maxOffset; offset++) {
 			this.chunks.push(new ResumableChunk(this.resumableObj, this, offset, this.chunkEvent));
 			this.resumableObj.fire('chunkingProgress', this, offset / maxOffset);
@@ -162,20 +174,6 @@ export default class ResumableFile {
 			this._pause = pause;
 		}
 	};
-
-	getOpt(option) {
-		// Get multiple option if passed an array
-		if (option instanceof Array) {
-			var collectedOptions = {};
-			Helpers.each(option, (o) => {
-				collectedOptions[o] = this.getOpt(o);
-			});
-			return collectedOptions;
-		}
-
-		// Otherwise, just return a simple option
-		return this.opts[option] !== undefined ? this.opts[option] : this.resumableObj.getOpt(option);
-	}
 
 	preprocessFinished() {
 		this.preprocessState = 2;

@@ -1,8 +1,9 @@
-import {ResumableHelpers as Helpers} from './resumableHelpers';
+import {ResumableHelpers as Helpers} from './resumableHelpers.js';
 
 export default class ResumableChunk {
 	constructor(resumableObj, fileObj, offset, callback) {
 		this.opts = {};
+		this.setOptions(options);
 		this.resumableObj = resumableObj;
 		this.fileObj = fileObj;
 		this.fileObjSize = fileObj.size;
@@ -16,37 +17,6 @@ export default class ResumableChunk {
 		this.preprocessState = 0; // 0 = unprocessed, 1 = processing, 2 = finished
 		this.markComplete = false;
 
-		// Default Options
-		this.chunkSize = 1 * 1024 * 1024;
-		this.fileParameterName = 'file';
-		this.chunkNumberParameterName = 'resumableChunkNumber';
-		this.chunkSizeParameterName = 'resumableChunkSize';
-		this.currentChunkSizeParameterName = 'resumableCurrentChunkSize';
-		this.totalSizeParameterName = 'resumableTotalSize';
-		this.typeParameterName = 'resumableType';
-		this.identifierParameterName = 'resumableIdentifier';
-		this.fileNameParameterName = 'resumableFilename';
-		this.relativePathParameterName = 'resumableRelativePath';
-		this.totalChunksParameterName = 'resumableTotalChunks';
-		this.throttleProgressCallbacks = 0.5;
-		this.query = {};
-		this.headers = {};
-		this.preprocess = null;
-		this.method = 'multipart';
-		this.uploadMethod = 'POST';
-		this.testMethod = 'GET';
-		this.parameterNamespace = '';
-		this.testChunks = true;
-		this.maxChunkRetries = 100;
-		this.chunkRetryInterval = undefined;
-		this.permanentErrors= [400, 401, 403, 404, 409, 415, 500, 501];
-		this.withCredentials = false;
-		this.xhrTimeout = 0;
-		this.chunkFormat = 'blob';
-		this.setChunkTypeFromFile = false;
-		this.target = '/';
-		this.testTarget = null;
-
 		// Computed properties
 		this.loaded = 0;
 		this.startByte = this.offset * this.chunkSize;
@@ -56,6 +26,45 @@ export default class ResumableChunk {
 			this.endByte = this.fileObjSize;
 		}
 		this.xhr = null;
+	}
+
+	/**
+	 * @param {{permanentErrors: number[], chunkRetryInterval: undefined, chunkFormat: string, chunkNumberParameterName: string, uploadMethod: string, typeParameterName: string, preprocess: null, maxChunkRetries: number, setChunkTypeFromFile: boolean, xhrTimeout: number, fileNameParameterName: string, parameterNamespace: string, relativePathParameterName: string, chunkSizeParameterName: string, testChunks: boolean, throttleProgressCallbacks: number, totalChunksParameterName: string, headers: {}, chunkSize: number, method: string, query: {}, testTarget: null, fileParameterName: string, target: string, withCredentials: boolean, testMethod: string, identifierParameterName: string, currentChunkSizeParameterName: string, totalSizeParameterName: string}} options
+	 */
+	setOptions(options) {
+		// Options
+		({
+			chunkSize: this.chunkSize = 1 * 1024 * 1024, // 1 MB
+			forceChunkSize: this.forceChunkSize = false,
+			fileParameterName: this.fileParameterName = 'file',
+			chunkNumberParameterName: this.chunkNumberParameterName = 'resumableChunkNumber',
+			chunkSizeParameterName: this.chunkSizeParameterName = 'resumableChunkSize',
+			currentChunkSizeParameterName: this.currentChunkSizeParameterName = 'resumableCurrentChunkSize',
+			totalSizeParameterName: this.totalSizeParameterName = 'resumableTotalSize',
+			typeParameterName: this.typeParameterName = 'resumableType',
+			identifierParameterName: this.identifierParameterName = 'resumableIdentifier',
+			fileNameParameterName: this.fileNameParameterName = 'resumableFilename',
+			relativePathParameterName: this.relativePathParameterName = 'resumableRelativePath',
+			totalChunksParameterName: this.totalChunksParameterName = 'resumableTotalChunks',
+			throttleProgressCallbacks: this.throttleProgressCallbacks = 0.5,
+			query: this.query = {},
+			headers: this.headers = {},
+			preprocess: this.preprocess = null,
+			method: this.method = 'multipart',
+			uploadMethod: this.uploadMethod = 'POST',
+			testMethod: this.testMethod = 'GET',
+			parameterNamespace: this.parameterNamespace = '',
+			testChunks: this.testChunks = true,
+			maxChunkRetries: this.maxChunkRetries = 100,
+			chunkRetryInterval: this.chunkRetryInterval = undefined,
+			permanentErrors: this.permanentErrors = [400, 401, 403, 404, 409, 415, 500, 501],
+			withCredentials: this.withCredentials = false,
+			xhrTimeout: this.xhrTimeout = 0,
+			chunkFormat: this.chunkFormat = 'blob',
+			setChunkTypeFromFile: this.setChunkTypeFromFile = false,
+			target: this.target = '/',
+			testTarget: this.testTarget = null,
+		} = options);
 	}
 
 	get formattedQuery() {
@@ -76,20 +85,6 @@ export default class ResumableChunk {
 			[this.totalChunksParameterName]: this.fileObj.chunks.length,
 		};
 		return {...extraData, ...customQuery};
-	}
-
-	getOpt(option) {
-		// Get multiple option if passed an array
-		if (option instanceof Array) {
-			var options = {};
-			Helpers.each(option, (o) => {
-				options[o] = this.getOpt(o);
-			});
-			return options;
-		}
-
-		// Otherwise, just return a simple option
-		return this.opts[option] !== undefined ? this.opts[option] : this.fileObj.getOpt(option);
 	}
 
 	// test() makes a GET request without any data to see if the chunk has already been uploaded in a previous session
@@ -182,20 +177,24 @@ export default class ResumableChunk {
 		// Done (either done, failed or retry)
 		let doneHandler = (e) => {
 			var status = this.status();
-			if (status === 'success' || status === 'error') {
-				this.callback(status, this.message());
-				this.resumableObj.uploadNextChunk();
-			} else {
-				this.callback('retry', this.message());
-				this.abort();
-				this.retries++;
-				var retryInterval = this.chunkRetryInterval;
-				if (retryInterval !== undefined) {
-					this.pendingRetry = true;
-					setTimeout(this.send, retryInterval);
-				} else {
-					this.send();
-				}
+			switch (status) {
+				case 'success':
+				case 'error':
+					this.callback(status, this.message());
+					this.resumableObj.uploadNextChunk();
+					break;
+				default:
+					this.callback('retry', this.message());
+					this.abort();
+					this.retries++;
+					var retryInterval = this.chunkRetryInterval;
+					if (retryInterval !== undefined) {
+						this.pendingRetry = true;
+						setTimeout(this.send, retryInterval);
+					} else {
+						this.send();
+					}
+					break;
 			}
 		};
 		this.xhr.addEventListener('load', doneHandler, false);
@@ -209,7 +208,6 @@ export default class ResumableChunk {
 		let bytes = this.fileObj.file[func](this.startByte, this.endByte,
 			this.setChunkTypeFromFile ? this.fileObj.file.type : '');
 		let data = null;
-
 		let parameterNamespace = this.parameterNamespace;
 		if (this.method === 'octet') {
 			// Add data from the query options
@@ -220,15 +218,18 @@ export default class ResumableChunk {
 			Helpers.each(this.formattedQuery, function(k, v) {
 				data.append(parameterNamespace + k, v);
 			});
-			if (this.chunkFormat === 'blob') {
-				data.append(parameterNamespace + this.fileParameterName, bytes, this.fileObj.fileName);
-			} else if (this.chunkFormat === 'base64') {
-				var fr = new FileReader();
-				fr.onload = function(e) {
-					data.append(parameterNamespace + this.fileParameterName, fr.result);
-					this.xhr.send(data);
-				};
-				fr.readAsDataURL(bytes);
+			switch (this.chunkFormat) {
+				case 'blob':
+					data.append(parameterNamespace + this.fileParameterName, bytes, this.fileObj.fileName);
+					break;
+				case 'base64':
+					var fr = new FileReader();
+					fr.onload = function(e) {
+						data.append(parameterNamespace + this.fileParameterName, fr.result);
+						this.xhr.send(data);
+					};
+					fr.readAsDataURL(bytes);
+					break;
 			}
 		}
 
@@ -294,7 +295,7 @@ export default class ResumableChunk {
 		switch (s) {
 			case 'success':
 			case 'error':
-				return 1 * factor;
+				return factor;
 			case 'pending':
 				return 0;
 			default:

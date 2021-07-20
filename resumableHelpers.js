@@ -6,7 +6,7 @@ export default class ResumableHelpers {
 	}
 
 	static each(o, callback) {
-		if (typeof (o.length) !== 'undefined') {
+		if (o.length !== undefined) {
 			for (var i = 0; i < o.length; i++) {
 				// Array or FileList
 				if (callback(o[i]) === false) return;
@@ -20,7 +20,6 @@ export default class ResumableHelpers {
 	}
 
 	static generateUniqueIdentifier(file, event) {
-		var custom = $.getOpt('generateUniqueIdentifier');
 		if (typeof custom === 'function') {
 			return custom(file, event);
 		}

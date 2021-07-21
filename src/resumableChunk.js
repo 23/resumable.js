@@ -1,7 +1,7 @@
-import {ResumableHelpers as Helpers} from './resumableHelpers.js';
+import Helpers from './resumableHelpers.js';
 
 export default class ResumableChunk {
-	constructor(resumableObj, fileObj, offset, callback) {
+	constructor(resumableObj, fileObj, offset, callback, options) {
 		this.opts = {};
 		this.setOptions(options);
 		this.resumableObj = resumableObj;

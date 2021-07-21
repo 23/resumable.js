@@ -1,6 +1,6 @@
-import {ResumableHelpers as Helpers} from './resumableHelpers.js';
+import Helpers from './resumableHelpers.js';
 import ResumableFile from './resumableFile.js';
-import _ from 'lodash';
+//import _ from 'lodash';
 /*
 * MIT Licensed
 * http://www.23developer.com/opensource
@@ -26,16 +26,14 @@ export default class Resumable {
 	 * @param {Object} item item to upload, may be file or directory entry
 	 * @param {string} path current file path
 	 * @param {File[]} items list of files to append new items to
-	 * @param {Function} cb callback invoked when item is processed
 	 */
-	static processItem(item, path, items, cb = () => {}) {
+	static processItem(item, path, items) {
 		let entry;
 		if (item.isFile) {
 			// file provided
 			return item.file(function(file) {
 				file.relativePath = path + file.name;
 				items.push(file);
-				cb();
 			});
 		} else if (item.isDirectory) {
 			// item is already a directory entry, just assign
@@ -59,7 +57,6 @@ export default class Resumable {
 				items.push(item);
 			}
 		}
-		cb(); // indicate processing is done
 	}
 
 	/**
@@ -185,26 +182,14 @@ export default class Resumable {
 		// - Blob object type
 		// - FileList object type
 		// - slicing files
-		const support =
+		this.support =
 			typeof (File) !== 'undefined' &&
 			typeof (Blob) !== 'undefined' &&
 			typeof (FileList) !== 'undefined' &&
 			(!!Blob.prototype.webkitSlice || !!Blob.prototype.mozSlice || !!Blob.prototype.slice || false);
-		if (!support) {
+		if (!this.support) {
 			throw new Error('Not supported by Browser');
 		}
-	}
-
-	indexOf(array, obj) {
-		if (array.indexOf) {
-			return array.indexOf(obj);
-		}
-		for (var i = 0; i < array.length; i++) {
-			if (array[i] === obj) {
-				return i;
-			}
-		}
-		return -1;
 	}
 
 	on(event, callback) {
@@ -246,7 +231,7 @@ export default class Resumable {
 	onDragOverEnter(e) {
 		e.preventDefault();
 		let dt = e.dataTransfer;
-		if (this.indexOf(dt.types, 'Files') >= 0) { // only for file drop
+		if (Helpers.indexOf(dt.types, 'Files') >= 0) { // only for file drop
 			e.stopPropagation();
 			dt.dropEffect = 'copy';
 			dt.effectAllowed = 'copy';
@@ -315,7 +300,7 @@ export default class Resumable {
 				if (!this.getFromUniqueIdentifier(uniqueIdentifier)) {
 					(() => {
 						file.uniqueIdentifier = uniqueIdentifier;
-						let f = new ResumableFile(this, file, uniqueIdentifier);
+						let f = new ResumableFile(this, file, uniqueIdentifier, this.opts);
 						this.files.push(f);
 						files.push(f);
 						f.container = event !== undefined ? event.target : null;
@@ -339,7 +324,7 @@ export default class Resumable {
 					addFile,
 					// unique identifier generation failed
 					// skip further processing, only decrease file count
-					decreaseRemaining
+					decreaseRemaining,
 				);
 			} else {
 				// non-Promise provided as unique identifier, process synchronously
@@ -520,7 +505,8 @@ export default class Resumable {
 	};
 
 	generateUniqueIdentifier(file, event) {
-		return this._generateUniqueIdentifier(file, event) || Helpers.generateUniqueIdentifier(file, event);
+		return typeof this._generateUniqueIdentifier === 'function' ?
+			this._generateUniqueIdentifier(file, event) : Helpers.generateUniqueIdentifier(file, event);
 	}
 
 	getFromUniqueIdentifier(uniqueIdentifier) {

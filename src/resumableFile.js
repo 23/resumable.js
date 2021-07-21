@@ -1,11 +1,11 @@
 // INTERNAL OBJECT TYPES
 import ResumableChunk from './resumableChunk.js';
-import {ResumableHelpers as Helpers} from './resumableHelpers.js';
+import Helpers from './resumableHelpers.js';
 
 export default class ResumableFile {
-	constructor(resumableObj, file, uniqueIdentifier) {
+	constructor(resumableObj, file, uniqueIdentifier, options) {
 		this.opts = options;
-		this.setOptions(options)
+		this.setOptions(options);
 		this._prevProgress = 0;
 		this.resumableObj = resumableObj;
 		this.file = file;
@@ -47,7 +47,7 @@ export default class ResumableFile {
 
 	// Callback when something happens within the chunk
 	chunkEvent(event, message) {
-		var _error = uniqueIdentifier !== undefined;
+		this._error = this.uniqueIdentifier !== undefined;
 
 		// event can be 'progress', 'success', 'error' or 'retry'
 		switch (event) {
@@ -56,12 +56,12 @@ export default class ResumableFile {
 				break;
 			case 'error':
 				this.abort();
-				_error = true;
+				this._error = true;
 				this.chunks = [];
 				this.resumableObj.fire('fileError', this, message);
 				break;
 			case 'success':
-				if (_error) return;
+				if (this._error) return;
 				this.resumableObj.fire('fileProgress', this, message); // it's at least progress
 				if (this.isComplete()) {
 					this.resumableObj.fire('fileSuccess', this, message);
@@ -111,14 +111,14 @@ export default class ResumableFile {
 
 	bootstrap() {
 		this.abort();
-		_error = false;
+		this._error = false;
 		// Rebuild stack of chunks from file
 		this.chunks = [];
 		this._prevProgress = 0;
 		var round = this.forceChunkSize ? Math.ceil : Math.floor;
 		var maxOffset = Math.max(round(this.file.size / this.chunkSize), 1);
 		for (var offset = 0; offset < maxOffset; offset++) {
-			this.chunks.push(new ResumableChunk(this.resumableObj, this, offset, this.chunkEvent));
+			this.chunks.push(new ResumableChunk(this.resumableObj, this, offset, this.chunkEvent, this.opts));
 			this.resumableObj.fire('chunkingProgress', this, offset / maxOffset);
 		}
 		window.setTimeout(function() {
@@ -127,7 +127,7 @@ export default class ResumableFile {
 	};
 
 	progress() {
-		if (_error) return (1);
+		if (this._error) return (1);
 		// Sum up progress across everything
 		var ret = 0;
 		var error = false;

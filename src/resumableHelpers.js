@@ -42,6 +42,18 @@ export default class ResumableHelpers {
 		return result;
 	}
 
+	static indexOf(array, obj) {
+		if (array.indexOf) {
+			return array.indexOf(obj);
+		}
+		for (var i = 0; i < array.length; i++) {
+			if (array[i] === obj) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
 	static formatSize(size) {
 		if (size < 1024) {
 			return size + ' bytes';

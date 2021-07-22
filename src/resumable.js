@@ -342,13 +342,12 @@ export default class Resumable {
 		// metadata and determine if there's even a point in continuing.
 		if (this.prioritizeFirstAndLastChunk) {
 			Helpers.each(this.files, function(file) {
-				if (file.chunks.length && file.chunks[0].status() === 'pending' && file.chunks[0].preprocessState ===
-					0) {
+				if (file.chunks.length && file.chunks[0].status === 'pending' && file.chunks[0].preprocessState ===	0) {
 					file.chunks[0].send();
 					found = true;
 					return false;
 				}
-				if (file.chunks.length > 1 && file.chunks[file.chunks.length - 1].status() === 'pending' &&
+				if (file.chunks.length > 1 && file.chunks[file.chunks.length - 1].status === 'pending' &&
 					file.chunks[file.chunks.length - 1].preprocessState === 0) {
 					file.chunks[file.chunks.length - 1].send();
 					found = true;

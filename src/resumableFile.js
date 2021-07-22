@@ -76,7 +76,7 @@ export default class ResumableFile {
 		// Stop current uploads
 		var abortCount = 0;
 		Helpers.each(this.chunks, function(c) {
-			if (c.status() === 'uploading') {
+			if (c.status === 'uploading') {
 				c.abort();
 				abortCount++;
 			}
@@ -90,7 +90,7 @@ export default class ResumableFile {
 		this.chunks = [];
 		// Stop current uploads
 		Helpers.each(_chunks, function(c) {
-			if (c.status() === 'uploading') {
+			if (c.status === 'uploading') {
 				c.abort();
 				this.resumableObj.uploadNextChunk();
 			}
@@ -133,7 +133,7 @@ export default class ResumableFile {
 		var ret = 0;
 		var error = false;
 		Helpers.each(this.chunks, function(c) {
-			if (c.status() === 'error') error = true;
+			if (c.status === 'error') error = true;
 			ret += c.progress(true); // get chunk progress relative to entire file
 		});
 		ret = (error ? 1 : (ret > 0.99999 ? 1 : ret));
@@ -145,7 +145,7 @@ export default class ResumableFile {
 	isUploading() {
 		var uploading = false;
 		Helpers.each(this.chunks, function(chunk) {
-			if (chunk.status() === 'uploading') {
+			if (chunk.status === 'uploading') {
 				uploading = true;
 				return false;
 			}
@@ -159,7 +159,7 @@ export default class ResumableFile {
 			return false;
 		}
 		Helpers.each(this.chunks, function(chunk) {
-			var status = chunk.status();
+			var status = chunk.status;
 			if (status === 'pending' || status === 'uploading' || chunk.preprocessState === 1) {
 				outstanding = true;
 				return false;
@@ -200,7 +200,7 @@ export default class ResumableFile {
 			}
 		}
 		Helpers.each(this.chunks, (chunk) => {
-			if (chunk.status() === 'pending' && chunk.preprocessState !== 1) {
+			if (chunk.status === 'pending' && chunk.preprocessState !== 1) {
 				chunk.send();
 				found = true;
 				return false;

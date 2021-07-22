@@ -89,34 +89,32 @@ export default class ResumableChunk extends BaseClass {
 		return {...extraData, ...customQuery};
 	}
 
-	// test() makes a GET request without any data to see if the chunk has already been uploaded in a previous session
-	test() {
-		// Set up request and listen for event
-		this.xhr = new XMLHttpRequest();
-
-		var testHandler = () => {
-			this.tested = true;
-			var status = this.status();
-			if (status === 'success') {
-				this.fire(status, this.message());
-				this.resumableObj.uploadNextChunk();
-			} else {
-				this.send();
-			}
-		};
-		this.xhr.addEventListener('load', testHandler, false);
-		this.xhr.addEventListener('error', testHandler, false);
-		this.xhr.addEventListener('timeout', testHandler, false);
-
-		// Append the relevant chunk and send it
-		this.xhr.open(this.testMethod, this.getTarget('test'));
-		this.xhr.timeout = this.xhrTimeout;
-		this.xhr.withCredentials = this.withCredentials;
-		// Add data from header options
-		this.setCustomHeaders();
-
-		this.xhr.send(null);
-	}
+	get status() {
+		// Returns: 'pending', 'uploading', 'success', 'error'
+		if (this.pendingRetry) {
+			// if pending retry then that's effectively the same as actively uploading,
+			// there might just be a slight delay before the retry starts
+			return 'uploading';
+		} else if (this.markComplete) {
+			return 'success';
+		} else if (!this.xhr) {
+			return 'pending';
+		} else if (this.xhr.readyState < 4) {
+			// Status is really 'OPENED', 'HEADERS_RECEIVED' or 'LOADING' - meaning that stuff is happening
+			return 'uploading';
+		} else if (this.xhr.status === 200 || this.xhr.status === 201) {
+			// HTTP 200, 201 (created)
+			return 'success';
+		} else if (Helpers.contains(this.permanentErrors, this.xhr.status) || this.retries >= this.maxChunkRetries) {
+			// HTTP 400, 404, 409, 415, 500, 501 (permanent error)
+			return 'error';
+		} else {
+			// this should never happen, but we'll reset and queue a retry
+			// a likely case for this would be 503 service unavailable
+			this.abort();
+			return 'pending';
+		}
+	};
 
 	setCustomHeaders() {
 		if (!this.xhr) {
@@ -139,6 +137,41 @@ export default class ResumableChunk extends BaseClass {
 	preprocessFinished() {
 		this.preprocessState = 2;
 		this.send();
+	};
+
+	// test() makes a GET request without any data to see if the chunk has already been uploaded in a previous session
+	test() {
+		// Set up request and listen for event
+		this.xhr = new XMLHttpRequest();
+
+		var testHandler = () => {
+			this.tested = true;
+			var status = this.status;
+			if (status === 'success') {
+				this.fire(status, this.message());
+				this.resumableObj.uploadNextChunk();
+			} else {
+				this.send();
+			}
+		};
+		this.xhr.addEventListener('load', testHandler, false);
+		this.xhr.addEventListener('error', testHandler, false);
+		this.xhr.addEventListener('timeout', testHandler, false);
+
+		// Append the relevant chunk and send it
+		this.xhr.open(this.testMethod, this.getTarget('test'));
+		this.xhr.timeout = this.xhrTimeout;
+		this.xhr.withCredentials = this.withCredentials;
+		// Add data from header options
+		this.setCustomHeaders();
+
+		this.xhr.send(null);
+	}
+
+	abort() {
+		// Abort and reset
+		if (this.xhr) this.xhr.abort();
+		this.xhr = null;
 	};
 
 	// send() uploads the actual data in a POST call
@@ -178,7 +211,7 @@ export default class ResumableChunk extends BaseClass {
 
 		// Done (either done, failed or retry)
 		let doneHandler = (e) => {
-			var status = this.status();
+			var status = this.status;
 			switch (status) {
 				case 'success':
 				case 'error':
@@ -252,39 +285,6 @@ export default class ResumableChunk extends BaseClass {
 		}
 	}
 
-	abort() {
-		// Abort and reset
-		if (this.xhr) this.xhr.abort();
-		this.xhr = null;
-	};
-
-	status() {
-		// Returns: 'pending', 'uploading', 'success', 'error'
-		if (this.pendingRetry) {
-			// if pending retry then that's effectively the same as actively uploading,
-			// there might just be a slight delay before the retry starts
-			return 'uploading';
-		} else if (this.markComplete) {
-			return 'success';
-		} else if (!this.xhr) {
-			return 'pending';
-		} else if (this.xhr.readyState < 4) {
-			// Status is really 'OPENED', 'HEADERS_RECEIVED' or 'LOADING' - meaning that stuff is happening
-			return 'uploading';
-		} else if (this.xhr.status === 200 || this.xhr.status === 201) {
-			// HTTP 200, 201 (created)
-			return 'success';
-		} else if (Helpers.contains(this.permanentErrors, this.xhr.status) || this.retries >= this.maxChunkRetries) {
-			// HTTP 400, 404, 409, 415, 500, 501 (permanent error)
-			return 'error';
-		} else {
-			// this should never happen, but we'll reset and queue a retry
-			// a likely case for this would be 503 service unavailable
-			this.abort();
-			return 'pending';
-		}
-	};
-
 	message() {
 		return this.xhr ? this.xhr.responseText : '';
 	};
@@ -293,7 +293,7 @@ export default class ResumableChunk extends BaseClass {
 		var factor = relative ? (this.endByte - this.startByte) / this.fileObjSize : 1;
 		if (this.pendingRetry) return 0;
 		if ((!this.xhr || !this.xhr.status) && !this.markComplete) factor *= .95;
-		var s = this.status();
+		var s = this.status;
 		switch (s) {
 			case 'success':
 			case 'error':

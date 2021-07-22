@@ -1,7 +1,9 @@
 import Helpers from './resumableHelpers.js';
+import BaseClass from './baseClass.js';
 
-export default class ResumableChunk {
+export default class ResumableChunk extends BaseClass {
 	constructor(resumableObj, fileObj, offset, callback, options) {
+		super();
 		this.opts = {};
 		this.setOptions(options);
 		this.resumableObj = resumableObj;
@@ -96,7 +98,7 @@ export default class ResumableChunk {
 			this.tested = true;
 			var status = this.status();
 			if (status === 'success') {
-				this.callback(status, this.message());
+				this.fire(status, this.message());
 				this.resumableObj.uploadNextChunk();
 			} else {
 				this.send();
@@ -165,14 +167,14 @@ export default class ResumableChunk {
 		// Progress
 		this.xhr.upload.addEventListener('progress', (e) => {
 			if ((new Date) - this.lastProgressCallback > this.throttleProgressCallbacks * 1000) {
-				this.callback('progress');
+				this.fire('progress');
 				this.lastProgressCallback = (new Date);
 			}
 			this.loaded = e.loaded || 0;
 		}, false);
 		this.loaded = 0;
 		this.pendingRetry = false;
-		this.callback('progress');
+		this.fire('progress');
 
 		// Done (either done, failed or retry)
 		let doneHandler = (e) => {
@@ -180,11 +182,11 @@ export default class ResumableChunk {
 			switch (status) {
 				case 'success':
 				case 'error':
-					this.callback(status, this.message());
+					this.fire(status, this.message());
 					this.resumableObj.uploadNextChunk();
 					break;
 				default:
-					this.callback('retry', this.message());
+					this.fire('retry', this.message());
 					this.abort();
 					this.retries++;
 					var retryInterval = this.chunkRetryInterval;

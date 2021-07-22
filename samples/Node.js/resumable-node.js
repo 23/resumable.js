@@ -8,9 +8,7 @@ module.exports = resumable = function(temporaryFolder){
   $.maxFileSize = null;
   $.fileParameterName = 'file';
 
-  try {
-    fs.mkdirSync($.temporaryFolder);
-  }catch(e){}
+  fs.mkdirSync($.temporaryFolder);
 
 
   var cleanIdentifier = function(identifier){

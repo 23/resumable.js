@@ -1,5 +1,5 @@
 var express = require('express');
-var resumable = require('./resumable-node.js')('/tmp/resumable.js/');
+var resumable = require('./resumable-node.js')('./tmp/');
 var app = express();
 var multipart = require('connect-multiparty');
 var crypto = require('crypto');

@@ -14,6 +14,7 @@ export default class ResumableFile {
 		this.relativePath = file.relativePath || file.webkitRelativePath || this.fileName;
 		this.uniqueIdentifier = uniqueIdentifier;
 		this._pause = false;
+		this._error = uniqueIdentifier !== undefined;
 		this.container = '';
 		this.preprocessState = 0; // 0 = unprocessed, 1 = processing, 2 = finished
 
@@ -47,8 +48,6 @@ export default class ResumableFile {
 
 	// Callback when something happens within the chunk
 	chunkEvent(event, message) {
-		this._error = this.uniqueIdentifier !== undefined;
-
 		// event can be 'progress', 'success', 'error' or 'retry'
 		switch (event) {
 			case 'progress':
@@ -115,10 +114,12 @@ export default class ResumableFile {
 		// Rebuild stack of chunks from file
 		this.chunks = [];
 		this._prevProgress = 0;
-		var round = this.forceChunkSize ? Math.ceil : Math.floor;
-		var maxOffset = Math.max(round(this.file.size / this.chunkSize), 1);
+		const round = this.forceChunkSize ? Math.ceil : Math.floor;
+		const maxOffset = Math.max(round(this.file.size / this.chunkSize), 1);
 		for (var offset = 0; offset < maxOffset; offset++) {
-			this.chunks.push(new ResumableChunk(this.resumableObj, this, offset, this.chunkEvent, this.opts));
+			const chunk = new ResumableChunk(this.resumableObj, this, offset, this.chunkEvent, this.opts);
+			chunk.on('*', this.chunkEvent.bind(this));
+			this.chunks.push(chunk);
 			this.resumableObj.fire('chunkingProgress', this, offset / maxOffset);
 		}
 		window.setTimeout(function() {

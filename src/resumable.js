@@ -182,23 +182,36 @@ export default class Resumable {
 		if (event === 'fileprogress') this.fire('progress');
 	}
 
-	onDrop(e) {
+	async onDrop(e) {
 		e.currentTarget.classList.remove(this.dragOverClass);
 		Helpers.stopEvent(e);
 
+		let items = [];
+
 		//handle dropped things as items if we can (this lets us deal with folders nicer in some cases)
 		if (e.dataTransfer && e.dataTransfer.items) {
-			this.loadFiles(e.dataTransfer.items, e);
+			items = e.dataTransfer.items;
 		}
 		//else handle them as files
 		else if (e.dataTransfer && e.dataTransfer.files) {
-			this.loadFiles(e.dataTransfer.files, e);
+			items = e.dataTransfer.files;
+		}
+
+		if (!items.length) {
+			return; // nothing to do
+		}
+		this.fire('fileProcessingBegin');
+		let promises =  [...items].map((item) => this.processItem(item, ''));
+		let files = _.flattenDeep(await Promise.all(promises));
+		if (files.length) {
+			// at least one file found
+			this.appendFilesFromFileList(files, e);
 		}
 	}
 
 	onDragLeave(e) {
 		e.currentTarget.classList.remove(this.dragOverClass);
-	};
+	}
 
 	onDragOverEnter(e) {
 		e.preventDefault();
@@ -235,12 +248,10 @@ export default class Resumable {
 					// no succeeded files, just skip
 					return;
 				}
-				window.setTimeout(() => {
-					this.fire('filesAdded', files, filesSkipped);
-				}, 0);
+				this.fire('filesAdded', files, filesSkipped);
 			}
 		};
-		Helpers.each(fileList, (file) => {
+		for (const file of fileList) {
 			let fileName = file.name;
 			let fileType = file.type.toLowerCase(); // e.g video/mp4
 			let fileExtension = fileName.split('.').pop().toLowerCase();
@@ -258,19 +269,19 @@ export default class Resumable {
 				if (!fileTypeFound) {
 					this.fire('fileProcessingFailed', file);
 					this.fileTypeErrorCallback(file, errorCount++);
-					return true;
+					continue;
 				}
 			}
 
 			if (this.minFileSize !== undefined && file.size < this.minFileSize) {
 				this.fire('fileProcessingFailed', file);
 				this.minFileSizeErrorCallback(file, errorCount++);
-				return true;
+				continue;
 			}
 			if (this.maxFileSize !== undefined && file.size > this.maxFileSize) {
 				this.fire('fileProcessingFailed', file);
 				this.maxFileSizeErrorCallback(file, errorCount++);
-				return true;
+				continue;
 			}
 
 			if (fileExtension in this.validators && !this.validators[fileExtension](file)) {
@@ -283,17 +294,13 @@ export default class Resumable {
 
 			const addFile = (uniqueIdentifier) => {
 				if (!this.getFromUniqueIdentifier(uniqueIdentifier)) {
-					(() => {
-						file.uniqueIdentifier = uniqueIdentifier;
-						let f = new ResumableFile(this, file, uniqueIdentifier, this.opts);
-						this.files.push(f);
-						files.push(f);
-						f.container = event !== undefined ? event.target : null;
-						// Make the firing of the event asynchronous
-						window.setTimeout(() => {
-							this.fire('fileAdded', f, event);
-						}, 0);
-					})();
+					file.uniqueIdentifier = uniqueIdentifier;
+					let f = new ResumableFile(this, file, uniqueIdentifier, this.opts);
+					this.files.push(f);
+					files.push(f);
+					f.container = event !== undefined ? event.target : null;
+					// Make the firing of the event asynchronous
+					this.fire('fileAdded', f, event);
 				} else {
 					filesSkipped.push(file);
 				}
@@ -315,7 +322,7 @@ export default class Resumable {
 				// non-Promise provided as unique identifier, process synchronously
 				addFile(uniqueIdentifier);
 			}
-		});
+		}
 	};
 
 	// QUEUE
@@ -414,21 +421,21 @@ export default class Resumable {
 		if (typeof (domNodes.length) == 'undefined') domNodes = [domNodes];
 
 		Helpers.each(domNodes, (domNode) => {
-			domNode.addEventListener('dragover', this.onDragOverEnter, false);
-			domNode.addEventListener('dragenter', this.onDragOverEnter, false);
-			domNode.addEventListener('dragleave', this.onDragLeave, false);
-			domNode.addEventListener('drop', this.onDrop, false);
+			domNode.addEventListener('dragover', this.onDragOverEnter.bind(this), false);
+			domNode.addEventListener('dragenter', this.onDragOverEnter.bind(this), false);
+			domNode.addEventListener('dragleave', this.onDragLeave.bind(this), false);
+			domNode.addEventListener('drop', this.onDrop.bind(this), false);
 		});
 	}
 
 	unAssignDrop(domNodes) {
-		if (typeof (domNodes.length) == 'undefined') domNodes = [domNodes];
+		if (domNodes.length === undefined) domNodes = [domNodes];
 
 		Helpers.each(domNodes, (domNode) => {
-			domNode.removeEventListener('dragover', this.onDragOverEnter);
-			domNode.removeEventListener('dragenter', this.onDragOverEnter);
-			domNode.removeEventListener('dragleave', this.onDragLeave);
-			domNode.removeEventListener('drop', this.onDrop);
+			domNode.removeEventListener('dragover', this.onDragOverEnter.bind(this));
+			domNode.removeEventListener('dragenter', this.onDragOverEnter.bind(this));
+			domNode.removeEventListener('dragleave', this.onDragLeave.bind(this));
+			domNode.removeEventListener('drop', this.onDrop.bind(this));
 		});
 	}
 

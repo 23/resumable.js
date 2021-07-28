@@ -68,14 +68,12 @@ export default class Resumable {
 			dragOverClass: this.dragOverClass = 'dragover',
 			fileType: this.fileType = [],
 			fileTypeErrorCallback: this.fileTypeErrorCallback = (file, errorCount) => {
-				this.fire('fileProcessingFailed');
 				alert(file.fileName || file.name + ' has type not allowed, please upload files of type ' +
 					this.fileType + '.');
 			},
 			generateUniqueIdentifier: this._generateUniqueIdentifier = null,
 			maxFileSize: this.maxFileSize = undefined,
 			maxFileSizeErrorCallback: this.maxFileSizeErrorCallback = (file, errorCount) => {
-				this.fire('fileProcessingFailed');
 				alert(file.fileName || file.name + ' is too large, please upload files less than ' +
 					Helpers.formatSize(this.maxFileSize) + '.');
 			},
@@ -224,12 +222,13 @@ export default class Resumable {
 			if (this.maxFiles === 1 && this.files.length === 1 && fileList.length === 1) {
 				this.removeFile(this.files[0]);
 			} else {
+				this.fire('fileProcessingFailed');
 				this.maxFilesErrorCallback(fileList, errorCount++);
 				return false;
 			}
 		}
 		let files = [], filesSkipped = [], remaining = fileList.length;
-		let decreaseRemaining = () => {
+		const decreaseRemaining = () => {
 			if (!--remaining) {
 				// all files processed, trigger event
 				if (!files.length && !filesSkipped.length) {
@@ -257,6 +256,7 @@ export default class Resumable {
 						);
 				});
 				if (!fileTypeFound) {
+					this.fire('fileProcessingFailed', file);
 					this.fileTypeErrorCallback(file, errorCount++);
 					return true;
 				}

@@ -1,11 +1,12 @@
 {
 	"name": "resumablejs",
-	"version": "1.1.2",
+	"version": "1.2.0",
 	"description": "A JavaScript library for providing multiple simultaneous, stable, fault-tolerant and resumable/restartable uploads via the HTML5 File API.",
-	"main": "resumable.js",
+	"main": "dist/main.js",
+	"private": false,
 	"types": "./resumable.d.ts",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"build": "webpack"
 	},
 	"dependencies": {
 		"lodash": "^4.17.21"
@@ -24,5 +25,14 @@
 	"bugs": {
 		"url": "https://github.com/23/resumable.js/issues"
 	},
-	"homepage": "https://github.com/23/resumable.js#readme"
+	"homepage": "https://github.com/23/resumable.js#readme",
+	"devDependencies": {
+		"@babel/core": "^7.14.8",
+		"@babel/plugin-transform-runtime": "^7.14.5",
+		"@babel/preset-env": "^7.14.8",
+		"@babel/runtime": "^7.14.8",
+		"babel-loader": "^8.2.2",
+		"webpack": "^5.47.0",
+		"webpack-cli": "^4.7.2"
+	}
 }

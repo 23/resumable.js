@@ -2,16 +2,14 @@ import Helpers from './resumableHelpers.js';
 import BaseClass from './baseClass.js';
 
 export default class ResumableChunk extends BaseClass {
-	constructor(resumableObj, fileObj, offset, callback, options) {
-		super();
-		this.opts = {};
+	constructor(resumableObj, fileObj, offset, options) {
+		super(fileObj);
 		this.setOptions(options);
 		this.resumableObj = resumableObj;
 		this.fileObj = fileObj;
 		this.fileObjSize = fileObj.size;
 		this.fileObjType = fileObj.file.type;
 		this.offset = offset;
-		this.callback = callback;
 		this.lastProgressCallback = (new Date);
 		this.tested = false;
 		this.retries = 0;

@@ -1,5 +1,6 @@
 import Helpers from './resumableHelpers.js';
 import ResumableFile from './resumableFile.js';
+import BaseClass from './baseClass.js';
 //import _ from 'lodash';
 /*
 * MIT Licensed
@@ -8,8 +9,9 @@ import ResumableFile from './resumableFile.js';
 * Steffen Tiedemann Christensen, steffen@23company.com
 */
 
-export default class Resumable {
+export default class Resumable extends BaseClass {
 	constructor(options) {
+		super();
 		this.setOptions({options: options});
 		this.opts = options;
 		this.files = [];
@@ -68,8 +70,7 @@ export default class Resumable {
 			dragOverClass: this.dragOverClass = 'dragover',
 			fileType: this.fileType = [],
 			fileTypeErrorCallback: this.fileTypeErrorCallback = (file, errorCount) => {
-				alert(file.fileName || file.name + ' has type not allowed, please upload files of type ' +
-					this.fileType + '.');
+				alert(`${file.fileName || file.name} has type not allowed, please upload files of type ${this.fileType}.`);
 			},
 			generateUniqueIdentifier: this._generateUniqueIdentifier = null,
 			maxFileSize: this.maxFileSize = undefined,
@@ -97,30 +98,12 @@ export default class Resumable {
 	}
 
 	/**
-	 * cps-style list iteration.
-	 * invokes all functions in list and waits for their callback to be
-	 * triggered.
-	 * @param  {Function[]}   items list of functions expecting callback parameter
-	 * @param  {Function} cb    callback to trigger after the last callback has been invoked
-	 */
-	static processCallbacks(items, cb) {
-		if (!items || items.length === 0) {
-			// empty or no list, invoke callback
-			return cb();
-		}
-		// invoke current function, pass the next part as continuation
-		items[0](() => {
-			this.processCallbacks(items.slice(1), cb);
-		});
-	}
-
-	/**
 	 * recursively traverse directory and collect files to upload
 	 * @param  {Object}   directory directory to process
 	 * @param  {string}   path      current path
 	 */
 	processDirectory(directory, path) {
-		return new Promise(((resolve, reject) => {
+		return new Promise((resolve, reject) => {
 			const dirReader = directory.createReader();
 			let allEntries = [];
 
@@ -137,13 +120,12 @@ export default class Resumable {
 						return this.processItem(entry, path);
 					});
 					// Wait until all files are collected.
-					const files = await Promise.all(allEntries);
-					resolve(files);
+					resolve(await Promise.all(allEntries));
 				}, reject);
 			};
 
 			readEntries();
-		}));
+		});
 	}
 
 	checkSupport() {
@@ -161,25 +143,6 @@ export default class Resumable {
 		if (!this.support) {
 			throw new Error('Not supported by Browser');
 		}
-	}
-
-	on(event, callback) {
-		this.events.push(event.toLowerCase(), callback);
-	}
-
-	fire() {
-		// `arguments` is an object, not array, in FF, so:
-		var args = [];
-		for (let i = 0; i < arguments.length; i++) args.push(arguments[i]);
-		// Find event listeners, and support pseudo-event `catchAll`
-		var event = args[0].toLowerCase();
-		console.log(event, args);
-		for (let i = 0; i <= this.events.length; i += 2) {
-			if (this.events[i] === event) this.events[i + 1].apply(this, args.slice(1));
-			if (this.events[i] === 'catchall') this.events[i + 1].apply(null, args);
-		}
-		if (event === 'fileerror') this.fire('error', args[2], args[1]);
-		if (event === 'fileprogress') this.fire('progress');
 	}
 
 	async onDrop(e) {

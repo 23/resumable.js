@@ -1,5 +1,6 @@
 export default class BaseClass {
-	constructor() {
+	constructor(parent = undefined) {
+		this.parent = parent;
 		this.events = {};
 	}
 
@@ -14,16 +15,28 @@ export default class BaseClass {
 	fire(event, ...args) {
 		// Find event listeners, and support wildcard-event `*` to catch all
 		event = event.toLowerCase();
-		for (let savedEvent in this.events) {
-			if (!this.events.hasOwnProperty(savedEvent)) continue;
-			if (savedEvent === event) {
-				this.events[savedEvent].forEach((callback) => callback(...args));
-			}
-			if (savedEvent === '*') {
-				this.events[savedEvent].forEach((callback) => callback(event, ...args));
-			}
+
+		console.log(this.constructor.name, event, args);
+
+		this.executeEventCallback(event, ...args);
+		this.executeEventCallback('*', event, ...args);
+
+		switch (event) {
+			case 'fileerror':
+				this.fire('error', args[1], args[0]);
+				break;
+			case 'fileprogress':
+				this.fire('progress');
+				break;
 		}
-		if (event === 'fileerror') this.fire('error', args[2], args[1]);
-		if (event === 'fileprogress') this.fire('progress');
+
+		//Let the event bubble up to the parent if present
+		if (this.parent !== undefined) this.parent.fire(event, ...args);
+	}
+
+	executeEventCallback(event, ...args) {
+		if (!this.events.hasOwnProperty(event)) return;
+		this.events[event].forEach((callback) => callback(...args));
+
 	}
 }

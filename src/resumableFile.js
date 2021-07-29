@@ -1,9 +1,11 @@
 // INTERNAL OBJECT TYPES
 import ResumableChunk from './resumableChunk.js';
 import Helpers from './resumableHelpers.js';
+import BaseClass from './baseClass.js';
 
-export default class ResumableFile {
+export default class ResumableFile extends BaseClass {
 	constructor(resumableObj, file, uniqueIdentifier, options) {
+		super(resumableObj);
 		this.opts = options;
 		this.setOptions(options);
 		this._prevProgress = 0;
@@ -26,7 +28,7 @@ export default class ResumableFile {
 		this.chunks = [];
 
 		// Bootstrap and return
-		this.resumableObj.fire('chunkingStart', this);
+		this.fire('chunkingStart', this);
 		this.bootstrap();
 		return this;
 	}
@@ -42,6 +44,7 @@ export default class ResumableFile {
 			preprocessFile: this.preprocessFile = null,
 		} = options);
 	}
+
 	get pause() {
 		return this._pause;
 	};
@@ -51,23 +54,23 @@ export default class ResumableFile {
 		// event can be 'progress', 'success', 'error' or 'retry'
 		switch (event) {
 			case 'progress':
-				this.resumableObj.fire('fileProgress', this, message);
+				this.fire('fileProgress', this, message);
 				break;
 			case 'error':
 				this.abort();
 				this._error = true;
 				this.chunks = [];
-				this.resumableObj.fire('fileError', this, message);
+				this.fire('fileError', this, message);
 				break;
 			case 'success':
 				if (this._error) return;
-				this.resumableObj.fire('fileProgress', this, message); // it's at least progress
+				this.fire('fileProgress', this, message); // it's at least progress
 				if (this.isComplete()) {
-					this.resumableObj.fire('fileSuccess', this, message);
+					this.fire('fileSuccess', this, message);
 				}
 				break;
 			case 'retry':
-				this.resumableObj.fire('fileRetry', this);
+				this.fire('fileRetry', this);
 				break;
 		}
 	};
@@ -81,7 +84,7 @@ export default class ResumableFile {
 				abortCount++;
 			}
 		});
-		if (abortCount > 0) this.resumableObj.fire('fileProgress', this);
+		if (abortCount > 0) this.fire('fileProgress', this);
 	}
 
 	cancel() {
@@ -89,20 +92,20 @@ export default class ResumableFile {
 		var _chunks = this.chunks;
 		this.chunks = [];
 		// Stop current uploads
-		Helpers.each(_chunks, function(c) {
+		Helpers.each(_chunks, (c) => {
 			if (c.status === 'uploading') {
 				c.abort();
 				this.resumableObj.uploadNextChunk();
 			}
 		});
 		this.resumableObj.removeFile(this);
-		this.resumableObj.fire('fileProgress', this);
+		this.fire('fileProgress', this);
 	}
 
 	retry() {
 		this.bootstrap();
 		let firedRetry = false;
-		this.resumableObj.on('chunkingComplete', () => {
+		this.on('chunkingComplete', () => {
 			if (!firedRetry) this.resumableObj.upload();
 			firedRetry = true;
 		});
@@ -117,14 +120,12 @@ export default class ResumableFile {
 		const round = this.forceChunkSize ? Math.ceil : Math.floor;
 		const maxOffset = Math.max(round(this.file.size / this.chunkSize), 1);
 		for (var offset = 0; offset < maxOffset; offset++) {
-			const chunk = new ResumableChunk(this.resumableObj, this, offset, this.chunkEvent, this.opts);
+			const chunk = new ResumableChunk(this.resumableObj, this, offset, this.opts);
 			chunk.on('*', this.chunkEvent.bind(this));
 			this.chunks.push(chunk);
-			this.resumableObj.fire('chunkingProgress', this, offset / maxOffset);
+			this.fire('chunkingProgress', this, offset / maxOffset);
 		}
-		window.setTimeout(function() {
-			this.resumableObj.fire('chunkingComplete', this);
-		}, 0);
+		this.fire('chunkingComplete', this);
 	};
 
 	progress() {
@@ -136,10 +137,10 @@ export default class ResumableFile {
 			if (c.status === 'error') error = true;
 			ret += c.progress(true); // get chunk progress relative to entire file
 		});
-		ret = (error ? 1 : (ret > 0.99999 ? 1 : ret));
+		ret = error ? 1 :  (ret > 0.99999 ? 1 : ret);
 		ret = Math.max(this._prevProgress, ret); // We don't want to lose percentages when an upload is paused
 		this._prevProgress = ret;
-		return (ret);
+		return ret;
 	};
 
 	isUploading() {

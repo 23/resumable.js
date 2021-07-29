@@ -21,3 +21,4 @@ target/
 
 # Gradle
 .gradle
+/dist/main.js

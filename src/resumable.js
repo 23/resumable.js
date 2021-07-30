@@ -69,27 +69,27 @@ export default class Resumable extends BaseClass {
 			clearInput: this.clearInput = true,
 			dragOverClass: this.dragOverClass = 'dragover',
 			fileType: this.fileType = [],
-			fileTypeErrorCallback: this.fileTypeErrorCallback = (file, errorCount) => {
+			fileTypeErrorCallback: this.fileTypeErrorCallback = (file) => {
 				alert(`${file.fileName || file.name} has type not allowed, please upload files of type ${this.fileType}.`);
 			},
 			generateUniqueIdentifier: this._generateUniqueIdentifier = null,
 			maxFileSize: this.maxFileSize = undefined,
-			maxFileSizeErrorCallback: this.maxFileSizeErrorCallback = (file, errorCount) => {
+			maxFileSizeErrorCallback: this.maxFileSizeErrorCallback = (file) => {
 				alert(file.fileName || file.name + ' is too large, please upload files less than ' +
 					Helpers.formatSize(this.maxFileSize) + '.');
 			},
 			maxFiles: this.maxFiles = undefined,
-			maxFilesErrorCallback: this.maxFilesErrorCallback = (files, errorCount) => {
+			maxFilesErrorCallback: this.maxFilesErrorCallback = (files) => {
 				var maxFiles = this.maxFiles;
 				alert('Please upload no more than ' + maxFiles + ' file' + (maxFiles === 1 ? '' : 's') + ' at a time.');
 			},
 			minFileSize: this.minFileSize = 1,
-			minFileSizeErrorCallback: this.minFileSizeErrorCallback = (file, errorCount) => {
+			minFileSizeErrorCallback: this.minFileSizeErrorCallback = (file) => {
 				alert(file.fileName || file.name + ' is too small, please upload files larger than ' +
 					Helpers.formatSize(this.minFileSize) + '.');
 			},
 			prioritizeFirstAndLastChunk: this.prioritizeFirstAndLastChunk = false,
-			fileValidationErrorCallback: this.fileValidationErrorCallback = (file, errorCount) => {},
+			fileValidationErrorCallback: this.fileValidationErrorCallback = (file) => {},
 			simultaneousUploads: this.simultaneousUploads = 3,
 		} = options);
 
@@ -163,7 +163,7 @@ export default class Resumable extends BaseClass {
 		if (!items.length) {
 			return; // nothing to do
 		}
-		this.fire('fileProcessingBegin');
+		this.fire('fileProcessingBegin', items);
 		let promises =  [...items].map((item) => this.processItem(item, ''));
 		let files = _.flattenDeep(await Promise.all(promises));
 		if (files.length) {
@@ -190,34 +190,18 @@ export default class Resumable extends BaseClass {
 		}
 	};
 
-	appendFilesFromFileList(fileList, event) {
-		// check for uploading too many files
-		let errorCount = 0;
-		if (this.maxFiles !== undefined && this.maxFiles < fileList.length + this.files.length) {
-			// if single-file upload, file is already added, and trying to add 1 new file, simply replace the already-added file
-			if (this.maxFiles === 1 && this.files.length === 1 && fileList.length === 1) {
-				this.removeFile(this.files[0]);
-			} else {
-				this.fire('fileProcessingFailed');
-				this.maxFilesErrorCallback(fileList, errorCount++);
+
+	async validateFiles(files, event) {
+		let validationPromises = files.map(async (file) => {
+			let fileType = file.type.toLowerCase(); // e.g video/mp4
+			let fileExtension = file.name.split('.').pop().toLowerCase();
+			let uniqueIdentifier = this.generateUniqueIdentifier(file, event);
+
+			if (this.files.includes((file) => file.uniqueIdentifier === uniqueIdentifier)) {
+				this.fire('fileProcessingFailed', file, 'duplicate');
 				return false;
 			}
-		}
-		let files = [], filesSkipped = [], remaining = fileList.length;
-		const decreaseRemaining = () => {
-			if (!--remaining) {
-				// all files processed, trigger event
-				if (!files.length && !filesSkipped.length) {
-					// no succeeded files, just skip
-					return;
-				}
-				this.fire('filesAdded', files, filesSkipped);
-			}
-		};
-		for (const file of fileList) {
-			let fileName = file.name;
-			let fileType = file.type.toLowerCase(); // e.g video/mp4
-			let fileExtension = fileName.split('.').pop().toLowerCase();
+
 			if (this.fileType.length > 0) {
 				const fileTypeFound = this.fileType.some((type) => {
 					// Check whether the extension inside the filename is an allowed file type
@@ -230,39 +214,74 @@ export default class Resumable extends BaseClass {
 						);
 				});
 				if (!fileTypeFound) {
-					this.fire('fileProcessingFailed', file);
+					this.fire('fileProcessingFailed', file, 'fileType');
 					this.fileTypeErrorCallback(file, errorCount++);
-					continue;
+					return false;
 				}
 			}
 
 			if (this.minFileSize !== undefined && file.size < this.minFileSize) {
-				this.fire('fileProcessingFailed', file);
+				this.fire('fileProcessingFailed', file, 'minFileSize');
 				this.minFileSizeErrorCallback(file, errorCount++);
-				continue;
+				return false;
 			}
 			if (this.maxFileSize !== undefined && file.size > this.maxFileSize) {
-				this.fire('fileProcessingFailed', file);
+				this.fire('fileProcessingFailed', file, 'maxFileSize');
 				this.maxFileSizeErrorCallback(file, errorCount++);
-				continue;
+				return false;
 			}
 
-			if (fileExtension in this.validators && !this.validators[fileExtension](file)) {
-				this.fire('fileProcessingFailed', file);
+			if (fileExtension in this.validators && !await this.validators[fileExtension](file)) {
+				this.fire('fileProcessingFailed', file, 'validation');
 				this.fileValidationErrorCallback(file, errorCount++);
-				continue;
+				return false;
 			}
 
-			this.fire('fileLoaded', file);
+			return true;
+		});
 
+		const results = await Promise.all(validationPromises);
+
+		return files.filter((_v, index) => results[index]);
+	}
+
+	async appendFilesFromFileList(fileListObject, event) {
+		const fileList = Array.from(fileListObject);
+		// check for uploading too many files
+		if (this.maxFiles !== undefined && this.maxFiles < fileList.length + this.files.length) {
+			// if single-file upload, file is already added, and trying to add 1 new file, simply replace the already-added file
+			if (this.maxFiles === 1 && this.files.length === 1 && fileList.length === 1) {
+				this.removeFile(this.files[0]);
+			} else {
+				this.fire('fileProcessingFailed');
+				this.maxFilesErrorCallback(fileList);
+				return false;
+			}
+		}
+
+		// Validate the files and remove duplicates
+		const validatedFiles = await this.validateFiles(fileList);
+		//this.fire('filesLoaded', validatedFiles);
+
+		let files = [], filesSkipped = [], remaining = fileList.length;
+		const decreaseRemaining = () => {
+			if (!--remaining) {
+				// all files processed, trigger event
+				if (!files.length && !filesSkipped.length) {
+					// no succeeded files, just skip
+					return;
+				}
+				this.fire('filesAdded', files, filesSkipped);
+			}
+		};
+
+		for (const file of validatedFiles) {
 			const addFile = (uniqueIdentifier) => {
-				if (!this.getFromUniqueIdentifier(uniqueIdentifier)) {
+				if (!this.files.includes((file) => file.uniqueIdentifier === uniqueIdentifier)) {
 					file.uniqueIdentifier = uniqueIdentifier;
 					let f = new ResumableFile(this, file, uniqueIdentifier, this.opts);
 					this.files.push(f);
-					files.push(f);
-					f.container = event !== undefined ? event.target : null;
-					// Make the firing of the event asynchronous
+					files.push(file);
 					this.fire('fileAdded', f, event);
 				} else {
 					filesSkipped.push(file);
@@ -359,7 +378,7 @@ export default class Resumable extends BaseClass {
 				input.removeAttribute('webkitdirectory');
 			}
 			if (this.fileType.length >= 1) {
-				input.setAttribute('accept', fileTypes.map((type) => {
+				input.setAttribute('accept', this.fileType.map((type) => {
 					type = type.replace(/\s/g, '').toLowerCase();
 					if (type.match(/^[^.][^/]+$/)) {
 						type = '.' + type;
@@ -371,7 +390,7 @@ export default class Resumable extends BaseClass {
 			}
 			// When new files are added, simply append them to the overall list
 			input.addEventListener('change', (e) => {
-				this.fire('fileProcessingBegin');
+				this.fire('fileProcessingBegin', e.target.files);
 				this.appendFilesFromFileList(e.target.files, e);
 				if (this.clearInput) {
 					e.target.value = '';
@@ -468,7 +487,7 @@ export default class Resumable extends BaseClass {
 
 	generateUniqueIdentifier(file, event) {
 		return typeof this._generateUniqueIdentifier === 'function' ?
-			this._generateUniqueIdentifier(file, event) : Helpers.generateUniqueIdentifier(file, event);
+			this._generateUniqueIdentifier(file, event) : Helpers.generateUniqueIdentifier(file);
 	}
 
 	getFromUniqueIdentifier(uniqueIdentifier) {
@@ -476,7 +495,7 @@ export default class Resumable extends BaseClass {
 	};
 
 	getSize() {
-		this.files.reduce((accumulator, file) => accumulator + file.size, 0);
+		return this.files.reduce((accumulator, file) => accumulator + file.size, 0);
 	}
 
 	handleDropEvent(e) {

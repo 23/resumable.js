@@ -17,7 +17,6 @@ export default class ResumableFile extends BaseClass {
 		this.uniqueIdentifier = uniqueIdentifier;
 		this._pause = false;
 		this._error = uniqueIdentifier !== undefined;
-		this.container = '';
 		this.preprocessState = 0; // 0 = unprocessed, 1 = processing, 2 = finished
 
 		// Default Options
@@ -133,7 +132,7 @@ export default class ResumableFile extends BaseClass {
 		// Sum up progress across everything
 		var ret = 0;
 		var error = false;
-		Helpers.each(this.chunks, function(c) {
+		Helpers.each(this.chunks, (c) => {
 			if (c.status === 'error') error = true;
 			ret += c.progress(true); // get chunk progress relative to entire file
 		});

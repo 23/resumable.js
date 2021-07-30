@@ -9,6 +9,7 @@
 		"build": "webpack"
 	},
 	"dependencies": {
+		"@babel/runtime-corejs3": "^7.14.8",
 		"lodash": "^4.17.21"
 	},
 	"repository": {

@@ -1,7 +1,7 @@
 import Helpers from './resumableHelpers.js';
-import BaseClass from './baseClass.js';
+import ResumableEventHandler from './resumableEventHandler.js';
 
-export default class ResumableChunk extends BaseClass {
+export default class ResumableChunk extends ResumableEventHandler {
 	constructor(resumableObj, fileObj, offset, options) {
 		super(fileObj);
 		this.setOptions(options);

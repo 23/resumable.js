@@ -1,9 +1,9 @@
 // INTERNAL OBJECT TYPES
 import ResumableChunk from './resumableChunk.js';
 import Helpers from './resumableHelpers.js';
-import BaseClass from './baseClass.js';
+import ResumableEventHandler from './resumableEventHandler.js';
 
-export default class ResumableFile extends BaseClass {
+export default class ResumableFile extends ResumableEventHandler {
 	constructor(resumableObj, file, uniqueIdentifier, options) {
 		super(resumableObj);
 		this.opts = options;
@@ -46,7 +46,15 @@ export default class ResumableFile extends BaseClass {
 
 	get pause() {
 		return this._pause;
-	};
+	}
+
+	set pause(pause) {
+		if (pause === undefined) {
+			this._pause = !this._pause;
+		} else {
+			this._pause = pause;
+		}
+	}
 
 	// Callback when something happens within the chunk
 	chunkEvent(event, message) {
@@ -76,7 +84,7 @@ export default class ResumableFile extends BaseClass {
 
 	abort() {
 		// Stop current uploads
-		var abortCount = 0;
+		let abortCount = 0;
 		Helpers.each(this.chunks, function(c) {
 			if (c.status === 'uploading') {
 				c.abort();
@@ -108,7 +116,7 @@ export default class ResumableFile extends BaseClass {
 			if (!firedRetry) this.resumableObj.upload();
 			firedRetry = true;
 		});
-	};
+	}
 
 	bootstrap() {
 		this.abort();
@@ -125,10 +133,10 @@ export default class ResumableFile extends BaseClass {
 			this.fire('chunkingProgress', this, offset / maxOffset);
 		}
 		this.fire('chunkingComplete', this);
-	};
+	}
 
 	progress() {
-		if (this._error) return (1);
+		if (this._error) return 1;
 		// Sum up progress across everything
 		var ret = 0;
 		var error = false;
@@ -140,49 +148,26 @@ export default class ResumableFile extends BaseClass {
 		ret = Math.max(this._prevProgress, ret); // We don't want to lose percentages when an upload is paused
 		this._prevProgress = ret;
 		return ret;
-	};
+	}
 
 	isUploading() {
-		var uploading = false;
-		Helpers.each(this.chunks, function(chunk) {
-			if (chunk.status === 'uploading') {
-				uploading = true;
-				return false;
-			}
-		});
-		return uploading;
-	};
+		return this.chunks.some((chunk) => chunk.status === 'uploading');
+	}
 
 	isComplete() {
-		var outstanding = false;
 		if (this.preprocessState === 1) {
 			return false;
 		}
-		Helpers.each(this.chunks, function(chunk) {
-			var status = chunk.status;
-			if (status === 'pending' || status === 'uploading' || chunk.preprocessState === 1) {
-				outstanding = true;
-				return false;
-			}
-		});
-		return !outstanding;
-	};
-
-	set pause(pause) {
-		if (pause === undefined) {
-			this._pause = !this._pause;
-		} else {
-			this._pause = pause;
-		}
-	};
+		return !this.chunks.some((chunk) =>
+			chunk.status === 'pending' || chunk.status === 'uploading' || chunk.preprocessState === 1);
+	}
 
 	preprocessFinished() {
 		this.preprocessState = 2;
 		this.upload();
-	};
+	}
 
 	upload() {
-		let found = false;
 		if (this.pause) {
 			return false;
 		}
@@ -199,15 +184,14 @@ export default class ResumableFile extends BaseClass {
 					break;
 			}
 		}
-		Helpers.each(this.chunks, (chunk) => {
+		for (const chunk of this.chunks) {
 			if (chunk.status === 'pending' && chunk.preprocessState !== 1) {
 				chunk.send();
-				found = true;
-				return false;
+				return true;
 			}
-		});
-		return found;
-	};
+		}
+		return false;
+	}
 
 	markChunksCompleted(chunkNumber) {
 		if (!this.chunks || this.chunks.length <= chunkNumber) {

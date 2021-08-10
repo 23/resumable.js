@@ -1,4 +1,4 @@
-export default class BaseClass {
+export default class ResumableEventHandler {
 	constructor(parent = undefined) {
 		this.parent = parent;
 		this.events = {};

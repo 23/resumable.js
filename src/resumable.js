@@ -1,6 +1,6 @@
 import Helpers from './resumableHelpers.js';
 import ResumableFile from './resumableFile.js';
-import BaseClass from './baseClass.js';
+import ResumableEventHandler from './resumableEventHandler.js';
 //import _ from 'lodash';
 /*
 * MIT Licensed
@@ -9,7 +9,7 @@ import BaseClass from './baseClass.js';
 * Steffen Tiedemann Christensen, steffen@23company.com
 */
 
-export default class Resumable extends BaseClass {
+export default class Resumable extends ResumableEventHandler {
 	constructor(options) {
 		super();
 		this.setOptions({options: options});
@@ -191,13 +191,19 @@ export default class Resumable extends BaseClass {
 	};
 
 
-	async validateFiles(files, event) {
-		let validationPromises = files.map(async (file) => {
+	async validateFiles(files) {
+		// Remove files that duplicated in the original array added based on their unique identifiers
+		let uniqueFiles = Helpers.uniqBy(files,
+			(file) => file.uniqueIdentifier,
+			(file) => this.fire('fileProcessingFailed', file, 'duplicate')
+		);
+
+		let validationPromises = uniqueFiles.map(async (file) => {
 			let fileType = file.type.toLowerCase(); // e.g video/mp4
 			let fileExtension = file.name.split('.').pop().toLowerCase();
-			let uniqueIdentifier = this.generateUniqueIdentifier(file, event);
 
-			if (this.files.includes((file) => file.uniqueIdentifier === uniqueIdentifier)) {
+			// Remove files that were already added based on their unique identifiers
+			if (this.files.some((addedFile) => addedFile.uniqueIdentifier === file.uniqueIdentifier)) {
 				this.fire('fileProcessingFailed', file, 'duplicate');
 				return false;
 			}
@@ -220,6 +226,7 @@ export default class Resumable extends BaseClass {
 				}
 			}
 
+			// Validate the file size against minimum and maximum allowed sizes
 			if (this.minFileSize !== undefined && file.size < this.minFileSize) {
 				this.fire('fileProcessingFailed', file, 'minFileSize');
 				this.minFileSizeErrorCallback(file, errorCount++);
@@ -231,6 +238,7 @@ export default class Resumable extends BaseClass {
 				return false;
 			}
 
+			// Apply a custom validator based on the file extension
 			if (fileExtension in this.validators && !await this.validators[fileExtension](file)) {
 				this.fire('fileProcessingFailed', file, 'validation');
 				this.fileValidationErrorCallback(file, errorCount++);
@@ -242,6 +250,7 @@ export default class Resumable extends BaseClass {
 
 		const results = await Promise.all(validationPromises);
 
+		// Only include files that passed their validation tests
 		return files.filter((_v, index) => results[index]);
 	}
 
@@ -253,90 +262,62 @@ export default class Resumable extends BaseClass {
 			if (this.maxFiles === 1 && this.files.length === 1 && fileList.length === 1) {
 				this.removeFile(this.files[0]);
 			} else {
-				this.fire('fileProcessingFailed');
+				this.fire('fileProcessingFailed', undefined, 'maxFiles');
 				this.maxFilesErrorCallback(fileList);
 				return false;
 			}
 		}
 
-		// Validate the files and remove duplicates
-		const validatedFiles = await this.validateFiles(fileList);
-		//this.fire('filesLoaded', validatedFiles);
+		// Add the unique identifier for every new file.
+		// Since this might return a promise, we have to wait until it completed.
+		const filesWithUniqueIdentifiers = await Promise.all(fileList.map(async (file) => {
+			file.uniqueIdentifier = await this.generateUniqueIdentifier(file, event);
+			return file;
+		}));
 
-		let files = [], filesSkipped = [], remaining = fileList.length;
-		const decreaseRemaining = () => {
-			if (!--remaining) {
-				// all files processed, trigger event
-				if (!files.length && !filesSkipped.length) {
-					// no succeeded files, just skip
-					return;
-				}
-				this.fire('filesAdded', files, filesSkipped);
-			}
-		};
+		// Validate the files and remove duplicates
+		const validatedFiles = await this.validateFiles(filesWithUniqueIdentifiers);
+
+		let skippedFiles = filesWithUniqueIdentifiers.filter((file) => !validatedFiles.includes(file));
 
 		for (const file of validatedFiles) {
-			const addFile = (uniqueIdentifier) => {
-				if (!this.files.includes((file) => file.uniqueIdentifier === uniqueIdentifier)) {
-					file.uniqueIdentifier = uniqueIdentifier;
-					let f = new ResumableFile(this, file, uniqueIdentifier, this.opts);
-					this.files.push(f);
-					files.push(file);
-					this.fire('fileAdded', f, event);
-				} else {
-					filesSkipped.push(file);
-				}
-				decreaseRemaining();
-			};
-
 			// directories have size == 0
-			let uniqueIdentifier = this.generateUniqueIdentifier(file, event);
-			if (uniqueIdentifier && typeof uniqueIdentifier.then === 'function') {
-				// Promise or Promise-like object provided as unique identifier
-				uniqueIdentifier.then(
-					// unique identifier generation succeeded
-					addFile,
-					// unique identifier generation failed
-					// skip further processing, only decrease file count
-					decreaseRemaining,
-				);
-			} else {
-				// non-Promise provided as unique identifier, process synchronously
-				addFile(uniqueIdentifier);
-			}
+			let f = new ResumableFile(this, file, uniqueIdentifier, this.opts);
+			this.files.push(f);
+			this.fire('fileAdded', f, event);
 		}
-	};
+
+		// all files processed, trigger event
+		if (!validatedFiles.length && !skippedFiles.length) {
+			// no succeeded files, just skip
+			return;
+		}
+		this.fire('filesAdded', validatedFiles, skippedFiles);
+	}
 
 	// QUEUE
 	uploadNextChunk() {
-		let found = false;
-
 		// In some cases (such as videos) it's really handy to upload the first
 		// and last chunk of a file quickly; this let's the server check the file's
 		// metadata and determine if there's even a point in continuing.
 		if (this.prioritizeFirstAndLastChunk) {
-			Helpers.each(this.files, function(file) {
+			for (const file of this.files) {
 				if (file.chunks.length && file.chunks[0].status === 'pending' && file.chunks[0].preprocessState ===	0) {
 					file.chunks[0].send();
-					found = true;
-					return false;
+					return;
 				}
 				if (file.chunks.length > 1 && file.chunks[file.chunks.length - 1].status === 'pending' &&
 					file.chunks[file.chunks.length - 1].preprocessState === 0) {
 					file.chunks[file.chunks.length - 1].send();
-					found = true;
-					return false;
+					return;
 				}
-			});
-			if (found) return true;
+			}
 		}
 
 		// Now, simply look for the next, best thing to upload
-		Helpers.each(this.files, function(file) {
-			found = file.upload();
-			if (found) return false;
-		});
-		if (found) return true;
+		for (const file of this.files) {
+			if (file.upload()) return;
+		}
 
 		// The are no more outstanding chunks to upload, check is everything is done
 		let uploadCompleted = this.files.every((file) => file.isComplete());
@@ -344,7 +325,6 @@ export default class Resumable extends BaseClass {
 			// All chunks have been uploaded, complete
 			this.fire('complete');
 		}
-		return false;
 	}
 
 	// PUBLIC METHODS FOR RESUMABLE.JS
@@ -437,9 +417,9 @@ export default class Resumable extends BaseClass {
 
 	pause() {
 		// Resume all chunks currently being uploaded
-		Helpers.each(this.files, function(file) {
+		for (const file of this.files) {
 			file.abort();
-		});
+		}
 		this.fire('pause');
 	};
 

@@ -28,7 +28,7 @@ export default class ResumableHelpers {
 	static contains(array, test) {
 		var result = false;
 
-		this.each(array, function(value) {
+		this.each(array, (value) => {
 			if (value === test) {
 				result = true;
 				return false;
@@ -37,6 +37,19 @@ export default class ResumableHelpers {
 		});
 
 		return result;
+	}
+
+	static uniqBy(array, callback, errorCallback) {
+		let seen = new Set();
+		return array.filter((item) => {
+			let k = callback(item);
+			if (seen.has(k)) {
+				errorCallback(item);
+				return false;
+			} else {
+				return seen.add(k);
+			}
+		});
 	}
 
 	static indexOf(array, obj) {

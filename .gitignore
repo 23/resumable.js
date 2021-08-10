@@ -21,4 +21,4 @@ target/
 
 # Gradle
 .gradle
-/dist/main.js
+/samples/Node.js/tmp/

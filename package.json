@@ -6,7 +6,9 @@
 	"private": false,
 	"types": "./resumable.d.ts",
 	"scripts": {
-		"build": "webpack"
+		"build": "webpack",
+		"production": "webpack --mode production",
+		"prepublish": "npm run production"
 	},
 	"dependencies": {
 		"@babel/runtime-corejs3": "^7.14.8",
@@ -14,19 +16,19 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/23/resumable.js.git"
+		"url": "git+https://github.com/pointcloudtechnology/resumable.js.git"
 	},
 	"keywords": [
 		"html5",
 		"file",
 		"upload"
 	],
-	"author": "https://github.com/23/resumable.js/graphs/contributors",
+	"author": "https://github.com/pointcloudtechnology/resumable.js/graphs/contributors",
 	"license": "MIT",
 	"bugs": {
-		"url": "https://github.com/23/resumable.js/issues"
+		"url": "https://github.com/pointcloudtechnology/resumable.js/issues"
 	},
-	"homepage": "https://github.com/23/resumable.js#readme",
+	"homepage": "https://github.com/pointcloudtechnology/resumable.js#readme",
 	"devDependencies": {
 		"@babel/core": "^7.14.8",
 		"@babel/plugin-transform-runtime": "^7.14.5",

@@ -16,7 +16,6 @@ export default class Resumable extends ResumableEventHandler {
 		this.opts = options;
 		this.files = [];
 		this.validators = {};
-		this.events = [];
 		this.checkSupport();
 	}
 
@@ -24,39 +23,20 @@ export default class Resumable extends ResumableEventHandler {
 		return 1.0;
 	}
 
-	/**
-	 * processes a single upload item (file or directory)
-	 * @param {Object} item item to upload, may be file or directory entry
-	 * @param {string} path current file path
-	 */
-	async processItem(item, path) {
-		let entry;
-		if (item.isFile) {
-			// file entry provided
-			const file = await new Promise((resolve, reject) => item.file(resolve, reject));
-			file.relativePath = path + file.name;
-			return file;
-		} else if (item.isDirectory) {
-			// item is already a directory entry, just assign
-			entry = item;
-		} else if (item instanceof File) {
-			return item
-		}
-		if (typeof item.webkitGetAsEntry === 'function') {
-			// get entry from file object
-			entry = item.webkitGetAsEntry();
-		}
-		if (entry && entry.isDirectory) {
-			// directory provided, process it
-			return await this.processDirectory(entry, path + entry.name + '/');
-		}
-		if (typeof item.getAsFile === 'function') {
-			// item represents a File object, convert it
-			item = item.getAsFile();
-			if (item instanceof File) {
-				item.relativePath = path + item.name;
-				return item
-			}
+	checkSupport() {
+		// SUPPORTED BY BROWSER?
+		// Check if these features are support by the browser:
+		// - File object type
+		// - Blob object type
+		// - FileList object type
+		// - slicing files
+		this.support =
+			typeof (File) !== 'undefined' &&
+			typeof (Blob) !== 'undefined' &&
+			typeof (FileList) !== 'undefined' &&
+			(!!Blob.prototype.webkitSlice || !!Blob.prototype.mozSlice || !!Blob.prototype.slice || false);
+		if (!this.support) {
+			throw new Error('Not supported by Browser');
 		}
 	}
 
@@ -98,6 +78,42 @@ export default class Resumable extends ResumableEventHandler {
 	}
 
 	/**
+	 * processes a single upload item (file or directory)
+	 * @param {Object} item item to upload, may be file or directory entry
+	 * @param {string} path current file path
+	 */
+	async processItem(item, path) {
+		let entry;
+		if (item.isFile) {
+			// file entry provided
+			const file = await new Promise((resolve, reject) => item.file(resolve, reject));
+			file.relativePath = path + file.name;
+			return file;
+		} else if (item.isDirectory) {
+			// item is already a directory entry, just assign
+			entry = item;
+		} else if (item instanceof File) {
+			return item
+		}
+		if (typeof item.webkitGetAsEntry === 'function') {
+			// get entry from file object
+			entry = item.webkitGetAsEntry();
+		}
+		if (entry && entry.isDirectory) {
+			// directory provided, process it
+			return await this.processDirectory(entry, path + entry.name + '/');
+		}
+		if (typeof item.getAsFile === 'function') {
+			// item represents a File object, convert it
+			item = item.getAsFile();
+			if (item instanceof File) {
+				item.relativePath = path + item.name;
+				return item
+			}
+		}
+	}
+
+	/**
 	 * recursively traverse directory and collect files to upload
 	 * @param  {Object}   directory directory to process
 	 * @param  {string}   path      current path
@@ -126,23 +142,6 @@ export default class Resumable extends ResumableEventHandler {
 
 			readEntries();
 		});
-	}
-
-	checkSupport() {
-		// SUPPORTED BY BROWSER?
-		// Check if these features are support by the browser:
-		// - File object type
-		// - Blob object type
-		// - FileList object type
-		// - slicing files
-		this.support =
-			typeof (File) !== 'undefined' &&
-			typeof (Blob) !== 'undefined' &&
-			typeof (FileList) !== 'undefined' &&
-			(!!Blob.prototype.webkitSlice || !!Blob.prototype.mozSlice || !!Blob.prototype.slice || false);
-		if (!this.support) {
-			throw new Error('Not supported by Browser');
-		}
 	}
 
 	async onDrop(e) {
@@ -380,25 +379,25 @@ export default class Resumable extends ResumableEventHandler {
 	}
 
 	assignDrop(domNodes) {
-		if (typeof (domNodes.length) == 'undefined') domNodes = [domNodes];
+		if (domNodes.length === undefined) domNodes = [domNodes];
 
-		Helpers.each(domNodes, (domNode) => {
+		for (const domNode of domNodes) {
 			domNode.addEventListener('dragover', this.onDragOverEnter.bind(this), false);
 			domNode.addEventListener('dragenter', this.onDragOverEnter.bind(this), false);
 			domNode.addEventListener('dragleave', this.onDragLeave.bind(this), false);
 			domNode.addEventListener('drop', this.onDrop.bind(this), false);
-		});
+		}
 	}
 
 	unAssignDrop(domNodes) {
 		if (domNodes.length === undefined) domNodes = [domNodes];
 
-		Helpers.each(domNodes, (domNode) => {
+		for (const domNode of domNodes) {
 			domNode.removeEventListener('dragover', this.onDragOverEnter.bind(this));
 			domNode.removeEventListener('dragenter', this.onDragOverEnter.bind(this));
 			domNode.removeEventListener('dragleave', this.onDragLeave.bind(this));
 			domNode.removeEventListener('drop', this.onDrop.bind(this));
-		});
+		}
 	}
 
 	isUploading() {

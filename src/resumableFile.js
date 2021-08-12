@@ -24,6 +24,9 @@ export default class ResumableFile extends ResumableEventHandler {
 
 		// Main code to set up a file object with chunks,
 		// packaged to be able to handle retries if needed.
+		/**
+		 * @type {ResumableChunk[]}
+		 */
 		this.chunks = [];
 
 		// Bootstrap and return
@@ -85,26 +88,25 @@ export default class ResumableFile extends ResumableEventHandler {
 	abort() {
 		// Stop current uploads
 		let abortCount = 0;
-		Helpers.each(this.chunks, function(c) {
-			if (c.status === 'uploading') {
-				c.abort();
+		for (const chunk of this.chunks) {
+			if (chunk.status === 'uploading') {
+				chunk.abort();
 				abortCount++;
 			}
-		});
+		}
 		if (abortCount > 0) this.fire('fileProgress', this);
 	}
 
 	cancel() {
-		// Reset this file to be void
-		var _chunks = this.chunks;
-		this.chunks = [];
 		// Stop current uploads
-		Helpers.each(_chunks, (c) => {
-			if (c.status === 'uploading') {
-				c.abort();
+		for (const chunk of this.chunks) {
+			if (chunk.status === 'uploading') {
+				chunk.abort();
 				this.resumableObj.uploadNextChunk();
 			}
-		});
+		}
+		// Reset this file to be void
+		this.chunks = [];
 		this.resumableObj.removeFile(this);
 		this.fire('fileProgress', this);
 	}
@@ -140,11 +142,11 @@ export default class ResumableFile extends ResumableEventHandler {
 		// Sum up progress across everything
 		var ret = 0;
 		var error = false;
-		Helpers.each(this.chunks, (c) => {
-			if (c.status === 'error') error = true;
-			ret += c.progress(true); // get chunk progress relative to entire file
-		});
-		ret = error ? 1 :  (ret > 0.99999 ? 1 : ret);
+		for (const chunk of this.chunks) {
+			if (chunk.status === 'error') error = true;
+			ret += chunk.progress(true); // get chunk progress relative to entire file
+		}
+		ret = error ? 1 : (ret > 0.99999 ? 1 : ret);
 		ret = Math.max(this._prevProgress, ret); // We don't want to lose percentages when an upload is paused
 		this._prevProgress = ret;
 		return ret;

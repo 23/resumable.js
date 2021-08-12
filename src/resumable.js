@@ -1,7 +1,6 @@
 import Helpers from './resumableHelpers.js';
 import ResumableFile from './resumableFile.js';
 import ResumableEventHandler from './resumableEventHandler.js';
-//import _ from 'lodash';
 /*
 * MIT Licensed
 * http://www.23developer.com/opensource
@@ -164,7 +163,7 @@ export default class Resumable extends ResumableEventHandler {
 		}
 		this.fire('fileProcessingBegin', items);
 		let promises =  [...items].map((item) => this.processItem(item, ''));
-		let files = _.flattenDeep(await Promise.all(promises));
+		let files = Helpers.flattenDeep(await Promise.all(promises));
 		if (files.length) {
 			// at least one file found
 			this.appendFilesFromFileList(files, e);
@@ -178,7 +177,7 @@ export default class Resumable extends ResumableEventHandler {
 	onDragOverEnter(e) {
 		e.preventDefault();
 		let dt = e.dataTransfer;
-		if (Helpers.indexOf(dt.types, 'Files') >= 0) { // only for file drop
+		if (dt.types.includes('Files')) { // only for file drop
 			e.stopPropagation();
 			dt.dropEffect = 'copy';
 			dt.effectAllowed = 'copy';
@@ -212,8 +211,8 @@ export default class Resumable extends ResumableEventHandler {
 					// Check whether the extension inside the filename is an allowed file type
 					return fileExtension === type ||
 						//If MIME type, check for wildcard or if extension matches the file's tile type
-						_.includes(type, '/') && (
-							_.includes(type, '*') &&
+						type.includes('/') && (
+							type.includes('*') &&
 							fileType.substr(0, type.indexOf('*')) === type.substr(0, type.indexOf('*')) ||
 							fileType === type
 						);
@@ -329,7 +328,7 @@ export default class Resumable extends ResumableEventHandler {
 	// PUBLIC METHODS FOR RESUMABLE.JS
 	assignBrowse(domNodes, isDirectory = false) {
 		if (domNodes.length === undefined) domNodes = [domNodes];
-		Helpers.each(domNodes, (domNode) => {
+		for (const domNode of domNodes) {
 			let input;
 			if (domNode.tagName === 'INPUT' && domNode.type === 'file') {
 				input = domNode;
@@ -375,7 +374,7 @@ export default class Resumable extends ResumableEventHandler {
 					e.target.value = '';
 				}
 			}, false);
-		});
+		}
 	}
 
 	assignDrop(domNodes) {
@@ -431,13 +430,8 @@ export default class Resumable extends ResumableEventHandler {
 	};
 
 	progress() {
-		let totalDone = 0;
-		let totalSize = 0;
-		// Resume all chunks currently being uploaded
-		Helpers.each(this.files, function(file) {
-			totalDone += file.progress() * file.size;
-			totalSize += file.size;
-		});
+		let totalDone = this.files.reduce((accumulator, file) => accumulator + file.size * file.progress(), 0);
+		let totalSize = this.getSize();
 		return totalSize > 0 ? totalDone / totalSize : 0;
 	};
 
@@ -470,7 +464,7 @@ export default class Resumable extends ResumableEventHandler {
 	}
 
 	getFromUniqueIdentifier(uniqueIdentifier) {
-		return _.find(this.files, {uniqueIdentifier});
+		return this.files.find((file) => file.uniqueIdentifier === uniqueIdentifier);
 	};
 
 	getSize() {

@@ -1,44 +1,44 @@
 // INTERNAL HELPER METHODS (handy, but ultimately not part of uploading)
 export default class ResumableHelpers {
+	/**
+	 * Stop the propagation and default behavior of the given event `e`.
+	 * @param {Event} e
+	 */
 	static stopEvent(e) {
 		e.stopPropagation();
 		e.preventDefault();
 	}
 
-	static each(o, callback) {
-		if (o.length !== undefined) {
-			for (var i = 0; i < o.length; i++) {
-				// Array or FileList
-				if (callback(o[i]) === false) return;
-			}
-		} else {
-			for (i in o) {
-				// Object
-				if (callback(i, o[i]) === false) return;
-			}
-		}
-	}
-
+	/**
+	 * Generate a unique identifier for the given file based on its size, filename and relative path.
+	 * @param {File} file
+	 * @returns {string}
+	 */
 	static generateUniqueIdentifier(file) {
 		var relativePath = file.webkitRelativePath || file.relativePath || file.fileName || file.name; // Some confusion in different versions of Firefox
 		var size = file.size;
 		return (size + '-' + relativePath.replace(/[^0-9a-zA-Z_-]/img, ''));
 	}
 
-	static contains(array, test) {
-		var result = false;
-
-		this.each(array, (value) => {
-			if (value === test) {
-				result = true;
-				return false;
-			}
-			return true;
-		});
-
-		return result;
+	/**
+	 * Flatten the given array and all contained subarrays.
+	 * Credit: {@link https://github.com/you-dont-need/You-Dont-Need-Lodash-Underscore#_flattendeep}
+	 * @param {*[]} array
+	 * @returns {*[]} The flattened array
+	 */
+	static flattenDeep(array) {
+		return Array.isArray(array)
+			? array.reduce((a, b) => a.concat(this.flattenDeep(b)), [])
+			: [array];
 	}
 
+	/**
+	 * Filter the given array based on the predicate inside `callback`
+	 * and executes `errorCallback` for duplicate elements.
+	 * @param {*[]} array
+	 * @param {function(*): *} callback
+	 * @param {function(*): void} errorCallback
+	 */
 	static uniqBy(array, callback, errorCallback) {
 		let seen = new Set();
 		return array.filter((item) => {
@@ -52,18 +52,10 @@ export default class ResumableHelpers {
 		});
 	}
 
-	static indexOf(array, obj) {
-		if (array.indexOf) {
-			return array.indexOf(obj);
-		}
-		for (var i = 0; i < array.length; i++) {
-			if (array[i] === obj) {
-				return i;
-			}
-		}
-		return -1;
-	}
-
+	/**
+	 * Format the size given in Bytes in a human readable format.
+	 * @param {number} size
+	 */
 	static formatSize(size) {
 		if (size < 1024) {
 			return size + ' bytes';

@@ -103,7 +103,7 @@ export default class ResumableChunk extends ResumableEventHandler {
 		} else if (this.xhr.status === 200 || this.xhr.status === 201) {
 			// HTTP 200, 201 (created)
 			return 'success';
-		} else if (Helpers.contains(this.permanentErrors, this.xhr.status) || this.retries >= this.maxChunkRetries) {
+		} else if (this.permanentErrors.includes(this.xhr.status) || this.retries >= this.maxChunkRetries) {
 			// HTTP 400, 404, 409, 415, 500, 501 (permanent error)
 			return 'error';
 		} else {
@@ -122,9 +122,10 @@ export default class ResumableChunk extends ResumableEventHandler {
 		if (typeof customHeaders === 'function') {
 			customHeaders = customHeaders(this.fileObj, this);
 		}
-		Helpers.each(customHeaders, (k, v) => {
-			this.xhr.setRequestHeader(k, v);
-		});
+		for (const header in customHeaders) {
+			if (!customHeaders.hasOwnProperty(header)) continue;
+			this.xhr.setRequestHeader(header, customHeaders[header]);
+		}
 	}
 
 	getTarget(requestType) {
@@ -248,9 +249,9 @@ export default class ResumableChunk extends ResumableEventHandler {
 		} else {
 			// Add data from the query options
 			data = new FormData();
-			Helpers.each(this.formattedQuery, function(k, v) {
-				data.append(parameterNamespace + k, v);
-			});
+			for (const queryKey in this.formattedQuery) {
+				data.append(parameterNamespace + queryKey, this.formattedQuery[queryKey]);
+			}
 			switch (this.chunkFormat) {
 				case 'blob':
 					data.append(parameterNamespace + this.fileParameterName, bytes, this.fileObj.fileName);

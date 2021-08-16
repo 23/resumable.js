@@ -1,4 +1,4 @@
-import Resumable = require('./index');
+import Resumable from './src/resumable';
 
 let resumable: Resumable = new Resumable({chunkSize: 123});
 let resumableNoOpts: Resumable = new Resumable();
@@ -10,12 +10,9 @@ resumable.assignBrowse([document], true);
 resumable.assignDrop(document);
 resumable.assignDrop([document]);
 resumable.cancel();
-let defaults: Object = resumable.defaults;
-let events: any[] = resumable.events;
 let files: any[] = resumable.files;
 resumable.fire();
 let {} = resumable.getFromUniqueIdentifier('test');
-let {} = resumable.getOpt('test');
 let size:number = resumable.getSize();
 resumable.handleChangeEvent({});
 resumable.handleDropEvent({});

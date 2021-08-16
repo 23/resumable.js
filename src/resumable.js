@@ -281,7 +281,7 @@ export default class Resumable extends ResumableEventHandler {
 
     for (const file of validatedFiles) {
       // directories have size == 0
-      let f = new ResumableFile(this, file, uniqueIdentifier, this.opts);
+      let f = new ResumableFile(this, file, file.uniqueIdentifier, this.opts);
       this.files.push(f);
       this.fire('fileAdded', f, event);
     }

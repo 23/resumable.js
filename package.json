@@ -32,6 +32,7 @@
     "@babel/runtime": "^7.14.8",
     "@babel/runtime-corejs3": "^7.14.8",
     "babel-loader": "^8.2.2",
+    "core-js": "^3.16.1",
     "webpack": "^5.47.0",
     "webpack-cli": "^4.7.2"
   }

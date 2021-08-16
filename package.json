@@ -1,38 +1,38 @@
 {
-	"name": "resumablejs",
-	"version": "1.2.0",
-	"description": "A JavaScript library for providing multiple simultaneous, stable, fault-tolerant and resumable/restartable uploads via the HTML5 File API.",
-	"main": "dist/main.js",
-	"private": false,
-	"types": "./resumable.d.ts",
-	"scripts": {
-		"build": "webpack",
-		"production": "webpack --mode production",
-		"prepublishOnly": "npm run production"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/pointcloudtechnology/resumable.js.git"
-	},
-	"keywords": [
-		"html5",
-		"file",
-		"upload"
-	],
-	"author": "https://github.com/pointcloudtechnology/resumable.js/graphs/contributors",
-	"license": "MIT",
-	"bugs": {
-		"url": "https://github.com/pointcloudtechnology/resumable.js/issues"
-	},
-	"homepage": "https://github.com/pointcloudtechnology/resumable.js#readme",
-	"devDependencies": {
-		"@babel/core": "^7.14.8",
-		"@babel/plugin-transform-runtime": "^7.14.5",
-		"@babel/preset-env": "^7.14.8",
-		"@babel/runtime": "^7.14.8",
-		"@babel/runtime-corejs3": "^7.14.8",
-		"babel-loader": "^8.2.2",
-		"webpack": "^5.47.0",
-		"webpack-cli": "^4.7.2"
-	}
+  "name": "resumablejs",
+  "version": "1.2.0",
+  "description": "A JavaScript library for providing multiple simultaneous, stable, fault-tolerant and resumable/restartable uploads via the HTML5 File API.",
+  "main": "dist/main.js",
+  "private": false,
+  "types": "./resumable.d.ts",
+  "scripts": {
+    "build": "webpack",
+    "production": "webpack --mode production",
+    "prepublishOnly": "npm run production"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pointcloudtechnology/resumable.js.git"
+  },
+  "keywords": [
+    "html5",
+    "file",
+    "upload"
+  ],
+  "author": "https://github.com/pointcloudtechnology/resumable.js/graphs/contributors",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pointcloudtechnology/resumable.js/issues"
+  },
+  "homepage": "https://github.com/pointcloudtechnology/resumable.js#readme",
+  "devDependencies": {
+    "@babel/core": "^7.14.8",
+    "@babel/plugin-transform-runtime": "^7.14.5",
+    "@babel/preset-env": "^7.14.8",
+    "@babel/runtime": "^7.14.8",
+    "@babel/runtime-corejs3": "^7.14.8",
+    "babel-loader": "^8.2.2",
+    "webpack": "^5.47.0",
+    "webpack-cli": "^4.7.2"
+  }
 }

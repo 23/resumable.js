@@ -8,7 +8,7 @@ import ResumableEventHandler from './resumableEventHandler.js';
 * Steffen Tiedemann Christensen, steffen@23company.com
 */
 
-export default class Resumable extends ResumableEventHandler {
+export class Resumable extends ResumableEventHandler {
   constructor(options) {
     super();
     this.setOptions({options: options});

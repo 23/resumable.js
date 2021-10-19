@@ -24,7 +24,7 @@ export class Resumable extends ResumableEventHandler {
 
   checkSupport() {
     // SUPPORTED BY BROWSER?
-    // Check if these features are support by the browser:
+    // Check if these features are supported by the browser:
     // - File object type
     // - Blob object type
     // - FileList object type
@@ -40,7 +40,20 @@ export class Resumable extends ResumableEventHandler {
   }
 
   /**
-   * @param {{options}|{maxFileSizeErrorCallback: Resumable.maxFileSizeErrorCallback, minFileSizeErrorCallback: Resumable.minFileSizeErrorCallback, clearInput: boolean, generateUniqueIdentifier: null, minFileSize: number, simultaneousUploads: number, maxFileSize: undefined, fileTypeErrorCallback: Resumable.fileTypeErrorCallback, maxFilesErrorCallback: Resumable.maxFilesErrorCallback, dragOverClass: string, prioritizeFirstAndLastChunk: boolean, fileType: *[], maxFiles: undefined}} options
+   * @param {{options}|{
+   * maxFileSizeErrorCallback: Resumable.maxFileSizeErrorCallback,
+   * minFileSizeErrorCallback: Resumable.minFileSizeErrorCallback,
+   * clearInput: boolean,
+   * generateUniqueIdentifier: null,
+   * minFileSize: number,
+   * simultaneousUploads: number,
+   * maxFileSize: undefined,
+   * fileTypeErrorCallback: Resumable.fileTypeErrorCallback,
+   * maxFilesErrorCallback: Resumable.maxFilesErrorCallback,
+   * dragOverClass: string,
+   * prioritizeFirstAndLastChunk: boolean,
+   * fileType: string[],
+   * maxFiles: undefined}} options
    */
   setOptions(options) {
     // Options
@@ -78,7 +91,7 @@ export class Resumable extends ResumableEventHandler {
   }
 
   /**
-   * processes a single upload item (file or directory)
+   * Processes a single upload item (file or directory)
    * @param {Object} item item to upload, may be file or directory entry
    * @param {string} path current file path
    */

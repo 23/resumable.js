@@ -1,4 +1,4 @@
-import Resumable from './src/resumable';
+import {Resumable} from './src/resumable';
 
 let resumable: Resumable = new Resumable({chunkSize: 123});
 let resumableNoOpts: Resumable = new Resumable();

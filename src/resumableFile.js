@@ -11,16 +11,13 @@ export default class ResumableFile extends ResumableEventHandler {
     this._prevProgress = 0;
     this.resumableObj = resumableObj;
     this.file = file;
-    this.fileName = file.fileName || file.name; // Some confusion in different versions of Firefox
+    this.fileName = Helpers.getFileNameFromFile(file);
     this.size = file.size;
     this.relativePath = file.relativePath || file.webkitRelativePath || this.fileName;
     this.uniqueIdentifier = uniqueIdentifier;
     this._pause = false;
     this._error = uniqueIdentifier !== undefined;
     this.preprocessState = 0; // 0 = unprocessed, 1 = processing, 2 = finished
-
-    // Default Options
-    this.preprocessFile = null;
 
     // Main code to set up a file object with chunks,
     // packaged to be able to handle retries if needed.
@@ -59,9 +56,12 @@ export default class ResumableFile extends ResumableEventHandler {
     } = options);
   }
 
-  // Callback when something happens within the chunk
+  /**
+   * Callback when something happens within the chunk
+   * @param {'progress' | 'success' | 'error' | 'retry'} event
+   * @param {string} message
+   */
   chunkEvent(event, message) {
-    // event can be 'progress', 'success', 'error' or 'retry'
     switch (event) {
       case 'progress':
         this.fire('fileProgress', this, message);
@@ -85,8 +85,10 @@ export default class ResumableFile extends ResumableEventHandler {
     }
   };
 
+  /**
+   * Stop current uploads
+   */
   abort() {
-    // Stop current uploads
     let abortCount = 0;
     for (const chunk of this.chunks) {
       if (chunk.status === 'uploading') {
@@ -97,8 +99,10 @@ export default class ResumableFile extends ResumableEventHandler {
     if (abortCount > 0) this.fire('fileProgress', this);
   }
 
+  /**
+   * Cancel uploading this file and remove it from the file list
+   */
   cancel() {
-    // Stop current uploads
     for (const chunk of this.chunks) {
       if (chunk.status === 'uploading') {
         chunk.abort();
@@ -173,12 +177,11 @@ export default class ResumableFile extends ResumableEventHandler {
     if (this.pause) {
       return false;
     }
-    let preprocess = this.preprocessFile;
-    if (typeof preprocess === 'function') {
+    if (typeof this.preprocessFile === 'function') {
       switch (this.preprocessState) {
         case 0:
           this.preprocessState = 1;
-          preprocess(this);
+          this.preprocessFile(this);
           return true;
         case 1:
           return true;

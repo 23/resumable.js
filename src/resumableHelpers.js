@@ -10,12 +10,21 @@ export default class ResumableHelpers {
   }
 
   /**
+   * Some confusion in different versions of Firefox using different attribute names for the file name
+   * @param {File} file The file whose filename should be retrieved
+   * @returns {string} The filename of the given file object
+   */
+  static getFileNameFromFile(file) {
+    return file.fileName || file.name;
+  }
+
+  /**
    * Generate a unique identifier for the given file based on its size, filename and relative path.
-   * @param {File} file
-   * @returns {string}
+   * @param {File} file The file for which the identifier should be generated
+   * @returns {string} The unique identifier for the given file object
    */
   static generateUniqueIdentifier(file) {
-    var relativePath = file.webkitRelativePath || file.relativePath || file.fileName || file.name; // Some confusion in different versions of Firefox
+    var relativePath = file.webkitRelativePath || file.relativePath || this.getFileNameFromFile(file);
     var size = file.size;
     return (size + '-' + relativePath.replace(/[^0-9a-zA-Z_-]/img, ''));
   }
@@ -47,7 +56,8 @@ export default class ResumableHelpers {
         errorCallback(item);
         return false;
       } else {
-        return seen.add(k);
+        seen.add(k);
+        return true;
       }
     });
   }
@@ -59,20 +69,21 @@ export default class ResumableHelpers {
   static formatSize(size) {
     if (size < 1024) {
       return size + ' bytes';
-    } else if (size < 1024 * 1024) {
-      return (size / 1024.0).toFixed(0) + ' KB';
-    } else if (size < 1024 * 1024 * 1024) {
-      return (size / 1024.0 / 1024.0).toFixed(1) + ' MB';
-    } else {
-      return (size / 1024.0 / 1024.0 / 1024.0).toFixed(1) + ' GB';
     }
+    if (size < 1024 * 1024) {
+      return (size / 1024.0).toFixed(0) + ' KB';
+    }
+    if (size < 1024 * 1024 * 1024) {
+      return (size / 1024.0 / 1024.0).toFixed(1) + ' MB';
+    }
+    return (size / 1024.0 / 1024.0 / 1024.0).toFixed(1) + ' GB';
   }
 
   /**
    * Get the target url for the specified request type and params
    * @param {string} requestType
    * @param {string} sendTarget
-   * @param {string}testTarget
+   * @param {string} testTarget
    * @param {Object} params
    * @param {string} parameterNamespace
    */

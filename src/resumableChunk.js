@@ -48,8 +48,10 @@ export default class ResumableChunk extends ResumableEventHandler {
     return {...extraData, ...customQuery};
   }
 
+  /**
+   * @returns 'pending' | 'uploading' | 'success'  | 'error'
+   */
   get status() {
-    // Returns: 'pending', 'uploading', 'success', 'error'
     if (this.pendingRetry) {
       // if pending retry then that's effectively the same as actively uploading,
       // there might just be a slight delay before the retry starts
@@ -76,7 +78,36 @@ export default class ResumableChunk extends ResumableEventHandler {
   };
 
   /**
-   * @param {{permanentErrors: number[], chunkRetryInterval: undefined, chunkFormat: string, chunkNumberParameterName: string, uploadMethod: string, typeParameterName: string, preprocess: null, maxChunkRetries: number, setChunkTypeFromFile: boolean, xhrTimeout: number, fileNameParameterName: string, parameterNamespace: string, relativePathParameterName: string, chunkSizeParameterName: string, testChunks: boolean, throttleProgressCallbacks: number, totalChunksParameterName: string, headers: {}, chunkSize: number, method: string, query: {}, testTarget: null, fileParameterName: string, target: string, withCredentials: boolean, testMethod: string, identifierParameterName: string, currentChunkSizeParameterName: string, totalSizeParameterName: string}} options
+   * @param {{
+   * permanentErrors: number[],
+   * chunkRetryInterval: undefined,
+   * chunkFormat: string,
+   * chunkNumberParameterName: string,
+   * uploadMethod: string,
+   * typeParameterName: string,
+   * preprocess: null,
+   * maxChunkRetries: number,
+   * setChunkTypeFromFile: boolean,
+   * xhrTimeout: number,
+   * fileNameParameterName: string,
+   * parameterNamespace: string,
+   * relativePathParameterName: string,
+   * chunkSizeParameterName: string,
+   * testChunks: boolean,
+   * throttleProgressCallbacks: number,
+   * totalChunksParameterName: string,
+   * headers: {},
+   * chunkSize: number,
+   * method: string,
+   * query: {},
+   * testTarget: null,
+   * fileParameterName: string,
+   * target: string,
+   * withCredentials: boolean,
+   * testMethod: string,
+   * identifierParameterName: string,
+   * currentChunkSizeParameterName: string,
+   * totalSizeParameterName: string}} options
    */
   setOptions(options) {
     // Options
@@ -138,7 +169,9 @@ export default class ResumableChunk extends ResumableEventHandler {
     this.send();
   };
 
-  // test() makes a GET request without any data to see if the chunk has already been uploaded in a previous session
+  /**
+   * Makes a GET request without any data to see if the chunk has already been uploaded in a previous session
+   */
   test() {
     // Set up request and listen for event
     this.xhr = new XMLHttpRequest();
@@ -167,20 +200,23 @@ export default class ResumableChunk extends ResumableEventHandler {
     this.xhr.send(null);
   }
 
+  /**
+   * Abort and reset a request
+   */
   abort() {
-    // Abort and reset
     if (this.xhr) this.xhr.abort();
     this.xhr = null;
-  };
+  }
 
-  // send() uploads the actual data in a POST call
+  /**
+   *  Uploads the actual data in a POST call
+   */
   send() {
-    let preprocess = this.preprocess;
-    if (typeof preprocess === 'function') {
+    if (typeof this.preprocess === 'function') {
       switch (this.preprocessState) {
         case 0:
           this.preprocessState = 1;
-          preprocess(this);
+          this.preprocess(this);
           return;
         case 1:
           return;
@@ -208,8 +244,10 @@ export default class ResumableChunk extends ResumableEventHandler {
     this.pendingRetry = false;
     this.fire('progress');
 
-    // Done (either done, failed or retry)
-    let doneHandler = (e) => {
+    /**
+     * Handles the different xhr events based on the status of this chunk
+     */
+    let doneHandler = () => {
       var status = this.status;
       switch (status) {
         case 'success':
@@ -243,11 +281,10 @@ export default class ResumableChunk extends ResumableEventHandler {
       this.setChunkTypeFromFile ? this.fileObj.file.type : '');
     let data = null;
     let parameterNamespace = this.parameterNamespace;
+    // Add data from the query options
     if (this.method === 'octet') {
-      // Add data from the query options
       data = bytes;
     } else {
-      // Add data from the query options
       data = new FormData();
       for (const queryKey in this.formattedQuery) {
         data.append(parameterNamespace + queryKey, this.formattedQuery[queryKey]);
@@ -268,9 +305,8 @@ export default class ResumableChunk extends ResumableEventHandler {
     }
 
     let target = this.getTarget('upload');
-    let method = this.uploadMethod;
 
-    this.xhr.open(method, target);
+    this.xhr.open(this.uploadMethod, target);
     if (this.method === 'octet') {
       this.xhr.setRequestHeader('Content-Type', 'application/octet-stream');
     }
@@ -292,8 +328,7 @@ export default class ResumableChunk extends ResumableEventHandler {
     var factor = relative ? (this.endByte - this.startByte) / this.fileObjSize : 1;
     if (this.pendingRetry) return 0;
     if ((!this.xhr || !this.xhr.status) && !this.markComplete) factor *= .95;
-    var s = this.status;
-    switch (s) {
+    switch (this.status) {
       case 'success':
       case 'error':
         return factor;

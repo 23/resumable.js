@@ -91,11 +91,11 @@ export class Resumable extends ResumableEventHandler {
   }
 
   /**
-   * Processes a single upload item (file or directory)
+   * Transforms a single fileEntry or dirEntry item into one or multiple File objects
    * @param {Object} item item to upload, may be file or directory entry
    * @param {string} path current file path
    */
-  async processItem(item, path) {
+  async mapItemToFile(item, path) {
     let entry;
     if (item.isFile) {
       // file entry provided
@@ -124,6 +124,7 @@ export class Resumable extends ResumableEventHandler {
         return item;
       }
     }
+    return undefined;
   }
 
   /**
@@ -146,7 +147,7 @@ export class Resumable extends ResumableEventHandler {
 
           // After collecting all files, map all fileEntries to File objects
           allEntries = allEntries.map((entry) => {
-            return this.processItem(entry, path);
+            return this.mapItemToFile(entry, path);
           });
           // Wait until all files are collected.
           resolve(await Promise.all(allEntries));
@@ -176,7 +177,7 @@ export class Resumable extends ResumableEventHandler {
       return; // nothing to do
     }
     this.fire('fileProcessingBegin', items);
-    let promises = [...items].map((item) => this.processItem(item, ''));
+    let promises = [...items].map((item) => this.mapItemToFile(item, ''));
     let files = Helpers.flattenDeep(await Promise.all(promises));
     if (files.length) {
       // at least one file found
@@ -203,8 +204,13 @@ export class Resumable extends ResumableEventHandler {
   };
 
 
+  /**
+   * Validate and clean a list of files. This includes the removal of duplicates, a check whether the file type is
+   * allowed and custom validation functions defined per file type.
+   * @param {File[]} files
+   */
   async validateFiles(files) {
-    // Remove files that duplicated in the original array added based on their unique identifiers
+    // Remove files that are duplicated in the original array, based on their unique identifiers
     let uniqueFiles = Helpers.uniqBy(files,
       (file) => file.uniqueIdentifier,
       (file) => this.fire('fileProcessingFailed', file, 'duplicate'),
@@ -224,7 +230,7 @@ export class Resumable extends ResumableEventHandler {
         const fileTypeFound = this.fileType.some((type) => {
           // Check whether the extension inside the filename is an allowed file type
           return fileExtension === type ||
-            //If MIME type, check for wildcard or if extension matches the file's tile type
+            // If MIME type, check for wildcard or if extension matches the file's tile type
             type.includes('/') && (
               type.includes('*') &&
               fileType.substr(0, type.indexOf('*')) === type.substr(0, type.indexOf('*')) ||
@@ -293,7 +299,6 @@ export class Resumable extends ResumableEventHandler {
     let skippedFiles = filesWithUniqueIdentifiers.filter((file) => !validatedFiles.includes(file));
 
     for (const file of validatedFiles) {
-      // directories have size == 0
       let f = new ResumableFile(this, file, file.uniqueIdentifier, this.opts);
       this.files.push(f);
       this.fire('fileAdded', f, event);
@@ -310,7 +315,7 @@ export class Resumable extends ResumableEventHandler {
   // QUEUE
   uploadNextChunk() {
     // In some cases (such as videos) it's really handy to upload the first
-    // and last chunk of a file quickly; this let's the server check the file's
+    // and last chunk of a file quickly; this lets the server check the file's
     // metadata and determine if there's even a point in continuing.
     if (this.prioritizeFirstAndLastChunk) {
       for (const file of this.files) {
@@ -331,7 +336,7 @@ export class Resumable extends ResumableEventHandler {
       if (file.upload()) return;
     }
 
-    // The are no more outstanding chunks to upload, check is everything is done
+    // The are no more outstanding chunks to upload, check if everything is done
     let uploadCompleted = this.files.every((file) => file.isComplete());
     if (uploadCompleted) {
       // All chunks have been uploaded, complete
@@ -468,6 +473,7 @@ export class Resumable extends ResumableEventHandler {
     for (let i = this.files.length - 1; i >= 0; i--) {
       if (this.files[i] === file) {
         this.files.splice(i, 1);
+        break;
       }
     }
   };

@@ -253,7 +253,7 @@ declare namespace Resumable {
      * @param fileType
      * @param validator
      */
-    addFileValidator(fileType: string, validator: (file: File) => void): void;
+    addFileValidator(fileType: string, validator: (file: File) => boolean): void;
 
     /**
      * Assign a browse action to one or more DOM nodes. Pass in true to allow directories to be selected (Chrome only).

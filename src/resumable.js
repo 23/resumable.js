@@ -299,7 +299,12 @@ export class Resumable extends ResumableEventHandler {
 
     for (const file of validatedFiles) {
       let f = new ResumableFile(this, file, file.uniqueIdentifier, this.opts);
-      f.on('*', bubbleEvents)
+      f.on('chunkSuccess', () => this.handleChunkSuccess());
+      f.on('chunkError', () => this.handleChunkError());
+      f.on('chunkCancel', () => this.handleChunkCancel());
+      f.on('fileProgress', () => this.handleFileProgress());
+      f.on('fileError', (...args) => this.handleFileError(args));
+      f.on('fileSuccess', (...args) => this.handleFileSuccess(args));
       this.files.push(f);
       this.fire('fileAdded', f, event);
     }
@@ -319,11 +324,11 @@ export class Resumable extends ResumableEventHandler {
     // metadata and determine if there's even a point in continuing.
     if (this.prioritizeFirstAndLastChunk) {
       for (const file of this.files) {
-        if (file.chunks.length && file.chunks[0].status === 'pending' && file.chunks[0].preprocessState === 0) {
+        if (file.chunks.length && file.chunks[0].status === 'chunkPending' && file.chunks[0].preprocessState === 0) {
           file.chunks[0].send();
           return;
         }
-        if (file.chunks.length > 1 && file.chunks[file.chunks.length - 1].status === 'pending' &&
+        if (file.chunks.length > 1 && file.chunks[file.chunks.length - 1].status === 'chunkPending' &&
           file.chunks[file.chunks.length - 1].preprocessState === 0) {
           file.chunks[file.chunks.length - 1].send();
           return;
@@ -334,13 +339,6 @@ export class Resumable extends ResumableEventHandler {
     // Now, simply look for the next, best thing to upload
     for (const file of this.files) {
       if (file.upload()) return;
-    }
-
-    // The are no more outstanding chunks to upload, check if everything is done
-    let uploadCompleted = this.files.every((file) => file.isComplete());
-    if (uploadCompleted) {
-      // All chunks have been uploaded, complete
-      this.fire('complete');
     }
   }
 
@@ -502,5 +500,44 @@ export class Resumable extends ResumableEventHandler {
 
   updateQuery(query) {
     this.query = query;
+  }
+
+  checkUploadComplete() {
+    // The are no more outstanding chunks to upload, check if everything is done
+    let uploadCompleted = this.files.every((file) => file.isComplete());
+    if (uploadCompleted) {
+      // All chunks have been uploaded, complete
+      this.fire('complete');
+    }
+  }
+
+  /**
+   * Event Handlers: This section should only include methods that are used to
+   * handle events coming from the files or chunks.
+   */
+
+  handleChunkSuccess() {
+    this.uploadNextChunk();
+  }
+
+  handleChunkError() {
+    this.uploadNextChunk();
+  }
+
+  handleChunkCancel() {
+    this.uploadNextChunk();
+  }
+
+  handleFileError(args) {
+    this.fire('error', args[1], args[0]);
+  }
+
+  handleFileSuccess(args) {
+    this.fire('fileSuccess', ...args);
+    this.checkUploadComplete();
+  }
+
+  handleFileProgress() {
+    this.fire('progress');
   }
 }

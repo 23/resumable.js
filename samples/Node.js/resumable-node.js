@@ -117,13 +117,13 @@ module.exports = resumable = function(temporaryFolder) {
             if (exists) {
               currentTestChunk++;
               if (currentTestChunk > numberOfChunks) {
-                callback('done', filename, original_filename, identifier);
+                callback('done', filename, original_filename, identifier + currentTestChunk);
               } else {
                 // Recursion
                 testChunkExists();
               }
             } else {
-              callback('partly_done', filename, original_filename, identifier);
+              callback('partly_done', filename, original_filename, identifier + currentTestChunk);
             }
           });
         };

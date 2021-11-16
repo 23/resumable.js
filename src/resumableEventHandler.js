@@ -4,6 +4,10 @@ export default class ResumableEventHandler {
     this.registeredEventHandlers = {};
   }
 
+  /**
+   * @param {string} event
+   * @param {function} callback
+   */
   on(event, callback) {
     event = event.toLowerCase();
     if (!this.registeredEventHandlers.hasOwnProperty(event)) {
@@ -16,21 +20,12 @@ export default class ResumableEventHandler {
     // Find event listeners, and support wildcard-event `*` to catch all
     event = event.toLowerCase();
 
+    console.log(this.constructor.name, event, args);
     this.executeEventCallback(event, ...args);
     this.executeEventCallback('*', event, ...args);
 
-    // For some specific registeredEventHandlers, additional more general registeredEventHandlers are fired
-    switch (event) {
-      case 'fileerror':
-        this.fire('error', args[1], args[0]);
-        break;
-      case 'fileprogress':
-        this.fire('progress');
-        break;
-    }
-
     //Let the event bubble up to the parent if present
-    if (this.parent !== undefined) this.parent.fire(event, ...args);
+    //if (this.parent !== undefined) this.parent.fire(event, ...args);
   }
 
   executeEventCallback(event, ...args) {

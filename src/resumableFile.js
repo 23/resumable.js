@@ -57,41 +57,12 @@ export default class ResumableFile extends ResumableEventHandler {
   }
 
   /**
-   * Callback when something happens within the chunk
-   * @param {'progress' | 'success' | 'error' | 'retry'} event
-   * @param {string} message
-   */
-  chunkEvent(event, message) {
-    switch (event) {
-      case 'progress':
-        this.fire('fileProgress', this, message);
-        break;
-      case 'error':
-        this.abort();
-        this._error = true;
-        this.chunks = [];
-        this.fire('fileError', this, message);
-        break;
-      case 'success':
-        if (this._error) return;
-        this.fire('fileProgress', this, message); // it's at least progress
-        if (this.isComplete()) {
-          this.fire('fileSuccess', this, message);
-        }
-        break;
-      case 'retry':
-        this.fire('fileRetry', this);
-        break;
-    }
-  };
-
-  /**
    * Stop current uploads
    */
   abort() {
     let abortCount = 0;
     for (const chunk of this.chunks) {
-      if (chunk.status === 'uploading') {
+      if (chunk.status === 'chunkUploading') {
         chunk.abort();
         abortCount++;
       }
@@ -104,9 +75,9 @@ export default class ResumableFile extends ResumableEventHandler {
    */
   cancel() {
     for (const chunk of this.chunks) {
-      if (chunk.status === 'uploading') {
+      if (chunk.status === 'chunkUploading') {
         chunk.abort();
-        this.resumableObj.uploadNextChunk();
+        this.fire('chunkCancel', chunk);
       }
     }
     // Reset this file to be void
@@ -125,6 +96,24 @@ export default class ResumableFile extends ResumableEventHandler {
   }
 
   bootstrap() {
+    const progressHandler = (message) => this.fire('fileProgress', this, message);
+    const retryHandler = () =>  this.fire('fileRetry', this);
+    const successHandler = (message) => {
+      if (this._error) return;
+      this.fire('chunkSuccess');
+      this.fire('fileProgress', this, message); // it's at least progress
+      if (this.isComplete()) {
+        this.fire('fileSuccess', this, message);
+      }
+    };
+    const errorHandler = (message) => {
+      this.fire('chunkError', message);
+      this.abort();
+      this._error = true;
+      this.chunks = [];
+      this.fire('fileError', this, message);
+    }
+
     this.abort();
     this._error = false;
     // Rebuild stack of chunks from file
@@ -133,8 +122,11 @@ export default class ResumableFile extends ResumableEventHandler {
     const round = this.forceChunkSize ? Math.ceil : Math.floor;
     const maxOffset = Math.max(round(this.file.size / this.chunkSize), 1);
     for (var offset = 0; offset < maxOffset; offset++) {
-      const chunk = new ResumableChunk(this.resumableObj, this, offset, this.opts);
-      chunk.on('*', this.chunkEvent.bind(this));
+      const chunk = new ResumableChunk(this, offset, this.opts);
+      chunk.on('chunkProgress', progressHandler);
+      chunk.on('chunkError', errorHandler);
+      chunk.on('chunkSuccess', successHandler);
+      chunk.on('chunkRetry', retryHandler);
       this.chunks.push(chunk);
       this.fire('chunkingProgress', this, offset / maxOffset);
     }
@@ -147,7 +139,7 @@ export default class ResumableFile extends ResumableEventHandler {
     var ret = 0;
     var error = false;
     for (const chunk of this.chunks) {
-      if (chunk.status === 'error') error = true;
+      if (chunk.status === 'chunkError') error = true;
       ret += chunk.progress(true); // get chunk progress relative to entire file
     }
     ret = error ? 1 : (ret > 0.99999 ? 1 : ret);
@@ -157,7 +149,7 @@ export default class ResumableFile extends ResumableEventHandler {
   }
 
   isUploading() {
-    return this.chunks.some((chunk) => chunk.status === 'uploading');
+    return this.chunks.some((chunk) => chunk.status === 'chunkUploading');
   }
 
   isComplete() {
@@ -165,7 +157,7 @@ export default class ResumableFile extends ResumableEventHandler {
       return false;
     }
     return !this.chunks.some((chunk) =>
-      chunk.status === 'pending' || chunk.status === 'uploading' || chunk.preprocessState === 1);
+      chunk.status === 'chunkPending' || chunk.status === 'chunkUploading' || chunk.preprocessState === 1);
   }
 
   preprocessFinished() {
@@ -190,7 +182,7 @@ export default class ResumableFile extends ResumableEventHandler {
       }
     }
     for (const chunk of this.chunks) {
-      if (chunk.status === 'pending' && chunk.preprocessState !== 1) {
+      if (chunk.status === 'chunkPending' && chunk.preprocessState !== 1) {
         chunk.send();
         return true;
       }

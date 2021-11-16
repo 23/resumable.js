@@ -1,26 +1,25 @@
 export default class ResumableEventHandler {
   constructor(parent = undefined) {
     this.parent = parent;
-    this.events = {};
+    this.registeredEventHandlers = {};
   }
 
   on(event, callback) {
     event = event.toLowerCase();
-    if (!this.events.hasOwnProperty(event)) {
-      this.events[event] = [];
+    if (!this.registeredEventHandlers.hasOwnProperty(event)) {
+      this.registeredEventHandlers[event] = [];
     }
-    this.events[event.toLowerCase()].push(callback);
+    this.registeredEventHandlers[event].push(callback);
   }
 
   fire(event, ...args) {
     // Find event listeners, and support wildcard-event `*` to catch all
     event = event.toLowerCase();
 
-    console.log(this.constructor.name, event, args);
-
     this.executeEventCallback(event, ...args);
     this.executeEventCallback('*', event, ...args);
 
+    // For some specific registeredEventHandlers, additional more general registeredEventHandlers are fired
     switch (event) {
       case 'fileerror':
         this.fire('error', args[1], args[0]);
@@ -35,8 +34,7 @@ export default class ResumableEventHandler {
   }
 
   executeEventCallback(event, ...args) {
-    if (!this.events.hasOwnProperty(event)) return;
-    this.events[event].forEach((callback) => callback(...args));
-
+    if (!this.registeredEventHandlers.hasOwnProperty(event)) return;
+    this.registeredEventHandlers[event].forEach((callback) => callback(...args));
   }
 }

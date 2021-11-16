@@ -5,7 +5,7 @@
     "start": "node app.js"
   },
   "dependencies": {
-    "express": "latest",
-    "connect-multiparty": "latest"
+    "express": "4.17.1",
+    "connect-multiparty": "2.2.0"
   }
 }

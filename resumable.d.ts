@@ -149,14 +149,14 @@ declare namespace Resumable {
 
   class ResumableEventHandler {
     /**
-     * The component that contains the current one and should be used to bubble up the event.
+     * The component that contains the current (this) instance and should be used to bubble up the event.
      */
-    parent: Resumable | ResumableFile;
+    parent: ResumableEventHandler;
 
     /**
      * An object of Events that contains a list for each registered event name
      */
-    events: { string: function[] };
+    registeredEventHandlers: { string: function[] };
 
     /**
      * A function used to register event listeners for a certain event type.
@@ -395,7 +395,7 @@ declare namespace Resumable {
      **/
     on(event: 'chunkingComplete', callback: (file: ResumableFile) => void): void;
     /**
-     * Listen to all the events listed above with the same callback function.
+     * Listen to all the registeredEventHandlers listed above with the same callback function.
      **/
     on(event: 'catchAll', callback: () => void): void;
     /**

@@ -245,7 +245,7 @@ export default class ResumableChunk extends ResumableEventHandler {
     this.fire('progress');
 
     /**
-     * Handles the different xhr events based on the status of this chunk
+     * Handles the different xhr registeredEventHandlers based on the status of this chunk
      */
     let doneHandler = () => {
       var status = this.status;

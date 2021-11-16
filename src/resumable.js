@@ -40,6 +40,7 @@ export class Resumable extends ResumableEventHandler {
   }
 
   /**
+   * Assign the attributes of this instance via destructuring of the options object.
    * @param {{options}|{
    * maxFileSizeErrorCallback: Resumable.maxFileSizeErrorCallback,
    * minFileSizeErrorCallback: Resumable.minFileSizeErrorCallback,
@@ -52,17 +53,16 @@ export class Resumable extends ResumableEventHandler {
    * maxFilesErrorCallback: Resumable.maxFilesErrorCallback,
    * dragOverClass: string,
    * prioritizeFirstAndLastChunk: boolean,
-   * fileType: string[],
+   * fileTypes: string[],
    * maxFiles: undefined}} options
    */
   setOptions(options) {
-    // Options
     ({
       clearInput: this.clearInput = true,
       dragOverClass: this.dragOverClass = 'dragover',
-      fileType: this.fileType = [],
+      fileTypes: this.fileTypes = [],
       fileTypeErrorCallback: this.fileTypeErrorCallback = (file) => {
-        alert(`${file.fileName || file.name} has type not allowed, please upload files of type ${this.fileType}.`);
+        alert(`${file.fileName || file.name} has an unsupported file type, please upload files of type ${this.fileTypes}.`);
       },
       generateUniqueIdentifier: this._generateUniqueIdentifier = null,
       maxFileSize: this.maxFileSize = undefined,
@@ -81,13 +81,12 @@ export class Resumable extends ResumableEventHandler {
           Helpers.formatSize(this.minFileSize) + '.');
       },
       prioritizeFirstAndLastChunk: this.prioritizeFirstAndLastChunk = false,
-      fileValidationErrorCallback: this.fileValidationErrorCallback = (file) => {
-      },
+      fileValidationErrorCallback: this.fileValidationErrorCallback = (file) => {},
       simultaneousUploads: this.simultaneousUploads = 3,
     } = options);
 
     // For good behaviour we do some initial sanitizing. Remove spaces and dots and lowercase all
-    this.fileType = this.fileType.map((type) => type.replace(/[\s.]/g, '').toLowerCase());
+    this.fileTypes = this.fileTypes.map((type) => type.replace(/[\s.]/g, '').toLowerCase());
   }
 
   /**
@@ -124,7 +123,7 @@ export class Resumable extends ResumableEventHandler {
         return item;
       }
     }
-    return undefined;
+    console.warn('Item mapping did not return a file object. This might be due to an unknown file type.')
   }
 
   /**
@@ -217,17 +216,17 @@ export class Resumable extends ResumableEventHandler {
     );
 
     let validationPromises = uniqueFiles.map(async (file) => {
-      let fileType = file.type.toLowerCase(); // e.g video/mp4
-      let fileExtension = file.name.split('.').pop().toLowerCase();
-
       // Remove files that were already added based on their unique identifiers
       if (this.files.some((addedFile) => addedFile.uniqueIdentifier === file.uniqueIdentifier)) {
         this.fire('fileProcessingFailed', file, 'duplicate');
         return false;
       }
 
-      if (this.fileType.length > 0) {
-        const fileTypeFound = this.fileType.some((type) => {
+      let fileType = file.type.toLowerCase(); // e.g video/mp4
+      let fileExtension = file.name.split('.').pop().toLowerCase();
+
+      if (this.fileTypes.length > 0) {
+        const fileTypeFound = this.fileTypes.some((type) => {
           // Check whether the extension inside the filename is an allowed file type
           return fileExtension === type ||
             // If MIME type, check for wildcard or if extension matches the file's tile type
@@ -239,7 +238,7 @@ export class Resumable extends ResumableEventHandler {
         });
         if (!fileTypeFound) {
           this.fire('fileProcessingFailed', file, 'fileType');
-          this.fileTypeErrorCallback(file, errorCount++);
+          this.fileTypeErrorCallback(file);
           return false;
         }
       }
@@ -300,6 +299,7 @@ export class Resumable extends ResumableEventHandler {
 
     for (const file of validatedFiles) {
       let f = new ResumableFile(this, file, file.uniqueIdentifier, this.opts);
+      f.on('*', bubbleEvents)
       this.files.push(f);
       this.fire('fileAdded', f, event);
     }
@@ -374,8 +374,8 @@ export class Resumable extends ResumableEventHandler {
       } else {
         input.removeAttribute('webkitdirectory');
       }
-      if (this.fileType.length >= 1) {
-        input.setAttribute('accept', this.fileType.map((type) => {
+      if (this.fileTypes.length >= 1) {
+        input.setAttribute('accept', this.fileTypes.map((type) => {
           type = type.replace(/\s/g, '').toLowerCase();
           if (type.match(/^[^.][^/]+$/)) {
             type = '.' + type;

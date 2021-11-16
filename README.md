@@ -31,7 +31,7 @@ r.assignDrop(document.getElementById('dropTarget'));
 
 It is recommended to use an HTML span for the browse button.  Using an actual button does not work reliably across all browsers, because Resumable.js creates the file input as a child of this control, and this may be invalid in the case of an HTML button.
 
-After this, interaction with Resumable.js is done by listening to events:
+After this, interaction with Resumable.js is done by listening to registeredEventHandlers:
 
 ```js
 r.on('fileAdded', function(file, event){
@@ -124,7 +124,7 @@ adding the file. (Default: `null`)
 * `minFileSizeErrorCallback(file, errorCount)` A function which displays an error a selected file is smaller than allowed. (Default: displays an alert for every bad file.)
 * `maxFileSize` The maximum allowed file size.  (Default: `undefined`)
 * `maxFileSizeErrorCallback(file, errorCount)` A function which displays an error a selected file is larger than allowed. (Default: displays an alert for every bad file.)
-* `fileType` The file types allowed to upload. An empty array allow any file type. (Default: `[]`)
+* `fileTypes` The file types allowed to upload. An empty array allow any file type. (Default: `[]`)
 * `fileTypeErrorCallback(file, errorCount)` A function which displays an error a selected file has type not allowed. (Default: displays an alert for every bad file.)
 * `maxChunkRetries` The maximum number of retries for a chunk before the upload is failed. Valid values are any positive integer and `undefined` for no limit. (Default: `undefined`)
 * `permanentErrors` List of HTTP status codes that define if the chunk upload was a permanent error and should not retry the upload. (Default: `[400, 404, 409, 415, 500, 501]`)
@@ -174,7 +174,7 @@ adding the file. (Default: `null`)
 * `.chunkingStart(file)` Started preparing file for upload
 * `.chunkingProgress(file,ratio)` Show progress in file preparation
 * `.chunkingComplete(file)` File is ready for upload
-* `.catchAll(event, ...)` Listen to all the events listed above with the same callback function.
+* `.catchAll(event, ...)` Listen to all the registeredEventHandlers listed above with the same callback function.
 
 ### ResumableFile
 #### Properties

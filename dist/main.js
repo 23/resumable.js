@@ -11075,18 +11075,17 @@ var ResumableFile = /*#__PURE__*/function (_ResumableEventHandle) {
 
   var _super = _createSuper(ResumableFile);
 
-  function ResumableFile(resumableObj, file, uniqueIdentifier, options) {
+  function ResumableFile(file, uniqueIdentifier, options) {
     var _this;
 
     (0,_babel_runtime_corejs3_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_8__.default)(this, ResumableFile);
 
-    _this = _super.call(this, resumableObj);
+    _this = _super.call(this);
     _this.opts = options;
 
     _this.setOptions(options);
 
     _this._prevProgress = 0;
-    _this.resumableObj = resumableObj;
     _this.file = file;
     _this.fileName = _resumableHelpers_js__WEBPACK_IMPORTED_MODULE_16__.default.getFileNameFromFile(file);
     _this.size = file.size;
@@ -11184,7 +11183,6 @@ var ResumableFile = /*#__PURE__*/function (_ResumableEventHandle) {
           if (chunk.status === 'chunkUploading') {
             chunk.abort();
             this.fire('chunkCancel', chunk);
-            this.resumableObj.uploadNextChunk();
           }
         } // Reset this file to be void
 
@@ -11195,7 +11193,7 @@ var ResumableFile = /*#__PURE__*/function (_ResumableEventHandle) {
       }
 
       this.chunks = [];
-      this.resumableObj.removeFile(this);
+      this.fire('fileCancel', this);
       this.fire('fileProgress', this);
     }
   }, {
@@ -11206,7 +11204,7 @@ var ResumableFile = /*#__PURE__*/function (_ResumableEventHandle) {
       this.bootstrap();
       var firedRetry = false;
       this.on('chunkingComplete', function () {
-        if (!firedRetry) _this2.resumableObj.upload();
+        if (!firedRetry) _this2.fire('fileRetry');
         firedRetry = true;
       });
     }
@@ -11256,7 +11254,7 @@ var ResumableFile = /*#__PURE__*/function (_ResumableEventHandle) {
       var maxOffset = Math.max(round(this.file.size / this.chunkSize), 1);
 
       for (var offset = 0; offset < maxOffset; offset++) {
-        var chunk = new _resumableChunk_js__WEBPACK_IMPORTED_MODULE_15__.default(this.resumableObj, this, offset, this.opts);
+        var chunk = new _resumableChunk_js__WEBPACK_IMPORTED_MODULE_15__.default(this, offset, this.opts);
         chunk.on('chunkProgress', progressHandler);
         chunk.on('chunkError', errorHandler);
         chunk.on('chunkSuccess', successHandler);
@@ -11464,7 +11462,7 @@ var ResumableChunk = /*#__PURE__*/function (_ResumableEventHandle) {
 
   var _super = _createSuper(ResumableChunk);
 
-  function ResumableChunk(resumableObj, fileObj, offset, options) {
+  function ResumableChunk(fileObj, offset, options) {
     var _this;
 
     (0,_babel_runtime_corejs3_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_10__.default)(this, ResumableChunk);
@@ -11473,7 +11471,6 @@ var ResumableChunk = /*#__PURE__*/function (_ResumableEventHandle) {
 
     _this.setOptions(options);
 
-    _this.resumableObj = resumableObj;
     _this.fileObj = fileObj;
     _this.fileObjSize = fileObj.size;
     _this.fileObjType = fileObj.file.type;
@@ -11687,8 +11684,7 @@ var ResumableChunk = /*#__PURE__*/function (_ResumableEventHandle) {
         var status = _this2.status;
 
         if (status === 'success') {
-          _this2.fire('chunkSuccess', _this2.message()); //this.resumableObj.uploadNextChunk();
-
+          _this2.fire('chunkSuccess', _this2.message());
         } else {
           _this2.send();
         }
@@ -13225,6 +13221,9 @@ var Resumable = /*#__PURE__*/function (_ResumableEventHandle) {
                     f.on('chunkError', function () {
                       return _this6.handleChunkError();
                     });
+                    f.on('chunkCancel', function () {
+                      return _this6.handleChunkCancel();
+                    });
                     f.on('fileProgress', function () {
                       return _this6.handleFileProgress();
                     });
@@ -13241,8 +13240,17 @@ var Resumable = /*#__PURE__*/function (_ResumableEventHandle) {
                       }
 
                       return _this6.handleFileSuccess(args);
-                    }); //f.on('*', (event, ...args) => this.fire(event, ...args));
+                    });
+                    f.on('fileCancel', function () {
+                      for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+                        args[_key3] = arguments[_key3];
+                      }
 
+                      return _this6.handleFileCancel(args);
+                    });
+                    f.on('fileRetry', function () {
+                      return _this6.handleFileRetry();
+                    });
                     this.files.push(f);
                     this.fire('fileAdded', f, event);
                   } // all files processed, trigger event
@@ -13620,6 +13628,11 @@ var Resumable = /*#__PURE__*/function (_ResumableEventHandle) {
       this.uploadNextChunk();
     }
   }, {
+    key: "handleChunkCancel",
+    value: function handleChunkCancel() {
+      this.uploadNextChunk();
+    }
+  }, {
     key: "handleFileError",
     value: function handleFileError(args) {
       this.fire('error', args[1], args[0]);
@@ -13636,6 +13649,16 @@ var Resumable = /*#__PURE__*/function (_ResumableEventHandle) {
     key: "handleFileProgress",
     value: function handleFileProgress() {
       this.fire('progress');
+    }
+  }, {
+    key: "handleFileCancel",
+    value: function handleFileCancel(args) {
+      this.removeFile(args[0]);
+    }
+  }, {
+    key: "handleFileRetry",
+    value: function handleFileRetry() {
+      this.upload();
     }
   }]);
 

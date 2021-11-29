@@ -4,12 +4,11 @@ import Helpers from './resumableHelpers.js';
 import ResumableEventHandler from './resumableEventHandler.js';
 
 export default class ResumableFile extends ResumableEventHandler {
-  constructor(resumableObj, file, uniqueIdentifier, options) {
-    super(resumableObj);
+  constructor(file, uniqueIdentifier, options) {
+    super();
     this.opts = options;
     this.setOptions(options);
     this._prevProgress = 0;
-    this.resumableObj = resumableObj;
     this.file = file;
     this.fileName = Helpers.getFileNameFromFile(file);
     this.size = file.size;
@@ -82,7 +81,7 @@ export default class ResumableFile extends ResumableEventHandler {
     }
     // Reset this file to be void
     this.chunks = [];
-    this.resumableObj.removeFile(this);
+    this.fire('fileCancel', this);
     this.fire('fileProgress', this);
   }
 
@@ -90,7 +89,7 @@ export default class ResumableFile extends ResumableEventHandler {
     this.bootstrap();
     let firedRetry = false;
     this.on('chunkingComplete', () => {
-      if (!firedRetry) this.resumableObj.upload();
+      if (!firedRetry) this.fire('fileRetry');
       firedRetry = true;
     });
   }

@@ -298,13 +298,15 @@ export class Resumable extends ResumableEventHandler {
     let skippedFiles = filesWithUniqueIdentifiers.filter((file) => !validatedFiles.includes(file));
 
     for (const file of validatedFiles) {
-      let f = new ResumableFile(this, file, file.uniqueIdentifier, this.opts);
+      let f = new ResumableFile(file, file.uniqueIdentifier, this.opts);
       f.on('chunkSuccess', () => this.handleChunkSuccess());
       f.on('chunkError', () => this.handleChunkError());
       f.on('chunkCancel', () => this.handleChunkCancel());
       f.on('fileProgress', () => this.handleFileProgress());
       f.on('fileError', (...args) => this.handleFileError(args));
       f.on('fileSuccess', (...args) => this.handleFileSuccess(args));
+      f.on('fileCancel', (...args) => this.handleFileCancel(args));
+      f.on('fileRetry', () => this.handleFileRetry());
       this.files.push(f);
       this.fire('fileAdded', f, event);
     }
@@ -539,5 +541,13 @@ export class Resumable extends ResumableEventHandler {
 
   handleFileProgress() {
     this.fire('progress');
+  }
+
+  handleFileCancel(args) {
+    this.removeFile(args[0])
+  }
+
+  handleFileRetry() {
+    this.upload();
   }
 }

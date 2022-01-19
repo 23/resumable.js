@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
   mode: 'none',
-  entry: './src/resumable.js',
+  entry: './src/resumable.ts',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'main.js',
@@ -11,36 +11,17 @@ module.exports = {
     globalObject: 'this',
     umdNamedDefine: true,
   },
+  devtool: "source-map",
+  resolve: {
+    // Add '.ts' and '.tsx' as resolvable extensions.
+    extensions: ["", ".webpack.js", ".web.js", ".ts", ".tsx", ".js"],
+  },
   module: {
     rules: [
-      // the 'transform-runtime' plugin tells Babel to
-      // require the runtime instead of inlining it.
-      {
-        test: /\.m?js$/,
-        exclude: /(node_modules|bower_components)/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: [
-              ["@babel/preset-env", {
-                useBuiltIns: 'usage',
-                corejs: 3
-              }]
-            ],
-            plugins: [
-              [
-                '@babel/plugin-transform-runtime',
-                {
-                  'corejs': 3,
-                },
-              ],
-            ],
-          },
-        },
-      },
+      // All files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'.
+      { test: /\.tsx?$/, loader: "ts-loader" },
+      // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
+      { test: /\.js$/, loader: "source-map-loader" },
     ],
-  },
-  resolve: {
-    extensions: ['.js'],
   },
 };

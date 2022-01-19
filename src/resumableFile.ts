@@ -1,64 +1,64 @@
 // INTERNAL OBJECT TYPES
-import ResumableChunk from './resumableChunk.js';
-import Helpers from './resumableHelpers.js';
-import ResumableEventHandler from './resumableEventHandler.js';
+import ResumableChunk from './resumableChunk';
+import Helpers from './resumableHelpers';
+import ResumableEventHandler from './resumableEventHandler';
+import {ResumableConfiguration} from './types/types';
 
 export default class ResumableFile extends ResumableEventHandler {
-  constructor(file, uniqueIdentifier, options) {
+  private opts: object;
+  private _prevProgress: number = 0;
+  private isPaused: boolean = false;
+
+  file: File;
+  fileName: string;
+  size: number;
+  relativePath: string;
+  uniqueIdentifier: string;
+  private _error: boolean;
+  chunks: ResumableChunk[] = [];
+  private chunkSize: number = 1024 * 1024; // 1 MB
+  private forceChunkSize: boolean = false;
+
+  constructor(file: File, uniqueIdentifier: string, options: object) {
     super();
     this.opts = options;
-    this.setOptions(options);
-    this._prevProgress = 0;
+    this.setInstanceProperties(options);
     this.file = file;
     this.fileName = Helpers.getFileNameFromFile(file);
     this.size = file.size;
-    this.relativePath = file.relativePath || file.webkitRelativePath || this.fileName;
+    this.relativePath = /*file.relativePath ||*/ file.webkitRelativePath || this.fileName;
     this.uniqueIdentifier = uniqueIdentifier;
-    this._pause = false;
     this._error = uniqueIdentifier !== undefined;
-    this.preprocessState = 0; // 0 = unprocessed, 1 = processing, 2 = finished
 
-    // Main code to set up a file object with chunks,
-    // packaged to be able to handle retries if needed.
-    /**
-     * @type {ResumableChunk[]}
-     */
-    this.chunks = [];
-
-    // Bootstrap and return
+    // Bootstrap file
     this.fire('chunkingStart', this);
     this.bootstrap();
-    return this;
   }
 
-  get pause() {
-    return this._pause;
+  get pause(): boolean {
+    return this.isPaused;
   }
 
-  set pause(pause) {
+  set pause(pause: boolean) {
     if (pause === undefined) {
-      this._pause = !this._pause;
+      this.isPaused = !this.isPaused;
     } else {
-      this._pause = pause;
+      this.isPaused = pause;
     }
   }
 
-  /**
-   * @param {{forceChunkSize: boolean, preprocessFile: null}} options
-   */
-  setOptions(options) {
+  setInstanceProperties(options: ResumableConfiguration) {
     // Options
     ({
-      chunkSize: this.chunkSize = 1 * 1024 * 1024, // 1 MB
-      forceChunkSize: this.forceChunkSize = false,
-      preprocessFile: this.preprocessFile = null,
+      chunkSize: this.chunkSize,
+      forceChunkSize: this.forceChunkSize,
     } = options);
   }
 
   /**
    * Stop current uploads
    */
-  abort() {
+  abort(): void {
     let abortCount = 0;
     for (const chunk of this.chunks) {
       if (chunk.status === 'chunkUploading') {
@@ -72,7 +72,7 @@ export default class ResumableFile extends ResumableEventHandler {
   /**
    * Cancel uploading this file and remove it from the file list
    */
-  cancel() {
+  cancel(): void {
     for (const chunk of this.chunks) {
       if (chunk.status === 'chunkUploading') {
         chunk.abort();
@@ -85,7 +85,7 @@ export default class ResumableFile extends ResumableEventHandler {
     this.fire('fileProgress', this);
   }
 
-  retry() {
+  retry(): void {
     this.bootstrap();
     let firedRetry = false;
     this.on('chunkingComplete', () => {
@@ -94,7 +94,7 @@ export default class ResumableFile extends ResumableEventHandler {
     });
   }
 
-  bootstrap() {
+  bootstrap(): void {
     const progressHandler = (message) => this.fire('fileProgress', this, message);
     const retryHandler = () =>  this.fire('fileRetry', this);
     const successHandler = (message) => {
@@ -132,7 +132,7 @@ export default class ResumableFile extends ResumableEventHandler {
     this.fire('chunkingComplete', this);
   }
 
-  progress() {
+  progress(): number {
     if (this._error) return 1;
     // Sum up progress across everything
     var ret = 0;
@@ -147,41 +147,22 @@ export default class ResumableFile extends ResumableEventHandler {
     return ret;
   }
 
-  isUploading() {
+  isUploading(): boolean {
     return this.chunks.some((chunk) => chunk.status === 'chunkUploading');
   }
 
   isComplete() {
-    if (this.preprocessState === 1) {
-      return false;
-    }
     return !this.chunks.some((chunk) =>
-      chunk.status === 'chunkPending' || chunk.status === 'chunkUploading' || chunk.preprocessState === 1);
-  }
-
-  preprocessFinished() {
-    this.preprocessState = 2;
-    this.upload();
+      chunk.status === 'chunkPending' || chunk.status === 'chunkUploading');
   }
 
   upload() {
     if (this.pause) {
       return false;
     }
-    if (typeof this.preprocessFile === 'function') {
-      switch (this.preprocessState) {
-        case 0:
-          this.preprocessState = 1;
-          this.preprocessFile(this);
-          return true;
-        case 1:
-          return true;
-        case 2:
-          break;
-      }
-    }
+
     for (const chunk of this.chunks) {
-      if (chunk.status === 'chunkPending' && chunk.preprocessState !== 1) {
+      if (chunk.status === 'chunkPending') {
         chunk.send();
         return true;
       }
@@ -194,7 +175,7 @@ export default class ResumableFile extends ResumableEventHandler {
       return;
     }
     for (var num = 0; num < chunkNumber; num++) {
-      this.chunks[num].markComplete = true;
+      this.chunks[num].markComplete();
     }
   }
 }

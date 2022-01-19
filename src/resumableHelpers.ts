@@ -2,20 +2,18 @@
 export default class ResumableHelpers {
   /**
    * Stop the propagation and default behavior of the given event `e`.
-   * @param {Event} e
    */
-  static stopEvent(e) {
+  static stopEvent(e: Event): void {
     e.stopPropagation();
     e.preventDefault();
   }
 
   /**
-   * Some confusion in different versions of Firefox using different attribute names for the file name
-   * @param {File} file The file whose filename should be retrieved
-   * @returns {string} The filename of the given file object
+   *
+   * @param file The file whose filename should be retrieved
    */
-  static getFileNameFromFile(file) {
-    return file.fileName || file.name;
+  static getFileNameFromFile(file: File): string {
+    return /*file.fileName ||*/ file.name;
   }
 
   /**
@@ -23,8 +21,8 @@ export default class ResumableHelpers {
    * @param {File} file The file for which the identifier should be generated
    * @returns {string} The unique identifier for the given file object
    */
-  static generateUniqueIdentifier(file) {
-    var relativePath = file.webkitRelativePath || file.relativePath || this.getFileNameFromFile(file);
+  static generateUniqueIdentifier(file: File): string {
+    var relativePath = file.webkitRelativePath || /*file.relativePath ||*/ this.getFileNameFromFile(file);
     var size = file.size;
     return (size + '-' + relativePath.replace(/[^0-9a-zA-Z_-]/img, ''));
   }
@@ -32,10 +30,8 @@ export default class ResumableHelpers {
   /**
    * Flatten the given array and all contained subarrays.
    * Credit: {@link https://github.com/you-dont-need/You-Dont-Need-Lodash-Underscore#_flattendeep}
-   * @param {*[]} array
-   * @returns {*[]} The flattened array
    */
-  static flattenDeep(array) {
+  static flattenDeep(array: any[]): any[] {
     return Array.isArray(array)
       ? array.reduce((a, b) => a.concat(this.flattenDeep(b)), [])
       : [array];
@@ -44,11 +40,8 @@ export default class ResumableHelpers {
   /**
    * Filter the given array based on the predicate inside `callback`
    * and executes `errorCallback` for duplicate elements.
-   * @param {*[]} array
-   * @param {function(*): *} callback
-   * @param {function(*): void} errorCallback
    */
-  static uniqBy(array, callback, errorCallback) {
+  static uniqBy(array: any[], callback: Function, errorCallback: Function): any[] {
     let seen = new Set();
     return array.filter((item) => {
       let k = callback(item);
@@ -64,9 +57,8 @@ export default class ResumableHelpers {
 
   /**
    * Format the size given in Bytes in a human readable format.
-   * @param {number} size
    */
-  static formatSize(size) {
+  static formatSize(size: number): string {
     if (size < 1024) {
       return size + ' bytes';
     }
@@ -81,13 +73,14 @@ export default class ResumableHelpers {
 
   /**
    * Get the target url for the specified request type and params
-   * @param {string} requestType
-   * @param {string} sendTarget
-   * @param {string} testTarget
-   * @param {Object} params
-   * @param {string} parameterNamespace
    */
-  static getTarget(requestType, sendTarget, testTarget, params, parameterNamespace = '') {
+  static getTarget(
+    requestType: string,
+    sendTarget: string,
+    testTarget: string,
+    params: object,
+    parameterNamespace: string = ''
+  ) {
     let target = sendTarget;
 
     if (requestType === 'test' && testTarget) {

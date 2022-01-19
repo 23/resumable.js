@@ -49,7 +49,7 @@ app.get('/download/:identifier', function(req, res) {
 app.get('/js/:filename', function(req, res) {
   var fs = require('fs');
   res.setHeader('content-type', 'application/javascript');
-  fs.createReadStream('../../src/' + req.params.filename).pipe(res);
+  fs.createReadStream('../../dist/' + req.params.filename).pipe(res);
 });
 
 app.listen(3000);

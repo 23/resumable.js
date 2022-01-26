@@ -1,11 +1,13 @@
-// INTERNAL OBJECT TYPES
 import ResumableChunk from './resumableChunk';
 import Helpers from './resumableHelpers';
 import ResumableEventHandler from './resumableEventHandler';
-import {ResumableConfiguration} from './types/types';
+import {ResumableChunkStatus, ResumableConfiguration} from './types/types';
 
+/**
+ * A single file object that should be uploaded in multiple chunks
+ */
 export default class ResumableFile extends ResumableEventHandler {
-  private opts: object;
+  private opts: ResumableConfiguration;
   private _prevProgress: number = 0;
   private isPaused: boolean = false;
 
@@ -35,33 +37,20 @@ export default class ResumableFile extends ResumableEventHandler {
     this.bootstrap();
   }
 
-  get pause(): boolean {
-    return this.isPaused;
-  }
-
-  set pause(pause: boolean) {
-    if (pause === undefined) {
-      this.isPaused = !this.isPaused;
-    } else {
-      this.isPaused = pause;
-    }
-  }
-
+  /**
+   * Set the options provided inside the configuration object on this instance
+   */
   setInstanceProperties(options: ResumableConfiguration) {
-    // Options
-    ({
-      chunkSize: this.chunkSize,
-      forceChunkSize: this.forceChunkSize,
-    } = options);
+    Object.assign(this, options);
   }
 
   /**
-   * Stop current uploads
+   * Stop current uploads for this file
    */
   abort(): void {
     let abortCount = 0;
     for (const chunk of this.chunks) {
-      if (chunk.status === 'chunkUploading') {
+      if (chunk.status === ResumableChunkStatus.UPLOADING) {
         chunk.abort();
         abortCount++;
       }
@@ -74,7 +63,7 @@ export default class ResumableFile extends ResumableEventHandler {
    */
   cancel(): void {
     for (const chunk of this.chunks) {
-      if (chunk.status === 'chunkUploading') {
+      if (chunk.status === ResumableChunkStatus.UPLOADING) {
         chunk.abort();
         this.fire('chunkCancel', chunk);
       }
@@ -85,6 +74,9 @@ export default class ResumableFile extends ResumableEventHandler {
     this.fire('fileProgress', this);
   }
 
+  /**
+   * Retry uploading this file
+   */
   retry(): void {
     this.bootstrap();
     let firedRetry = false;
@@ -94,6 +86,9 @@ export default class ResumableFile extends ResumableEventHandler {
     });
   }
 
+  /**
+   * Prepare this file for a new upload, by dividing it into multiple chunks
+   */
   bootstrap(): void {
     const progressHandler = (message) => this.fire('fileProgress', this, message);
     const retryHandler = () =>  this.fire('fileRetry', this);
@@ -101,7 +96,7 @@ export default class ResumableFile extends ResumableEventHandler {
       if (this._error) return;
       this.fire('chunkSuccess');
       this.fire('fileProgress', this, message); // it's at least progress
-      if (this.isComplete()) {
+      if (this.isComplete) {
         this.fire('fileSuccess', this, message);
       }
     };
@@ -132,13 +127,16 @@ export default class ResumableFile extends ResumableEventHandler {
     this.fire('chunkingComplete', this);
   }
 
+  /**
+   * Get the progress for uploading this file based on the progress of the individual file chunks
+   */
   progress(): number {
     if (this._error) return 1;
     // Sum up progress across everything
     var ret = 0;
     var error = false;
     for (const chunk of this.chunks) {
-      if (chunk.status === 'chunkError') error = true;
+      if (chunk.status === ResumableChunkStatus.ERROR) error = true;
       ret += chunk.progress(true); // get chunk progress relative to entire file
     }
     ret = error ? 1 : (ret > 0.99999 ? 1 : ret);
@@ -147,22 +145,32 @@ export default class ResumableFile extends ResumableEventHandler {
     return ret;
   }
 
-  isUploading(): boolean {
-    return this.chunks.some((chunk) => chunk.status === 'chunkUploading');
+  /**
+   * Check whether at least one of this file's chunks is currently uploading
+   */
+  get isUploading(): boolean {
+    return this.chunks.some((chunk) => chunk.status === ResumableChunkStatus.UPLOADING);
   }
 
-  isComplete() {
+  /**
+   * Check whether all of this file's chunks completed their upload requests and whether it should be
+   * treated as completed.
+   */
+  get isComplete(): boolean {
     return !this.chunks.some((chunk) =>
-      chunk.status === 'chunkPending' || chunk.status === 'chunkUploading');
+      chunk.status === ResumableChunkStatus.PENDING || chunk.status === ResumableChunkStatus.UPLOADING);
   }
 
-  upload() {
-    if (this.pause) {
+  /**
+   * Initiate the upload of a new chunk for this file. This function returns whether a new upload was started or not.
+   */
+  upload(): boolean {
+    if (this.isPaused) {
       return false;
     }
 
     for (const chunk of this.chunks) {
-      if (chunk.status === 'chunkPending') {
+      if (chunk.status === ResumableChunkStatus.PENDING) {
         chunk.send();
         return true;
       }
@@ -170,11 +178,15 @@ export default class ResumableFile extends ResumableEventHandler {
     return false;
   }
 
-  markChunksCompleted(chunkNumber) {
+  /**
+   * Mark a given number of chunks as already uploaded to the server.
+   * @param chunkNumber The index until which all chunks should be marked as completed
+   */
+  markChunksCompleted(chunkNumber: number): void {
     if (!this.chunks || this.chunks.length <= chunkNumber) {
       return;
     }
-    for (var num = 0; num < chunkNumber; num++) {
+    for (let num = 0; num < chunkNumber; num++) {
       this.chunks[num].markComplete();
     }
   }

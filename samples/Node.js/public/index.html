@@ -4,6 +4,7 @@
     <title>Resumable.js - Multiple simultaneous, stable and resumable uploads via the HTML5 File API</title>
     <meta charset="utf-8"/>
     <link rel="stylesheet" type="text/css" href="style.css"/>
+    <script src="/js/main.js"></script>
   </head>
   <body>
     <div id="frame">
@@ -61,9 +62,7 @@
       <ul class="resumable-list"></ul>
 
       <script type="module">
-        import {Resumable} from '/js/main.js';
-
-        window.r = new Resumable({
+        window.r = new resumablejs.Resumable({
           target: '/upload',
           chunkSize: 1 * 1024 * 1024,
           simultaneousUploads: 4,

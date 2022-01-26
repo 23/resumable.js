@@ -1,15 +1,11 @@
 import Helpers from './resumableHelpers';
 import ResumableEventHandler from './resumableEventHandler';
 import ResumableFile from './resumableFile';
-import {ResumableConfiguration} from './types/types';
+import {ResumableChunkStatus, ResumableConfiguration} from './types/types';
 
-const enum ResumableChunkStatus {
-  PENDING ='chunkPending',
-  UPLOADING = 'chunkUploading',
-  SUCCESS = 'chunkSuccess',
-  ERROR = 'chunkError',
-}
-
+/**
+ * A file chunk that contains all the data that for a single upload request
+ */
 export default class ResumableChunk extends ResumableEventHandler {
   private fileObj: ResumableFile;
   private fileObjSize: number;
@@ -57,7 +53,7 @@ export default class ResumableChunk extends ResumableEventHandler {
   testTarget: string = '';
 
 
-  constructor(fileObj, offset, options: ResumableConfiguration) {
+  constructor(fileObj: ResumableFile, offset: number, options: ResumableConfiguration) {
     super();
     this.setInstanceProperties(options);
     this.fileObj = fileObj;
@@ -75,43 +71,17 @@ export default class ResumableChunk extends ResumableEventHandler {
     this.xhr = null;
   }
 
-  setInstanceProperties(options: ResumableConfiguration) {
-    // Options
-    Object.apply(this, options);
-    ({
-      chunkSize: this.chunkSize,
-      forceChunkSize: this.forceChunkSize,
-      fileParameterName: this.fileParameterName,
-      chunkNumberParameterName: this.chunkNumberParameterName,
-      chunkSizeParameterName: this.chunkSizeParameterName,
-      currentChunkSizeParameterName: this.currentChunkSizeParameterName,
-      totalSizeParameterName: this.totalSizeParameterName,
-      typeParameterName: this.typeParameterName,
-      identifierParameterName: this.identifierParameterName,
-      fileNameParameterName: this.fileNameParameterName,
-      relativePathParameterName: this.relativePathParameterName,
-      totalChunksParameterName: this.totalChunksParameterName,
-      throttleProgressCallbacks: this.throttleProgressCallbacks,
-      query: this.query,
-      headers: this.headers,
-      method: this.method,
-      uploadMethod: this.uploadMethod,
-      testMethod: this.testMethod,
-      parameterNamespace: this.parameterNamespace,
-      testChunks: this.testChunks,
-      maxChunkRetries: this.maxChunkRetries,
-      chunkRetryInterval: this.chunkRetryInterval,
-      permanentErrors: this.permanentErrors,
-      withCredentials: this.withCredentials,
-      xhrTimeout: this.xhrTimeout,
-      chunkFormat: this.chunkFormat,
-      setChunkTypeFromFile: this.setChunkTypeFromFile,
-      target: this.target,
-      testTarget: this.testTarget,
-    } = options);
+  /**
+   * Set the options provided inside the configuration object on this instance
+   */
+  setInstanceProperties(options: ResumableConfiguration): void {
+    Object.assign(this, options);
   }
 
-  setCustomHeaders() {
+  /**
+   * Set the header values for the current XMLHttpRequest
+   */
+  setCustomHeaders(): void {
     if (!this.xhr) {
       return;
     }
@@ -125,7 +95,10 @@ export default class ResumableChunk extends ResumableEventHandler {
     }
   }
 
-  get formattedQuery() {
+  /**
+   * Get query parameters for this chunk as an object, combined with custom parameters if provided
+   */
+  get formattedQuery(): object {
     var customQuery = this.query;
     if (typeof customQuery == 'function') customQuery = customQuery(this.fileObj, this);
 
@@ -145,6 +118,9 @@ export default class ResumableChunk extends ResumableEventHandler {
     return {...extraData, ...customQuery};
   }
 
+  /**
+   * Determine the status for this Chunk based on different parameters of the underlying XMLHttpRequest
+   */
   get status(): ResumableChunkStatus {
     if (this.pendingRetry) {
       // if pending retry then that's effectively the same as actively uploading,
@@ -171,7 +147,11 @@ export default class ResumableChunk extends ResumableEventHandler {
     }
   };
 
-  getTarget(requestType) {
+  /**
+   * Get the target url for the specified request type and the configured parameters of this chunk
+   * @param requestType The type of the request, either 'test' or 'upload'
+   */
+  getTarget(requestType: string): string {
     return Helpers.getTarget(requestType, this.target, this.testTarget, this.formattedQuery, this.parameterNamespace);
   }
 
@@ -185,7 +165,7 @@ export default class ResumableChunk extends ResumableEventHandler {
     var testHandler = () => {
       this.tested = true;
       var status = this.status;
-      if (status === 'chunkSuccess') {
+      if (status === ResumableChunkStatus.SUCCESS) {
         this.fire('chunkSuccess', this.message());
       } else {
         this.send();
@@ -226,10 +206,10 @@ export default class ResumableChunk extends ResumableEventHandler {
     this.xhr = new XMLHttpRequest();
 
     // Progress
-    this.xhr.upload.addEventListener('progress', (e) => {
+    this.xhr.upload.addEventListener('progress', (e: ProgressEvent<XMLHttpRequestEventTarget>) => {
       if (Date.now() - this.lastProgressCallback.getTime() > this.throttleProgressCallbacks * 1000) {
         this.fire('chunkProgress');
-        this.lastProgressCallback = (new Date);
+        this.lastProgressCallback = new Date();
       }
       this.loaded = e.loaded || 0;
     }, false);
@@ -243,8 +223,8 @@ export default class ResumableChunk extends ResumableEventHandler {
     let doneHandler = () => {
       var status = this.status;
       switch (status) {
-        case 'chunkSuccess':
-        case 'chunkError':
+        case ResumableChunkStatus.SUCCESS:
+        case ResumableChunkStatus.ERROR:
           this.fire(status, this.message());
           break;
         default:
@@ -284,7 +264,7 @@ export default class ResumableChunk extends ResumableEventHandler {
           break;
         case 'base64':
           var fr = new FileReader();
-          fr.onload = (e) => {
+          fr.onload = () => {
             data.append(parameterNamespace + this.fileParameterName, fr.result);
             this.xhr.send(data);
           };
@@ -309,10 +289,17 @@ export default class ResumableChunk extends ResumableEventHandler {
     }
   }
 
+  /**
+   * Return the response text of the underlying XMLHttpRequest if it exists
+   */
   message(): string {
     return this.xhr ? this.xhr.responseText : '';
   };
 
+  /**
+   * Return the progress for the current chunk as a number between 0 and 1
+   * @param relative Whether or not the progress should be calculated based on the size of the entire file
+   */
   progress(relative: boolean = false): number {
     var factor = relative ? (this.endByte - this.startByte) / this.fileObjSize : 1;
     if (this.pendingRetry) return 0;
@@ -328,7 +315,10 @@ export default class ResumableChunk extends ResumableEventHandler {
     }
   }
 
-  markComplete() {
+  /**
+   * Mark this chunk as completed because it was already uploaded to the server.
+   */
+  markComplete(): void {
     this.isMarkedComplete = true;
   }
 }

@@ -1,13 +1,20 @@
 import ResumableFile from '../resumableFile';
 
-interface ExtendedFile extends File {
+declare interface ExtendedFile extends File {
   uniqueIdentifier?: string,
   relativePath?: string,
 }
 
-interface ResumableConfiguration {
+declare const enum ResumableChunkStatus {
+  PENDING ='chunkPending',
+  UPLOADING = 'chunkUploading',
+  SUCCESS = 'chunkSuccess',
+  ERROR = 'chunkError',
+}
+
+declare interface ResumableConfiguration {
   /**
-   * The target URL for the multipart POST request. This can be a string or a function that allows you you to construct and return a value, based on supplied params. (Default: /)
+   * The target URL for the multipart POST request. This can be a string or a function that allows you to construct and return a value, based on supplied params. (Default: /)
    **/
   target?: string;
   /**

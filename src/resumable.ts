@@ -1,14 +1,18 @@
 import Helpers from './resumableHelpers';
 import ResumableFile from './resumableFile';
 import ResumableEventHandler from './resumableEventHandler';
-import {ExtendedFile, ResumableConfiguration} from './types/types';
+import {ExtendedFile, ResumableChunkStatus, ResumableConfiguration} from './types/types';
+
 /*
 * MIT Licensed
-* http://www.23developer.com/opensource
+* http://www.twentythree.com/
 * http://github.com/23/resumable.js
-* Steffen Tiedemann Christensen, steffen@23company.com
+* Steffen Tiedemann Christensen, steffen@twentythree.com
 */
 
+/**
+ * An instance of a resumable upload handler that contains one or multiple files which should be uploaded in chunks.
+ */
 export class Resumable extends ResumableEventHandler {
   private opts: ResumableConfiguration;
   private files: ResumableFile[] = [];
@@ -49,17 +53,15 @@ export class Resumable extends ResumableEventHandler {
     this.checkSupport();
   }
 
-  get version(): number {
-    return 1.0;
-  }
-
-  checkSupport(): void {
-    // SUPPORTED BY BROWSER?
-    // Check if these features are supported by the browser:
-    // - File object type
-    // - Blob object type
-    // - FileList object type
-    // - slicing files
+  /**
+   * Check whether the current browser supports the essential functions for the package to work.
+   * The method checks if these features are supported:
+   * - File object type
+   * - Blob object type
+   * - FileList object type
+   * - slicing files
+   */
+  private checkSupport(): void {
     this.support =
       File !== undefined &&
       Blob !== undefined &&
@@ -73,34 +75,19 @@ export class Resumable extends ResumableEventHandler {
   /**
    * Assign the attributes of this instance via destructuring of the options object.
    */
-  setInstanceProperties(options: ResumableConfiguration) {
-    ({
-      clearInput: this.clearInput,
-      dragOverClass: this.dragOverClass,
-      fileTypes: this.fileTypes,
-      fileTypeErrorCallback: this.fileTypeErrorCallback,
-      generateUniqueIdentifier: this._generateUniqueIdentifier,
-      maxFileSize: this.maxFileSize,
-      maxFileSizeErrorCallback: this.maxFileSizeErrorCallback,
-      maxFiles: this.maxFiles,
-      maxFilesErrorCallback: this.maxFilesErrorCallback,
-      minFileSize: this.minFileSize,
-      minFileSizeErrorCallback: this.minFileSizeErrorCallback,
-      prioritizeFirstAndLastChunk: this.prioritizeFirstAndLastChunk,
-      fileValidationErrorCallback: this.fileValidationErrorCallback,
-      simultaneousUploads: this.simultaneousUploads,
-    } = options);
+  private setInstanceProperties(options: ResumableConfiguration) {
+    Object.assign(this, options);
 
     // For good behaviour we do some initial sanitizing. Remove spaces and dots and lowercase all
     this.fileTypes = this.fileTypes.map((type) => type.replace(/[\s.]/g, '').toLowerCase());
   }
 
   /**
-   * Transforms a single fileEntry item into a File Object
+   * Transforms a single fileEntry or DirectoryEntry item into a list of File objects
    * @param {Object} item item to upload, may be file or directory entry
    * @param {string} path current file path
    */
-  async mapItemToFile(item: FileSystemEntry, path: string): Promise<File[]> {
+  private async mapItemToFile(item: FileSystemEntry, path: string): Promise<File[]> {
     if (item instanceof FileSystemFileEntry) {
       // file entry provided
       const file = await new Promise((resolve, reject) => item.file(resolve, reject)) as ExtendedFile;
@@ -116,7 +103,13 @@ export class Resumable extends ResumableEventHandler {
     return [];
   }
 
-  async mapDragItemToFile(item: DataTransferItem, path: string): Promise<File[]> {
+  /**
+   * Transforms a single DataTransfer item into a File object. This may include either extracting the given file or
+   * all files inside the provided directory.
+   * @param item item to upload, may be file or directory entry
+   * @param path current file path
+   */
+  private async mapDragItemToFile(item: DataTransferItem, path: string): Promise<File[]> {
     let entry = item.webkitGetAsEntry();
     if (entry instanceof FileSystemDirectoryEntry) {
       return await this.processDirectory(entry, path + entry.name + '/');
@@ -133,11 +126,9 @@ export class Resumable extends ResumableEventHandler {
   }
 
   /**
-   * recursively traverse directory and collect files to upload
-   * @param  {Object}   directory directory to process
-   * @param  {string}   path      current path
+   * Recursively traverse a directory and collect files to upload
    */
-  processDirectory(directory: FileSystemDirectoryEntry, path: string): Promise<File[]> {
+  private processDirectory(directory: FileSystemDirectoryEntry, path: string): Promise<File[]> {
     return new Promise((resolve, reject) => {
       const dirReader = directory.createReader();
       let allEntries = [];
@@ -163,7 +154,10 @@ export class Resumable extends ResumableEventHandler {
     });
   }
 
-  async onDrop(e: DragEvent): Promise<void> {
+  /**
+   * Handle the event when a new file was provided via drag-and-drop
+   */
+  private async onDrop(e: DragEvent): Promise<void> {
     (e.currentTarget as HTMLElement).classList.remove(this.dragOverClass);
     Helpers.stopEvent(e);
 
@@ -190,11 +184,17 @@ export class Resumable extends ResumableEventHandler {
     }
   }
 
-  onDragLeave(e: DragEvent): void {
+  /**
+   * Handle the event when a drag-and-drop item leaves the area of assigned drag-and-drop area
+   */
+  private onDragLeave(e: DragEvent): void {
     (e.currentTarget as HTMLElement).classList.remove(this.dragOverClass);
   }
 
-  onDragOverEnter(e: DragEvent): void {
+  /**
+   * Handle the event when a drag-and-drop item enters the area of assigned drag-and-drop area
+   */
+  private onDragOverEnter(e: DragEvent): void {
     e.preventDefault();
     let dt = e.dataTransfer;
     if (dt.types.includes('Files')) { // only for file drop
@@ -208,13 +208,12 @@ export class Resumable extends ResumableEventHandler {
     }
   };
 
-
   /**
    * Validate and clean a list of files. This includes the removal of duplicates, a check whether the file type is
    * allowed and custom validation functions defined per file type.
-   * @param {File[]} files
+   * @param {ExtendedFile[]} files A list of File instances that were previously extended with a uniqueIdentifier
    */
-  async validateFiles(files: ExtendedFile[]): Promise<ExtendedFile[]> {
+  private async validateFiles(files: ExtendedFile[]): Promise<ExtendedFile[]> {
     // Remove files that are duplicated in the original array, based on their unique identifiers
     let uniqueFiles = Helpers.uniqBy(files,
       (file) => file.uniqueIdentifier,
@@ -228,7 +227,7 @@ export class Resumable extends ResumableEventHandler {
         return false;
       }
 
-      let fileType = file.type.toLowerCase(); // e.g video/mp4
+      let fileType: string = file.type.toLowerCase();
       let fileExtension = file.name.split('.').pop().toLowerCase();
 
       if (this.fileTypes.length > 0) {
@@ -238,7 +237,7 @@ export class Resumable extends ResumableEventHandler {
             // If MIME type, check for wildcard or if extension matches the file's tile type
             type.includes('/') && (
               type.includes('*') &&
-              fileType.substr(0, type.indexOf('*')) === type.substr(0, type.indexOf('*')) ||
+              fileType.substring(0, type.indexOf('*')) === type.substring(0, type.indexOf('*')) ||
               fileType === type
             );
         });
@@ -277,8 +276,13 @@ export class Resumable extends ResumableEventHandler {
     return files.filter((_v, index) => results[index]);
   }
 
-  async appendFilesFromFileList(fileListObject: File[], event: Event): Promise<boolean> {
-    const fileList = Array.from(fileListObject);
+  /**
+   * Add an array of files to this instance's file list by creating new ResumableFiles. This includes a validation and
+   * deduplication of the provided array.
+   * @param fileList An array containing File objects
+   * @param event The event with which the fileList was provided
+   */
+  private async appendFilesFromFileList(fileList: File[], event: Event): Promise<boolean> {
     // check for uploading too many files
     if (this.maxFiles !== undefined && this.maxFiles < fileList.length + this.files.length) {
       // if single-file upload, file is already added, and trying to add 1 new file, simply replace the already-added file
@@ -325,33 +329,53 @@ export class Resumable extends ResumableEventHandler {
     this.fire('filesAdded', validatedFiles, skippedFiles);
   }
 
-  // QUEUE
-  uploadNextChunk(): void {
+  /**
+   * Generate a new unique identifier for a given file either with a default helper function or with a custom
+   * generator function.
+   * @param file The file as an HTML 5 File object
+   * @param event The event with which the file was provided originally
+   */
+  private generateUniqueIdentifier(file: File, event: Event): string {
+    return typeof this._generateUniqueIdentifier === 'function' ?
+      this._generateUniqueIdentifier(file, event) : Helpers.generateUniqueIdentifier(file);
+  }
+
+  /**
+   * Queue a new chunk to be uploaded that is currently awaiting upload.
+   */
+  private uploadNextChunk(): void {
     // In some cases (such as videos) it's really handy to upload the first
     // and last chunk of a file quickly; this lets the server check the file's
     // metadata and determine if there's even a point in continuing.
     if (this.prioritizeFirstAndLastChunk) {
       for (const file of this.files) {
-        if (file.chunks.length && file.chunks[0].status === 'chunkPending') {
+        if (file.chunks.length && file.chunks[0].status === ResumableChunkStatus.PENDING) {
           file.chunks[0].send();
           return;
         }
-        if (file.chunks.length > 1 && file.chunks[file.chunks.length - 1].status === 'chunkPending') {
+        if (file.chunks.length > 1 && file.chunks[file.chunks.length - 1].status === ResumableChunkStatus.PENDING) {
           file.chunks[file.chunks.length - 1].send();
           return;
         }
       }
     }
 
-    // Now, simply look for the next, best thing to upload
+    // Now, simply look for the next best thing to upload
     for (const file of this.files) {
       if (file.upload()) return;
     }
   }
 
-  // PUBLIC METHODS FOR RESUMABLE.JS
-  assignBrowse(domNodes, isDirectory = false): void {
-    if (domNodes.length === undefined) domNodes = [domNodes];
+  /**
+   *  PUBLIC METHODS FOR RESUMABLE.JS
+   *  This section only includes methods that should be callable from external packages.
+   */
+
+  /**
+   * Assign a browse action to one or more DOM nodes. Pass in true to allow directories to be selected (Chrome only).
+   */
+  assignBrowse(domNodes: HTMLInputElement | HTMLInputElement[], isDirectory: boolean = false): void {
+    if (domNodes instanceof HTMLInputElement) domNodes = [domNodes];
     for (const domNode of domNodes) {
       let input;
       if (domNode.tagName === 'INPUT' && domNode.type === 'file') {
@@ -402,6 +426,9 @@ export class Resumable extends ResumableEventHandler {
     }
   }
 
+  /**
+   * Assign one or more DOM nodes as a drop target.
+   */
   assignDrop(domNodes: HTMLElement | HTMLElement[]): void {
     if (domNodes instanceof HTMLElement) domNodes = [domNodes];
 
@@ -413,6 +440,9 @@ export class Resumable extends ResumableEventHandler {
     }
   }
 
+  /**
+   * Remove one or more DOM nodes as a drop target.
+   */
   unAssignDrop(domNodes: HTMLElement | HTMLElement[]): void {
     if (domNodes instanceof HTMLElement) domNodes = [domNodes];
 
@@ -424,13 +454,19 @@ export class Resumable extends ResumableEventHandler {
     }
   }
 
-  isUploading(): boolean {
-    return this.files.some((file) => file.isUploading());
+  /**
+   * Check whether any files are currently uploading
+   */
+  get isUploading(): boolean {
+    return this.files.some((file) => file.isUploading);
   }
 
+  /**
+   * Start or resume the upload of the provided files by initiating the upload of the first chunk
+   */
   upload(): void {
     // Make sure we don't start too many uploads at once
-    if (this.isUploading()) return;
+    if (this.isUploading) return;
     // Kick off the queue
     this.fire('uploadStart');
     for (let num = 1; num <= this.simultaneousUploads; num++) {
@@ -438,6 +474,9 @@ export class Resumable extends ResumableEventHandler {
     }
   }
 
+  /**
+   * Pause the upload
+   */
   pause(): void {
     // Resume all chunks currently being uploaded
     for (const file of this.files) {
@@ -446,6 +485,9 @@ export class Resumable extends ResumableEventHandler {
     this.fire('pause');
   };
 
+  /**
+   * Cancel uploading and reset all files to their initial states
+   */
   cancel(): void {
     this.fire('beforeCancel');
     for (let i = this.files.length - 1; i >= 0; i--) {
@@ -454,20 +496,35 @@ export class Resumable extends ResumableEventHandler {
     this.fire('cancel');
   };
 
+  /**
+   * Return the progress of the current upload as a float between 0 and 1
+   */
   progress(): number {
     let totalDone = this.files.reduce((accumulator, file) => accumulator + file.size * file.progress(), 0);
     let totalSize = this.getSize();
     return totalSize > 0 ? totalDone / totalSize : 0;
   };
 
+  /**
+   * Add a HTML5 File object to the list of files.
+   */
   addFile(file: File, event: Event): void {
     this.appendFilesFromFileList([file], event);
   };
 
+  /**
+   * Add a list of HTML5 File objects to the list of files.
+   */
   addFiles(files: File[], event: Event): void {
     this.appendFilesFromFileList(files, event);
   };
 
+  /**
+   * Add a validator function for the given file type. This can e.g. be used to read the file and validate
+   * checksums based on certain properties.
+   * @param fileType The file extension for the given validator
+   * @param validator A callback function that should be called when validating files with the given type
+   */
   addFileValidator(fileType: string, validator: Function): void {
     if (fileType in this.validators) {
       console.warn(`Overwriting validator for file type: ${fileType}`);
@@ -475,6 +532,9 @@ export class Resumable extends ResumableEventHandler {
     this.validators[fileType] = validator;
   }
 
+  /**
+   * Cancel the upload of a specific ResumableFile object and remove it from the file list.
+   */
   removeFile(file: ResumableFile): void {
     for (let i = this.files.length - 1; i >= 0; i--) {
       if (this.files[i] === file) {
@@ -484,31 +544,39 @@ export class Resumable extends ResumableEventHandler {
     }
   };
 
-  generateUniqueIdentifier(file: File, event: Event): string {
-    return typeof this._generateUniqueIdentifier === 'function' ?
-      this._generateUniqueIdentifier(file, event) : Helpers.generateUniqueIdentifier(file);
-  }
-
+  /**
+   * Retrieve a ResumableFile object from the file list by its unique identifier.
+   */
   getFromUniqueIdentifier(uniqueIdentifier: string): ResumableFile {
     return this.files.find((file) => file.uniqueIdentifier === uniqueIdentifier);
   };
 
+  /**
+   * Get the combined size of all files for the upload
+   */
   getSize(): number {
     return this.files.reduce((accumulator, file) => accumulator + file.size, 0);
   }
 
+  /**
+   * Call the event handler when a file is dropped on the drag-and-drop area
+   */
   handleDropEvent(e: DragEvent): void {
     this.onDrop(e);
   }
-
+  /**
+   * Call the event handler when the provided input element changes (i.e. receives one or multiple files.
+   */
   handleChangeEvent(e: InputEvent): void {
     this.appendFilesFromFileList(Array.from((e.target as HTMLInputElement).files), e);
     (e.target as HTMLInputElement).value = '';
   }
 
+  /**
+   * Check whether the upload is completed, i.e. if all files were uploaded successfully.
+   */
   checkUploadComplete(): void {
-    // The are no more outstanding chunks to upload, check if everything is done
-    let uploadCompleted = this.files.every((file) => file.isComplete());
+    let uploadCompleted = this.files.every((file) => file.isComplete);
     if (uploadCompleted) {
       // All chunks have been uploaded, complete
       this.fire('complete');
@@ -520,36 +588,60 @@ export class Resumable extends ResumableEventHandler {
    * handle events coming from the files or chunks.
    */
 
-  handleChunkSuccess(): void {
+  /**
+   * The event handler when a chunk was uploaded successfully
+   */
+  private handleChunkSuccess(): void {
     this.uploadNextChunk();
   }
 
-  handleChunkError(): void {
+  /**
+   * The event handler when a chunk was uploaded successfully
+   */
+  private handleChunkError(): void {
     this.uploadNextChunk();
   }
 
-  handleChunkCancel(): void {
+  /**
+   * The event handler when an error occurred during the upload of a chunk
+   */
+  private handleChunkCancel(): void {
     this.uploadNextChunk();
   }
 
-  handleFileError(args: any[]): void {
+  /**
+   * The event handler when an error occurred during the upload of a file
+   */
+  private handleFileError(args: any[]): void {
     this.fire('error', args[1], args[0]);
   }
 
-  handleFileSuccess(args: any[]): void {
+  /**
+   * The event handler when all chunks from a file were uploaded successfully
+   */
+  private handleFileSuccess(args: any[]): void {
     this.fire('fileSuccess', ...args);
     this.checkUploadComplete();
   }
 
-  handleFileProgress(): void {
+  /**
+   * The event handler when a file progress event was received
+   */
+  private handleFileProgress(): void {
     this.fire('progress');
   }
 
-  handleFileCancel(args: any[]): void {
+  /**
+   * The event handler when the upload of a file was canceled
+   */
+  private handleFileCancel(args: any[]): void {
     this.removeFile(args[0])
   }
 
-  handleFileRetry(): void {
+  /**
+   * The event handler, when the retry of a file was initiated
+   */
+  private handleFileRetry(): void {
     this.upload();
   }
 }

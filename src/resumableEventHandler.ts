@@ -1,3 +1,7 @@
+/**
+ * The underlying base class for ResumableJS. This class is responsible for registering and executing
+ * events and listeners.
+ */
 export default class ResumableEventHandler {
   private registeredEventHandlers: { [event: string]: Function[]};
 
@@ -10,8 +14,6 @@ export default class ResumableEventHandler {
 
   /**
    * Register a new callback for the given event.
-   * @param event
-   * @param callback
    */
   on(event: string, callback: Function): void {
     event = event.toLowerCase();
@@ -22,12 +24,9 @@ export default class ResumableEventHandler {
   }
 
   /**
-   * Fire the event listeners for the given event with the given arguments.
-   * @param event
-   * @param args
+   * Fire the event listeners for the given event with the given arguments as well as the wildcard event '*'
    */
   fire(event: string, ...args): void {
-    // Find event listeners, and support wildcard-event `*` to catch all
     event = event.toLowerCase();
 
     this.executeEventCallback(event, ...args);
@@ -36,10 +35,7 @@ export default class ResumableEventHandler {
 
   /**
    * Execute all callbacks for the given event with the provided arguments. This function is only used internally
-   * to call the callbacks individually.
-   * @param event
-   * @param args
-   * @private
+   * to call all callbacks registered to a given event individually.
    */
   private executeEventCallback(event: string, ...args): void {
     if (!this.registeredEventHandlers.hasOwnProperty(event)) return;

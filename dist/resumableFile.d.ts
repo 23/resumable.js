@@ -21,7 +21,7 @@ export default class ResumableFile extends ResumableEventHandler {
     /**
      * Set the options provided inside the configuration object on this instance
      */
-    setInstanceProperties(options: ResumableConfiguration): void;
+    protected setInstanceProperties(options: ResumableConfiguration): void;
     /**
      * Stop current uploads for this file
      */

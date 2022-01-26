@@ -46,7 +46,7 @@ export class Resumable extends ResumableEventHandler {
   fileValidationErrorCallback: Function = (file) => {};
   simultaneousUploads: number = 3;
 
-  constructor(options: ResumableConfiguration) {
+  constructor(options: ResumableConfiguration = {}) {
     super();
     this.setInstanceProperties(options);
     this.opts = options;
@@ -75,7 +75,7 @@ export class Resumable extends ResumableEventHandler {
   /**
    * Assign the attributes of this instance via destructuring of the options object.
    */
-  private setInstanceProperties(options: ResumableConfiguration) {
+  protected setInstanceProperties(options: ResumableConfiguration) {
     Object.assign(this, options);
 
     // For good behaviour we do some initial sanitizing. Remove spaces and dots and lowercase all

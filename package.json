@@ -4,7 +4,7 @@
   "description": "A JavaScript library for providing multiple simultaneous, stable, fault-tolerant and resumable/restartable uploads via the HTML5 File API.",
   "main": "dist/main.js",
   "private": false,
-  "types": "./resumable.d.ts",
+  "types": "./dist/resumable.d.ts",
   "scripts": {
     "build": "webpack",
     "production": "webpack --mode production",
@@ -26,7 +26,6 @@
   },
   "homepage": "https://github.com/pointcloudtechnology/resumable.js#readme",
   "devDependencies": {
-    "core-js": "^3.16.1",
     "source-map-loader": "^3.0.1",
     "ts-loader": "^9.2.6",
     "webpack": "^5.47.0",

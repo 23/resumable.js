@@ -23,7 +23,7 @@ export declare class Resumable extends ResumableEventHandler {
     prioritizeFirstAndLastChunk: boolean;
     fileValidationErrorCallback: Function;
     simultaneousUploads: number;
-    constructor(options: ResumableConfiguration);
+    constructor(options?: ResumableConfiguration);
     /**
      * Check whether the current browser supports the essential functions for the package to work.
      * The method checks if these features are supported:
@@ -36,7 +36,7 @@ export declare class Resumable extends ResumableEventHandler {
     /**
      * Assign the attributes of this instance via destructuring of the options object.
      */
-    private setInstanceProperties;
+    protected setInstanceProperties(options: ResumableConfiguration): void;
     /**
      * Transforms a single fileEntry or DirectoryEntry item into a list of File objects
      * @param {Object} item item to upload, may be file or directory entry

@@ -40,7 +40,7 @@ export default class ResumableFile extends ResumableEventHandler {
   /**
    * Set the options provided inside the configuration object on this instance
    */
-  setInstanceProperties(options: ResumableConfiguration) {
+  protected setInstanceProperties(options: ResumableConfiguration) {
     Object.assign(this, options);
   }
 

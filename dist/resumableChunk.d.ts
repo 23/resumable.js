@@ -51,7 +51,7 @@ export default class ResumableChunk extends ResumableEventHandler {
     /**
      * Set the options provided inside the configuration object on this instance
      */
-    setInstanceProperties(options: ResumableConfiguration): void;
+    protected setInstanceProperties(options: ResumableConfiguration): void;
     /**
      * Set the header values for the current XMLHttpRequest
      */

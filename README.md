@@ -31,7 +31,7 @@ r.assignDrop(document.getElementById('dropTarget'));
 
 It is recommended to use an HTML span for the browse button.  Using an actual button does not work reliably across all browsers, because Resumable.js creates the file input as a child of this control, and this may be invalid in the case of an HTML button.
 
-After this, interaction with Resumable.js is done by listening to registeredEventHandlers:
+After this, interaction with Resumable.js is done by listening to events:
 
 ```js
 r.on('fileAdded', function(file, event){
@@ -174,7 +174,7 @@ adding the file. (Default: `null`)
 * `.chunkingStart(file)` Started preparing file for upload
 * `.chunkingProgress(file,ratio)` Show progress in file preparation
 * `.chunkingComplete(file)` File is ready for upload
-* `.catchAll(event, ...)` Listen to all the registeredEventHandlers listed above with the same callback function.
+* `.catchAll(event, ...)` Listen to all the registered event handlers listed above with the same callback function.
 
 ### ResumableFile
 #### Properties

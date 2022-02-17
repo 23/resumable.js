@@ -68,6 +68,36 @@ export default class ResumableHelpers {
   }
 
   /**
+   * Use a polyfill for Object.assign if necessary.
+   * Credit: {@link https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Object/assign#polyfill}
+   */
+  static assignObject(target: any, varArgs: any): any {
+    if (typeof Object.assign === 'function') {
+      return Object.assign(target, varArgs);
+    }
+    
+    if (target == null) { // TypeError if undefined or null
+      throw new TypeError('Cannot convert undefined or null to object');
+    }
+
+    const to = Object(target);
+
+    for (let index = 1; index < arguments.length; index++) {
+      const nextSource = arguments[index];
+
+      if (nextSource != null) { // Skip over if undefined or null
+        for (const nextKey in nextSource) {
+          // Avoid bugs when hasOwnProperty is shadowed
+          if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+            to[nextKey] = nextSource[nextKey];
+          }
+        }
+      }
+    }
+    return to;
+  }
+
+  /**
    * Get the target url for the specified request type and params
    */
   static getTarget(

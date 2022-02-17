@@ -76,7 +76,7 @@ export class Resumable extends ResumableEventHandler {
    * Assign the attributes of this instance via destructuring of the options object.
    */
   protected setInstanceProperties(options: ResumableConfiguration) {
-    Object.assign(this, options);
+    Helpers.assignObject(this, options);
 
     // For good behaviour we do some initial sanitizing. Remove spaces and dots and lowercase all
     this.fileTypes = this.fileTypes.map((type) => type.replace(/[\s.]/g, '').toLowerCase());

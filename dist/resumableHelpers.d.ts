@@ -25,6 +25,11 @@ export default class ResumableHelpers {
      */
     static formatSize(size: number): string;
     /**
+     * Use a polyfill for Object.assign if necessary.
+     * Credit: {@link https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Object/assign#polyfill}
+     */
+    static assignObject(target: any, varArgs: any): any;
+    /**
      * Get the target url for the specified request type and params
      */
     static getTarget(requestType: string, sendTarget: string, testTarget: string, params: object, parameterNamespace?: string): string;

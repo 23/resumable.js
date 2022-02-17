@@ -26,7 +26,7 @@ export default class ResumableFile extends ResumableEventHandler {
     this.opts = options;
     this.setInstanceProperties(options);
     this.file = file;
-    this.fileName = Helpers.getFileNameFromFile(file);
+    this.fileName = file.name;
     this.size = file.size;
     this.relativePath = /*file.relativePath ||*/ file.webkitRelativePath || this.fileName;
     this.uniqueIdentifier = uniqueIdentifier;

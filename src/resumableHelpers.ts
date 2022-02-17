@@ -1,4 +1,6 @@
 // INTERNAL HELPER METHODS (handy, but ultimately not part of uploading)
+import {ExtendedFile} from "./types/types";
+
 export default class ResumableHelpers {
   /**
    * Stop the propagation and default behavior of the given event `e`.
@@ -9,22 +11,16 @@ export default class ResumableHelpers {
   }
 
   /**
-   *
-   * @param file The file whose filename should be retrieved
-   */
-  static getFileNameFromFile(file: File): string {
-    return /*file.fileName ||*/ file.name;
-  }
-
-  /**
    * Generate a unique identifier for the given file based on its size, filename and relative path.
-   * @param {File} file The file for which the identifier should be generated
+   * @param {ExtendedFile} file The file for which the identifier should be generated
    * @returns {string} The unique identifier for the given file object
    */
-  static generateUniqueIdentifier(file: File): string {
-    var relativePath = file.webkitRelativePath || /*file.relativePath ||*/ this.getFileNameFromFile(file);
-    var size = file.size;
-    return (size + '-' + relativePath.replace(/[^0-9a-zA-Z_-]/img, ''));
+  static generateUniqueIdentifier(file: ExtendedFile): string {
+    let relativePath = file.webkitRelativePath || file.relativePath || file.name;
+    // The '/' is used to display the relative path of the file. This information should be preserved
+    relativePath = relativePath.replace('/', '-');
+    // Remove special characters
+    return (file.size + '-' + relativePath.replace(/[^0-9a-zA-Z_-]/img, ''));
   }
 
   /**

@@ -83,18 +83,22 @@ export class Resumable extends ResumableEventHandler {
   }
 
   /**
-   * Transforms a single fileEntry or DirectoryEntry item into a list of File objects
+   * Transforms a single fileEntry or directoryEntry item into a list of File objects this method is used to convert
+   * entries found inside dragged-and-dropped directories.
    * @param {Object} item item to upload, may be file or directory entry
    * @param {string} path current file path
    */
-  private async mapItemToFile(item: FileSystemEntry, path: string): Promise<File[]> {
-    if (item instanceof FileSystemFileEntry) {
+  private async mapDirectoryItemToFile(item: FileSystemEntry, path: string): Promise<File[]> {
+    if (item.isFile) {
       // file entry provided
-      const file = await new Promise((resolve, reject) => item.file(resolve, reject)) as ExtendedFile;
+      const file = await new Promise(
+        (resolve, reject) => (item as FileSystemFileEntry).file(resolve, reject)
+      ) as ExtendedFile;
       file.relativePath = path + file.name;
       return [file];
-    } else if (item instanceof FileSystemDirectoryEntry) {
-      return await this.processDirectory(item, path + item.name + '/');
+    } else if (item.isDirectory) {
+      // directory entry provided
+      return await this.processDirectory(item as FileSystemDirectoryEntry, path + item.name + '/');
     } else if (item instanceof File) {
       return [item];
     }
@@ -111,8 +115,8 @@ export class Resumable extends ResumableEventHandler {
    */
   private async mapDragItemToFile(item: DataTransferItem, path: string): Promise<File[]> {
     let entry = item.webkitGetAsEntry();
-    if (entry instanceof FileSystemDirectoryEntry) {
-      return await this.processDirectory(entry, path + entry.name + '/');
+    if (entry.isDirectory) {
+      return await this.processDirectory(entry as FileSystemDirectoryEntry, path + entry.name + '/');
     }
 
     let file = item.getAsFile();
@@ -143,7 +147,7 @@ export class Resumable extends ResumableEventHandler {
 
           // After collecting all files, map all fileEntries to File objects
           allEntries = allEntries.map((entry) => {
-            return this.mapItemToFile(entry, path);
+            return this.mapDirectoryItemToFile(entry, path);
           });
           // Wait until all files are collected.
           resolve(await Promise.all(allEntries));
@@ -202,7 +206,7 @@ export class Resumable extends ResumableEventHandler {
       dt.dropEffect = 'copy';
       dt.effectAllowed = 'copy';
       (e.currentTarget as HTMLElement).classList.add(this.dragOverClass);
-    } else { // not work on IE/Edge....
+    } else {
       dt.dropEffect = 'none';
       dt.effectAllowed = 'none';
     }
@@ -374,11 +378,11 @@ export class Resumable extends ResumableEventHandler {
   /**
    * Assign a browse action to one or more DOM nodes. Pass in true to allow directories to be selected (Chrome only).
    */
-  assignBrowse(domNodes: HTMLInputElement | HTMLInputElement[], isDirectory: boolean = false): void {
-    if (domNodes instanceof HTMLInputElement) domNodes = [domNodes];
+  assignBrowse(domNodes: HTMLElement | HTMLElement[], isDirectory: boolean = false): void {
+    if (domNodes instanceof HTMLElement) domNodes = [domNodes];
     for (const domNode of domNodes) {
       let input;
-      if (domNode.tagName === 'INPUT' && domNode.type === 'file') {
+      if (domNode instanceof HTMLInputElement && domNode.type === 'file') {
         input = domNode;
       } else {
         input = document.createElement('input');

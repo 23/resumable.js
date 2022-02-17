@@ -1,19 +1,15 @@
+import { ExtendedFile } from "./types/types";
 export default class ResumableHelpers {
     /**
      * Stop the propagation and default behavior of the given event `e`.
      */
     static stopEvent(e: Event): void;
     /**
-     *
-     * @param file The file whose filename should be retrieved
-     */
-    static getFileNameFromFile(file: File): string;
-    /**
      * Generate a unique identifier for the given file based on its size, filename and relative path.
-     * @param {File} file The file for which the identifier should be generated
+     * @param {ExtendedFile} file The file for which the identifier should be generated
      * @returns {string} The unique identifier for the given file object
      */
-    static generateUniqueIdentifier(file: File): string;
+    static generateUniqueIdentifier(file: ExtendedFile): string;
     /**
      * Flatten the given array and all contained subarrays.
      * Credit: {@link https://github.com/you-dont-need/You-Dont-Need-Lodash-Underscore#_flattendeep}

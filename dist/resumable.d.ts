@@ -38,11 +38,12 @@ export declare class Resumable extends ResumableEventHandler {
      */
     protected setInstanceProperties(options: ResumableConfiguration): void;
     /**
-     * Transforms a single fileEntry or DirectoryEntry item into a list of File objects
+     * Transforms a single fileEntry or directoryEntry item into a list of File objects this method is used to convert
+     * entries found inside dragged-and-dropped directories.
      * @param {Object} item item to upload, may be file or directory entry
      * @param {string} path current file path
      */
-    private mapItemToFile;
+    private mapDirectoryItemToFile;
     /**
      * Transforms a single DataTransfer item into a File object. This may include either extracting the given file or
      * all files inside the provided directory.
@@ -97,7 +98,7 @@ export declare class Resumable extends ResumableEventHandler {
     /**
      * Assign a browse action to one or more DOM nodes. Pass in true to allow directories to be selected (Chrome only).
      */
-    assignBrowse(domNodes: HTMLInputElement | HTMLInputElement[], isDirectory?: boolean): void;
+    assignBrowse(domNodes: HTMLElement | HTMLElement[], isDirectory?: boolean): void;
     /**
      * Assign one or more DOM nodes as a drop target.
      */

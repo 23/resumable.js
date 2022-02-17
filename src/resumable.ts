@@ -169,11 +169,11 @@ export class Resumable extends ResumableEventHandler {
 
     //handle dropped things as items if we can (this lets us deal with folders nicer in some cases)
     if (e.dataTransfer && e.dataTransfer.items) {
-      items = Array.from(e.dataTransfer.items);
+      items = Helpers.toArray(e.dataTransfer.items);
     }
     //else handle them as files
     else if (e.dataTransfer && e.dataTransfer.files) {
-      items = Array.from(e.dataTransfer.files);
+      items = Helpers.toArray(e.dataTransfer.files);
     }
 
     if (!items.length) {
@@ -419,14 +419,7 @@ export class Resumable extends ResumableEventHandler {
         input.removeAttribute('accept');
       }
       // When new files are added, simply append them to the overall list
-      input.addEventListener('change', (e: InputEvent) => {
-        const eventTarget = e.target as HTMLInputElement;
-        this.fire('fileProcessingBegin', eventTarget.files);
-        this.appendFilesFromFileList(Array.from(eventTarget.files), e);
-        if (this.clearInput) {
-          eventTarget.value = '';
-        }
-      }, false);
+      input.addEventListener('change', this.handleChangeEvent.bind(this), false);
     }
   }
 
@@ -572,8 +565,12 @@ export class Resumable extends ResumableEventHandler {
    * Call the event handler when the provided input element changes (i.e. receives one or multiple files.
    */
   handleChangeEvent(e: InputEvent): void {
-    this.appendFilesFromFileList(Array.from((e.target as HTMLInputElement).files), e);
-    (e.target as HTMLInputElement).value = '';
+    const eventTarget = e.target as HTMLInputElement;
+    this.fire('fileProcessingBegin', eventTarget.files);
+    this.appendFilesFromFileList(Helpers.toArray(eventTarget.files), e);
+    if (this.clearInput) {
+      eventTarget.value = '';
+    }
   }
 
   /**

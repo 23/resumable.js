@@ -30,6 +30,11 @@ export default class ResumableHelpers {
      */
     static assignObject(target: any, varArgs: any): any;
     /**
+     * This function is used to convert a list-like object to a normal JS array with the help of the spread operator
+     * @param iterable
+     */
+    static toArray(iterable: any): Array<any>;
+    /**
      * Get the target url for the specified request type and params
      */
     static getTarget(requestType: string, sendTarget: string, testTarget: string, params: object, parameterNamespace?: string): string;

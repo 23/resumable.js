@@ -75,7 +75,7 @@ export default class ResumableHelpers {
     if (typeof Object.assign === 'function') {
       return Object.assign(target, varArgs);
     }
-    
+
     if (target == null) { // TypeError if undefined or null
       throw new TypeError('Cannot convert undefined or null to object');
     }
@@ -95,6 +95,14 @@ export default class ResumableHelpers {
       }
     }
     return to;
+  }
+
+  /**
+   * This function is used to convert a list-like object to a normal JS array with the help of the spread operator
+   * @param iterable
+   */
+  static toArray(iterable: any): Array<any> {
+    return [...iterable];
   }
 
   /**

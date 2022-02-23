@@ -1,6 +1,5 @@
 // INTERNAL HELPER METHODS (handy, but ultimately not part of uploading)
 import {ExtendedFile} from "./types/types";
-import 'ts-polyfill';
 
 export default class ResumableHelpers {
   /**

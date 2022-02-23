@@ -1,5 +1,4 @@
 import { ExtendedFile } from "./types/types";
-import 'ts-polyfill';
 export default class ResumableHelpers {
     /**
      * Stop the propagation and default behavior of the given event `e`.

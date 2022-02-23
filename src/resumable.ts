@@ -1,3 +1,4 @@
+import './registerPolyfills';
 import Helpers from './resumableHelpers';
 import ResumableFile from './resumableFile';
 import ResumableEventHandler from './resumableEventHandler';

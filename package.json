@@ -32,6 +32,6 @@
     "webpack-cli": "^4.7.2"
   },
   "dependencies": {
-    "ts-polyfill": "^3.8.2"
+    "core-js": "^3.21.1"
   }
 }

@@ -67,7 +67,11 @@
           chunkSize: 1 * 1024 * 1024,
           simultaneousUploads: 4,
           testChunks: false,
+          fileTypes: ['doc', 'las'],
           throttleProgressCallbacks: 1,
+        });
+        r.addFileValidator('las', function (file) {
+          return true;
         });
         // Resumable.js isn't supported, fall back on a different method
         if (!r.support) {

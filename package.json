@@ -30,5 +30,8 @@
     "ts-loader": "^9.2.6",
     "webpack": "^5.47.0",
     "webpack-cli": "^4.7.2"
+  },
+  "dependencies": {
+    "ts-polyfill": "^3.8.2"
   }
 }

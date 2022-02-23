@@ -75,7 +75,7 @@ export default class ResumableChunk extends ResumableEventHandler {
    * Set the options provided inside the configuration object on this instance
    */
   protected setInstanceProperties(options: ResumableConfiguration): void {
-    Helpers.assignObject(this, options);
+    Object.assign(this, options);
   }
 
   /**

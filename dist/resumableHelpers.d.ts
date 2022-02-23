@@ -1,4 +1,5 @@
 import { ExtendedFile } from "./types/types";
+import 'ts-polyfill';
 export default class ResumableHelpers {
     /**
      * Stop the propagation and default behavior of the given event `e`.
@@ -24,16 +25,6 @@ export default class ResumableHelpers {
      * Format the size given in Bytes in a human readable format.
      */
     static formatSize(size: number): string;
-    /**
-     * Use a polyfill for Object.assign if necessary.
-     * Credit: {@link https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Object/assign#polyfill}
-     */
-    static assignObject(target: any, varArgs: any): any;
-    /**
-     * This function is used to convert a list-like object to a normal JS array with the help of the spread operator
-     * @param iterable
-     */
-    static toArray(iterable: any): Array<any>;
     /**
      * Get the target url for the specified request type and params
      */

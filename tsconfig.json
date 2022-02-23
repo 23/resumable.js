@@ -1,7 +1,14 @@
 {
   "compilerOptions": {
-    "module": "es6",
+    "module": "commonjs",
     "target": "es5",
+    "lib": [
+      "es2015",
+      "dom",
+      "ES2020.Promise",
+      "ES2019.Array",
+      "ES2019.Object"
+    ],
     "sourceMap": true,
     "declaration": true,
     "outDir": "dist"

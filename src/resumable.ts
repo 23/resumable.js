@@ -76,7 +76,7 @@ export class Resumable extends ResumableEventHandler {
    * Assign the attributes of this instance via destructuring of the options object.
    */
   protected setInstanceProperties(options: ResumableConfiguration) {
-    Helpers.assignObject(this, options);
+    Object.assign(this, options);
 
     // For good behaviour we do some initial sanitizing. Remove spaces and dots and lowercase all
     this.fileTypes = this.fileTypes.map((type) => type.replace(/[\s.]/g, '').toLowerCase());
@@ -169,11 +169,11 @@ export class Resumable extends ResumableEventHandler {
 
     //handle dropped things as items if we can (this lets us deal with folders nicer in some cases)
     if (e.dataTransfer && e.dataTransfer.items) {
-      items = Helpers.toArray(e.dataTransfer.items);
+      items = [...e.dataTransfer.items as any];
     }
     //else handle them as files
     else if (e.dataTransfer && e.dataTransfer.files) {
-      items = Helpers.toArray(e.dataTransfer.files);
+      items =  [...e.dataTransfer.files as any];
     }
 
     if (!items.length) {
@@ -567,7 +567,7 @@ export class Resumable extends ResumableEventHandler {
   handleChangeEvent(e: InputEvent): void {
     const eventTarget = e.target as HTMLInputElement;
     this.fire('fileProcessingBegin', eventTarget.files);
-    this.appendFilesFromFileList(Helpers.toArray(eventTarget.files), e);
+    this.appendFilesFromFileList([...eventTarget.files as any], e);
     if (this.clearInput) {
       eventTarget.value = '';
     }

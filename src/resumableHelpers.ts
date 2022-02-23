@@ -1,5 +1,6 @@
 // INTERNAL HELPER METHODS (handy, but ultimately not part of uploading)
 import {ExtendedFile} from "./types/types";
+import 'ts-polyfill';
 
 export default class ResumableHelpers {
   /**
@@ -65,44 +66,6 @@ export default class ResumableHelpers {
       return (size / 1024.0 / 1024.0).toFixed(1) + ' MB';
     }
     return (size / 1024.0 / 1024.0 / 1024.0).toFixed(1) + ' GB';
-  }
-
-  /**
-   * Use a polyfill for Object.assign if necessary.
-   * Credit: {@link https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Object/assign#polyfill}
-   */
-  static assignObject(target: any, varArgs: any): any {
-    if (typeof Object.assign === 'function') {
-      return Object.assign(target, varArgs);
-    }
-
-    if (target == null) { // TypeError if undefined or null
-      throw new TypeError('Cannot convert undefined or null to object');
-    }
-
-    const to = Object(target);
-
-    for (let index = 1; index < arguments.length; index++) {
-      const nextSource = arguments[index];
-
-      if (nextSource != null) { // Skip over if undefined or null
-        for (const nextKey in nextSource) {
-          // Avoid bugs when hasOwnProperty is shadowed
-          if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
-            to[nextKey] = nextSource[nextKey];
-          }
-        }
-      }
-    }
-    return to;
-  }
-
-  /**
-   * This function is used to convert a list-like object to a normal JS array with the help of the spread operator
-   * @param iterable
-   */
-  static toArray(iterable: any): Array<any> {
-    return [...iterable];
   }
 
   /**

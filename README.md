@@ -174,7 +174,7 @@ adding the file. (Default: `null`)
 * `.chunkingStart(file)` Started preparing file for upload
 * `.chunkingProgress(file,ratio)` Show progress in file preparation
 * `.chunkingComplete(file)` File is ready for upload
-* `.catchAll(event, ...)` Listen to all the registered event handlers listed above with the same callback function.
+* `.catchAll(event, ...)` Listen to all the events listed above with the same callback function.
 
 ### ResumableFile
 #### Properties

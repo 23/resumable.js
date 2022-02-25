@@ -395,7 +395,7 @@ declare namespace Resumable {
      **/
     on(event: 'chunkingComplete', callback: (file: ResumableFile) => void): void;
     /**
-     * Listen to all the registeredEventHandlers listed above with the same callback function.
+     * Listen to all the events listed above with the same callback function.
      **/
     on(event: 'catchAll', callback: () => void): void;
     /**

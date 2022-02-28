@@ -317,7 +317,7 @@ export class Resumable extends ResumableEventHandler {
       f.on('chunkSuccess', () => this.handleChunkSuccess());
       f.on('chunkError', () => this.handleChunkError());
       f.on('chunkCancel', () => this.handleChunkCancel());
-      f.on('fileProgress', () => this.handleFileProgress());
+      f.on('fileProgress', (...args) => this.handleFileProgress(args));
       f.on('fileError', (...args) => this.handleFileError(args));
       f.on('fileSuccess', (...args) => this.handleFileSuccess(args));
       f.on('fileCancel', (...args) => this.handleFileCancel(args));
@@ -629,7 +629,8 @@ export class Resumable extends ResumableEventHandler {
   /**
    * The event handler when a file progress event was received
    */
-  private handleFileProgress(): void {
+  private handleFileProgress(args: any[]): void {
+    this.fire('fileProgress', ...args);
     this.fire('progress');
   }
 

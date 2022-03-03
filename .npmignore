@@ -1,0 +1,15 @@
+# Samples directory
+samples
+
+# Compiler
+webpack.config.js
+
+# Tests
+test.html
+resumable-tests.ts
+
+# Editor files
+.vscode
+*.code-workspace
+
+

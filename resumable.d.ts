@@ -14,10 +14,6 @@ declare namespace Resumable {
      **/
     chunkSize?: number;
     /**
-     * Force all chunks to be less or equal than chunkSize. Otherwise, the last chunk will be greater than or equal to chunkSize. (Default: false)
-     **/
-    forceChunkSize?: boolean;
-    /**
      * Number of simultaneous uploads (Default: 3)
      **/
     simultaneousUploads?: number;
@@ -112,7 +108,7 @@ declare namespace Resumable {
     /**
      * The minimum allowed file size. (Default: undefined)
      **/
-    minFileSize?: boolean;
+    minFileSize?: number;
     /**
      * A function which displays an error a selected file is smaller than allowed. (Default: displays an alert for every bad file.)
      **/
@@ -120,7 +116,7 @@ declare namespace Resumable {
     /**
      * The maximum allowed file size. (Default: undefined)
      **/
-    maxFileSize?: boolean;
+    maxFileSize?: number;
     /**
      * A function which displays an error a selected file is larger than allowed. (Default: displays an alert for every bad file.)
      **/
@@ -147,9 +143,40 @@ declare namespace Resumable {
     withCredentials?: boolean;
   }
 
-  class Resumable {
-    constructor(options: ConfigurationHash);
+  class ResumableEventHandler {
+    /**
+     * The component that contains the current (this) instance and should be used to bubble up the event.
+     */
+    parent: ResumableEventHandler;
 
+    /**
+     * An object of Events that contains a list for each registered event name
+     */
+    registeredEventHandlers: { string: function[] };
+
+    /**
+     * A function used to register event listeners for a certain event type.
+     * @param event
+     * @param callback
+     */
+    on(event: string, callback: (file: ResumableFile) => void): void;
+
+    /**
+     * The event emitter for the specified event with the given arguments.
+     * @param event
+     * @param args
+     */
+    fire(event: string, ...args): void;
+
+    /**
+     * This executes all listener functions registered to this event with the given arguments.
+     * @param event
+     * @param args
+     */
+    executeEventCallback(event: string, ...args): void;
+  }
+
+  class Resumable extends ResumableEventHandler {
     /**
      * A boolean value indicator whether or not Resumable.js is supported by the current browser.
      **/
@@ -162,73 +189,141 @@ declare namespace Resumable {
      * An array of ResumableFile file objects added by the user (see full docs for this object type below).
      **/
     files: ResumableFile[];
+    /**
+     * A list of validator functions for the associated file types.
+     */
+    validators: {};
+    /**
+     * Relevant options from the ConfigurationHash:
+     */
+    clearInput: boolean = true;
+    dragOverClass: string = 'dragover';
+    fileType: string[] = [];
+    fileTypeErrorCallback: (file: File) => void;
+    _generateUniqueIdentifier: (file: File) => string = null;
+    maxFileSize: number = undefined;
+    maxFileSizeErrorCallback: (file: File) => void;
+    maxFiles: number = undefined;
+    maxFilesErrorCallback: (files: File[]) => void;
+    minFileSize: number = 1;
+    minFileSizeErrorCallback: (file: File) => void;
+    prioritizeFirstAndLastChunk: boolean = false;
+    fileValidationErrorCallback: (file: File) => void;
+    simultaneousUploads: number = 3;
 
-    defaults: ConfigurationHash;
+    constructor(options: ConfigurationHash);
 
-    events: Event[];
-    version: number;
+    /**
+     * Retrieves the current version number
+     */
+    get version(): number;
+
+    /**
+     * Calculates whether the current browser supports Resumable.
+     **/
+    checkSupport(): boolean;
+
+    /**
+     * Sets the relevant options from `options` on the current active class instance
+     * @param options
+     */
+    setOptions(options: ConfigurationHash): void;
+
+    /**
+     * processes a single upload item (file or directory)
+     * @param {Object} item item to upload, may be file or directory entry
+     * @param {string} path current file path
+     */
+    async processItem(item, path): Promise
+
+    /**
+     * recursively traverse directory and collect files to upload
+     * @param  {Object}   directory directory to process
+     * @param  {string}   path      current path
+     */
+    processDirectory(directory, path: string): Promise
+
+    /**
+     * Add a validator function for the given file type. This can e.g. be used to read the file and validate
+     * checksums based on certain properties.
+     * @param fileType
+     * @param validator
+     */
+    addFileValidator(fileType: string, validator: (file: File) => boolean): void;
 
     /**
      * Assign a browse action to one or more DOM nodes. Pass in true to allow directories to be selected (Chrome only).
      **/
     assignBrowse(domNode: Element, isDirectory: boolean): void;
     assignBrowse(domNodes: Element[], isDirectory: boolean): void;
+
     /**
      * Assign one or more DOM nodes as a drop target.
      **/
-    assignDrop(domNode: Element): void;
-    assignDrop(domNodes: Element[]): void;
-    unAssignDrop(domNode: Element): void;
-    unAssignDrop(domNodes: Element[]): void;
+    assignDrop(domNodes: Element | Element[]): void;
+
+    unAssignDrop(domNodes: Element | Element[]): void;
+
     /**
      * Start or resume uploading.
      **/
     upload(): void;
+
     uploadNextChunk(): void;
+
     /**
      * Pause uploading.
      **/
     pause(): void;
+
     /**
      * Cancel upload of all ResumableFile objects and remove them from the list.
      **/
     cancel(): void;
+
     fire(): void;
+
     /**
      * Returns a float between 0 and 1 indicating the current upload progress of all files.
      **/
     progress(): number;
+
     /**
      * Returns a boolean indicating whether or not the instance is currently uploading anything.
      **/
     isUploading(): boolean;
+
     /**
      * Add a HTML5 File object to the list of files.
      **/
     addFile(file: File, event: Event): void;
+
     /**
      * Cancel upload of a specific ResumableFile object on the list from the list.
      **/
     removeFile(file: ResumableFile): void;
+
     /**
      * Look up a ResumableFile object by its unique identifier.
      **/
     getFromUniqueIdentifier(uniqueIdentifier: string): ResumableFile;
+
     /**
      * Returns the total size of the upload in bytes.
      **/
     getSize(): number;
+
     getOpt(o: string): any;
 
     // Events
-  /**
-   * Change event handler
-   **/
+    /**
+     * Change event handler
+     **/
     handleChangeEvent(e: Event): void;
 
     /**
-    * Drop event handler
-    **/
+     * Drop event handler
+     **/
     handleDropEvent(e: Event): void;
 
     /**
@@ -299,13 +394,13 @@ declare namespace Resumable {
      * Listen to all the events listed above with the same callback function.
      **/
     on(event: 'catchAll', callback: () => void): void;
-  /**
+    /**
      * Listen for event from Resumable.js (see below)
      **/
     on(event: string, callback: Function): void;
   }
 
-  interface ResumableFile {
+  class ResumableFile extends ResumableEventHandler {
     /**
      * A back-reference to the parent Resumable object.
      **/
@@ -366,7 +461,8 @@ declare namespace Resumable {
     isComplete: () => boolean;
   }
 
-  interface ResumableChunk { }
+  class ResumableChunk extends ResumableEventHandler {
+  }
 }
 
 declare module 'resumablejs' {

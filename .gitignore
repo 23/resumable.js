@@ -1,5 +1,6 @@
 *~
 samples/Node.js/node_modules/
+node_modules/
 
 # Eclipse
 .classpath
@@ -20,3 +21,4 @@ target/
 
 # Gradle
 .gradle
+/samples/Node.js/tmp/

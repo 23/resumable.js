@@ -23,7 +23,6 @@ export default class ResumableChunk extends ResumableEventHandler {
 
   // Option properties
   private chunkSize: number = 1024 * 1024; // 1 MB
-  private forceChunkSize: boolean = false;
   private fileParameterName: string = 'file';
   chunkNumberParameterName: string = 'resumableChunkNumber';
   chunkSizeParameterName: string = 'resumableChunkSize';
@@ -64,10 +63,6 @@ export default class ResumableChunk extends ResumableEventHandler {
     // Computed properties
     this.startByte = this.offset * this.chunkSize;
     this.endByte = Math.min(this.fileObjSize, (this.offset + 1) * this.chunkSize);
-    if (this.fileObjSize - this.endByte < this.chunkSize && !this.forceChunkSize) {
-      // The last chunk will be bigger than the chunk size, but less than 2*chunkSize
-      this.endByte = this.fileObjSize;
-    }
     this.xhr = null;
   }
 

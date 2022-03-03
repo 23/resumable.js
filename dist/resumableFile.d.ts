@@ -16,7 +16,6 @@ export default class ResumableFile extends ResumableEventHandler {
     private _error;
     chunks: ResumableChunk[];
     private chunkSize;
-    private forceChunkSize;
     constructor(file: File, uniqueIdentifier: string, options: object);
     /**
      * Set the options provided inside the configuration object on this instance

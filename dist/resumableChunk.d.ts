@@ -19,7 +19,6 @@ export default class ResumableChunk extends ResumableEventHandler {
     private endByte;
     private xhr;
     private chunkSize;
-    private forceChunkSize;
     private fileParameterName;
     chunkNumberParameterName: string;
     chunkSizeParameterName: string;

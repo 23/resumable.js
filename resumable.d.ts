@@ -14,10 +14,6 @@ declare namespace Resumable {
      **/
     chunkSize?: number;
     /**
-     * Force all chunks to be less or equal than chunkSize. Otherwise, the last chunk will be greater than or equal to chunkSize. (Default: false)
-     **/
-    forceChunkSize?: boolean;
-    /**
      * Number of simultaneous uploads (Default: 3)
      **/
     simultaneousUploads?: number;

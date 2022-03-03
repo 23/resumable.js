@@ -19,7 +19,6 @@ export default class ResumableFile extends ResumableEventHandler {
   private _error: boolean;
   chunks: ResumableChunk[] = [];
   private chunkSize: number = 1024 * 1024; // 1 MB
-  private forceChunkSize: boolean = false;
 
   constructor(file: File, uniqueIdentifier: string, options: object) {
     super();
@@ -113,8 +112,7 @@ export default class ResumableFile extends ResumableEventHandler {
     // Rebuild stack of chunks from file
     this.chunks = [];
     this._prevProgress = 0;
-    const round = this.forceChunkSize ? Math.ceil : Math.floor;
-    const maxOffset = Math.max(round(this.file.size / this.chunkSize), 1);
+    const maxOffset = Math.max(Math.ceil(this.file.size / this.chunkSize), 1);
     for (var offset = 0; offset < maxOffset; offset++) {
       const chunk = new ResumableChunk(this, offset, this.opts);
       chunk.on('chunkProgress', progressHandler);

@@ -1,4 +1,3 @@
-import './registerPolyfills';
 import ResumableFile from './resumableFile';
 import ResumableEventHandler from './resumableEventHandler';
 import { ResumableConfiguration } from './types/types';

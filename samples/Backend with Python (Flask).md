@@ -19,7 +19,7 @@ def resumable_example():
 # NOTE: your validation here needs to match whatever you do in the POST (otherwise it will NEVER find the files)
 @app.route("/resumable_upload", methods=['GET'])
 def resumable():
-    resumableIdentfier = request.args.get('resumableIdentifier', type=str)
+    resumableIdentifier = request.args.get('resumableIdentifier', type=str)
     resumableFilename = request.args.get('resumableFilename', type=str)
     resumableChunkNumber = request.args.get('resumableChunkNumber', type=int)
 

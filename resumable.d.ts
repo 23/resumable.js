@@ -265,6 +265,12 @@ declare namespace Resumable {
     unAssignDrop(domNodes: Element | Element[]): void;
 
     /**
+     * Update the file types allowed to upload. Optionally pass a dom node on which the accepted file types should be
+     * updated as well.
+     **/
+    updateFileTypes(fileTypes: string[], domNode?: HTMLInputElement): void;
+
+    /**
      * Start or resume uploading.
      **/
     upload(): void;

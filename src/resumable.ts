@@ -410,17 +410,7 @@ export class Resumable extends ResumableEventHandler {
       } else {
         input.removeAttribute('webkitdirectory');
       }
-      if (this.fileTypes.length >= 1) {
-        input.setAttribute('accept', this.fileTypes.map((type) => {
-          type = type.replace(/\s/g, '').toLowerCase();
-          if (type.match(/^[^.][^/]+$/)) {
-            type = '.' + type;
-          }
-          return type;
-        }).join(','));
-      } else {
-        input.removeAttribute('accept');
-      }
+      this.setFileTypes(this.fileTypes, input);
       // When new files are added, simply append them to the overall list
       input.addEventListener('change', this.handleChangeEvent.bind(this), false);
     }
@@ -451,6 +441,35 @@ export class Resumable extends ResumableEventHandler {
       domNode.removeEventListener('dragenter', this.onDragOverEnter.bind(this));
       domNode.removeEventListener('dragleave', this.onDragLeave.bind(this));
       domNode.removeEventListener('drop', this.onDrop.bind(this));
+    }
+  }
+
+  /**
+   * Set the file types allowed to upload. Optionally pass a dom node on which the accepted file types should be
+   * updated as well.
+   */
+  setFileTypes(fileTypes: string[], domNode: HTMLInputElement = null): void {
+    if (domNode && domNode.type !== 'file') {
+      throw new Error('Dom node is not a file input.');
+    }
+
+    // Store new file types and sanitize them.
+    this.fileTypes = fileTypes;
+    this.sanitizeFileTypes();
+
+    if (domNode) {
+      if (fileTypes.length >= 1) {
+        // Set the new file types as "accepted" by the given dom node.
+        domNode.setAttribute('accept', this.fileTypes.map((type) => {
+          if (type.match(/^[^.][^/]+$/)) {
+            type = '.' + type;
+          }
+          return type;
+        }).join(','));
+      } else {
+        // Make all file types "accepted" by the given dom node.
+        domNode.removeAttribute('accept');
+      }
     }
   }
 

@@ -77,8 +77,11 @@ export class Resumable extends ResumableEventHandler {
    */
   protected setInstanceProperties(options: ResumableConfiguration) {
     Object.assign(this, options);
+    this.sanitizeFileTypes();
+  }
 
-    // For good behaviour we do some initial sanitizing. Remove spaces and dots and lowercase all
+  private sanitizeFileTypes() {
+    // For good behaviour we do some sanitizing. Remove spaces and dots and lowercase all.
     this.fileTypes = this.fileTypes.map((type) => type.replace(/[\s.]/g, '').toLowerCase());
   }
 

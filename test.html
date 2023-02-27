@@ -1,11 +1,10 @@
 <a href="#" id="browseButton">Select files</a>
 
-<script src="src/resumable.ts"></script>
+<script src="dist/main.js"></script>
 <script>
-  var r = new Resumable({
+  var r = new resumablejs.Resumable({
     target: 'test.html',
   });
-
 
   r.assignBrowse(document.getElementById('browseButton'));
 

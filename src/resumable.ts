@@ -162,10 +162,18 @@ export class Resumable extends ResumableEventHandler {
   }
 
   /**
+   * Handle CSS related stuff (e.g. remove dragOverClass from target element) and then call onDrop().
+   */
+  private onDropWithCssHandling(e: DragEvent): Promise<void> {
+    (e.currentTarget as HTMLElement).classList.remove(this.dragOverClass);
+
+    return this.onDrop(e);
+  }
+
+  /**
    * Handle the event when a new file was provided via drag-and-drop
    */
   private async onDrop(e: DragEvent): Promise<void> {
-    (e.currentTarget as HTMLElement).classList.remove(this.dragOverClass);
     Helpers.stopEvent(e);
 
     let items = [];
@@ -440,7 +448,7 @@ export class Resumable extends ResumableEventHandler {
       domNode.removeEventListener('dragover', this.onDragOverEnter.bind(this));
       domNode.removeEventListener('dragenter', this.onDragOverEnter.bind(this));
       domNode.removeEventListener('dragleave', this.onDragLeave.bind(this));
-      domNode.removeEventListener('drop', this.onDrop.bind(this));
+      domNode.removeEventListener('drop', this.onDropWithCssHandling.bind(this));
     }
   }
 
@@ -578,13 +586,14 @@ export class Resumable extends ResumableEventHandler {
   }
 
   /**
-   * Call the event handler when a file is dropped on the drag-and-drop area
+   * Call the event handler for a DragEvent (when a file is dropped on a drop area).
    */
   handleDropEvent(e: DragEvent): void {
     this.onDrop(e);
   }
+
   /**
-   * Call the event handler when the provided input element changes (i.e. receives one or multiple files.
+   * Call the event handler for an InputEvent (i.e. received one or multiple files).
    */
   handleChangeEvent(e: InputEvent): void {
     const eventTarget = e.target as HTMLInputElement;

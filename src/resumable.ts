@@ -167,18 +167,19 @@ export class Resumable extends ResumableEventHandler {
    * class to the element when a file is dropped onto it. In this case, we have to remove that class again before
    * calling "onDrop()".
    * If "onDrop()" is called from "handleDropEvent()" this is not needed.
-   * 
    */
   private removeDragOverClassAndCallOnDrop(e: DragEvent): Promise<void> {
-    (e.currentTarget as HTMLElement).classList.remove(this.dragOverClass);
+    const domNode: HTMLElement = e.currentTarget as HTMLElement;
+    domNode.classList.remove(this.dragOverClass);
+    const fileCategory = domNode.getAttribute('resumable-file-category');
 
-    return this.onDrop(e);
+    return this.onDrop(e, fileCategory);
   }
 
   /**
    * Handle the event when a new file was provided via drag-and-drop
    */
-  private async onDrop(e: DragEvent): Promise<void> {
+  private async onDrop(e: DragEvent, fileCategory: string = null): Promise<void> {
     Helpers.stopEvent(e);
 
     let items = [];
@@ -200,7 +201,7 @@ export class Resumable extends ResumableEventHandler {
     let files = Helpers.flattenDeep(await Promise.all(promises));
     if (files.length) {
       // at least one file found
-      this.appendFilesFromFileList(files, e);
+      this.appendFilesFromFileList(files, e, fileCategory);
     }
   }
 
@@ -302,7 +303,12 @@ export class Resumable extends ResumableEventHandler {
    * @param fileList An array containing File objects
    * @param event The event with which the fileList was provided
    */
-  private async appendFilesFromFileList(fileList: File[], event: Event): Promise<boolean> {
+  private async appendFilesFromFileList(fileList: File[], event: Event, fileCategory: string = null): Promise<boolean> {
+    if (fileCategory && !this.fileCategories.includes(fileCategory)) {
+      this.fire('fileProcessingFailed', undefined, 'unknownFileCategory');
+      return false;
+    }
+
     // check for uploading too many files
     if (this.maxFiles !== undefined && this.maxFiles < fileList.length + this.files.length) {
       // if single-file upload, file is already added, and trying to add 1 new file, simply replace the already-added file
@@ -394,7 +400,8 @@ export class Resumable extends ResumableEventHandler {
   /**
    * Assign a browse action to one or more DOM nodes. Pass in true to allow directories to be selected (Chrome only).
    */
-  assignBrowse(domNodes: HTMLElement | HTMLElement[], isDirectory: boolean = false): void {
+  assignBrowse(domNodes: HTMLElement | HTMLElement[], isDirectory: boolean = false, fileCategory: string = null): void {
+
     if (domNodes instanceof HTMLElement) domNodes = [domNodes];
     for (const domNode of domNodes) {
       let input;
@@ -425,17 +432,31 @@ export class Resumable extends ResumableEventHandler {
       }
       this.setFileTypes(this.fileTypes, input);
       // When new files are added, simply append them to the overall list
-      input.addEventListener('change', this.handleChangeEvent.bind(this), false);
+      input.addEventListener(
+        'change',
+        (event: InputEvent) => {
+          this.handleChangeEvent(event, fileCategory);
+        },
+        false
+      );
     }
   }
 
   /**
    * Assign one or more DOM nodes as a drop target.
    */
-  assignDrop(domNodes: HTMLElement | HTMLElement[]): void {
+  assignDrop(domNodes: HTMLElement | HTMLElement[], fileCategory: string = null): void {
     if (domNodes instanceof HTMLElement) domNodes = [domNodes];
 
     for (const domNode of domNodes) {
+      if (fileCategory) {
+        // Assign the file category as attribute to the Dom node. This is needed because this information needs to be read
+        // in the "drop" event listener, but we can't pass a value into the listener directly. Unfortunately we can't use
+        // an arrow function as a wrapper here (as done in assignBrowse()) because we need to be able to access the same
+        // function in unAssignDrop().
+        domNode.setAttribute('resumable-file-category', fileCategory);
+      }
+
       domNode.addEventListener('dragover', this.onDragOverEnter.bind(this), false);
       domNode.addEventListener('dragenter', this.onDragOverEnter.bind(this), false);
       domNode.addEventListener('dragleave', this.onDragLeave.bind(this), false);
@@ -540,15 +561,15 @@ export class Resumable extends ResumableEventHandler {
   /**
    * Add a HTML5 File object to the list of files.
    */
-  addFile(file: File, event: Event): void {
-    this.appendFilesFromFileList([file], event);
+  addFile(file: File, event: Event, fileCategory: string = null): void {
+    this.appendFilesFromFileList([file], event, fileCategory);
   };
 
   /**
    * Add a list of HTML5 File objects to the list of files.
    */
-  addFiles(files: File[], event: Event): void {
-    this.appendFilesFromFileList(files, event);
+  addFiles(files: File[], event: Event, fileCategory: string = null): void {
+    this.appendFilesFromFileList(files, event, fileCategory);
   };
 
   /**
@@ -593,17 +614,17 @@ export class Resumable extends ResumableEventHandler {
   /**
    * Call the event handler for a DragEvent (when a file is dropped on a drop area).
    */
-  handleDropEvent(e: DragEvent): void {
-    this.onDrop(e);
+  handleDropEvent(e: DragEvent, fileCategory: string = null): void {
+    this.onDrop(e, fileCategory);
   }
 
   /**
    * Call the event handler for an InputEvent (i.e. received one or multiple files).
    */
-  handleChangeEvent(e: InputEvent): void {
+  handleChangeEvent(e: InputEvent, fileCategory: string = null): void {
     const eventTarget = e.target as HTMLInputElement;
     this.fire('fileProcessingBegin', eventTarget.files);
-    this.appendFilesFromFileList([...eventTarget.files as any], e);
+    this.appendFilesFromFileList([...eventTarget.files as any], e, fileCategory);
     if (this.clearInput) {
       eventTarget.value = '';
     }

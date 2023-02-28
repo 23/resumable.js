@@ -15,7 +15,15 @@ import {ExtendedFile, ResumableChunkStatus, ResumableConfiguration} from './type
  */
 export class Resumable extends ResumableEventHandler {
   private opts: ResumableConfiguration;
-  private files: ResumableFile[] = [];
+  /**
+   * An object that contains one entry for every file category. The key is the category name, the value is an array of
+   * all ResumableFiles of that category that were added to this instance.
+   */
+  private files: {[key: string]: ResumableFile[]} = {};
+  /**
+   * Contains all file categories for which the upload was not yet completed.
+   */
+  private uncompletedFileCategories: string[] = [];
   private validators: {[fileType: string]: Function} = {};
   private support: boolean;
 
@@ -23,6 +31,7 @@ export class Resumable extends ResumableEventHandler {
   clearInput: boolean = true;
   dragOverClass: string = 'dragover';
   fileCategories: string[] = [];
+  defaultFileCategory: string = 'default';
   fileTypes: string[] = [];
   fileTypeErrorCallback: Function = (file) => {
     alert(`${file.fileName || file.name} has an unsupported file type, please upload files of type ${this.fileTypes}.`);
@@ -79,6 +88,15 @@ export class Resumable extends ResumableEventHandler {
   protected setInstanceProperties(options: ResumableConfiguration) {
     Object.assign(this, options);
     this.sanitizeFileTypes();
+
+    if (!this.fileCategories.includes(this.defaultFileCategory)) {
+      this.fileCategories.push(this.defaultFileCategory);
+    }
+
+    this.fileCategories.forEach((fileCategory) => {
+      this.files[fileCategory] = [];
+      this.uncompletedFileCategories.push(fileCategory);
+    });
   }
 
   private sanitizeFileTypes(): void {
@@ -242,9 +260,15 @@ export class Resumable extends ResumableEventHandler {
       (file) => this.fire('fileProcessingFailed', file, 'duplicate', fileCategory),
     );
 
+    const resumableFiles = this.getFilesOfCategory(fileCategory);
     let validationPromises = uniqueFiles.map(async (file) => {
-      // Remove files that were already added based on their unique identifiers
-      if (this.files.some((addedFile) => addedFile.uniqueIdentifier === file.uniqueIdentifier)) {
+      if (!resumableFiles) {
+        this.fire('fileProcessingFailed', undefined, 'unknownFileCategory', fileCategory);
+        return false;
+      }
+
+      // Check if the file has already been added (based on its unique identifier).
+      if (resumableFiles.some((addedFile) => addedFile.uniqueIdentifier === file.uniqueIdentifier)) {
         this.fire('fileProcessingFailed', file, 'duplicate', fileCategory);
         return false;
       }
@@ -306,16 +330,20 @@ export class Resumable extends ResumableEventHandler {
    * @param fileCategory The file category that has been provided for the file
    */
   private async appendFilesFromFileList(fileList: File[], event: Event, fileCategory: string = null): Promise<boolean> {
-    if (fileCategory && !this.fileCategories.includes(fileCategory)) {
+    const resumableFiles = this.getFilesOfCategory(fileCategory);
+
+    if (!resumableFiles) {
       this.fire('fileProcessingFailed', undefined, 'unknownFileCategory', fileCategory);
       return false;
     }
 
+    const allResumableFiles = this.getFilesOfAllCategories();
+
     // check for uploading too many files
-    if (this.maxFiles !== undefined && this.maxFiles < fileList.length + this.files.length) {
+    if (this.maxFiles !== undefined && this.maxFiles < fileList.length + allResumableFiles.length) {
       // if single-file upload, file is already added, and trying to add 1 new file, simply replace the already-added file
-      if (this.maxFiles === 1 && this.files.length === 1 && fileList.length === 1) {
-        this.removeFile(this.files[0]);
+      if (this.maxFiles === 1 && allResumableFiles.length === 1 && fileList.length === 1) {
+        this.removeFile(resumableFiles[0]);
       } else {
         this.fire('fileProcessingFailed', undefined, 'maxFiles', fileCategory);
         this.maxFilesErrorCallback(fileList);
@@ -345,7 +373,7 @@ export class Resumable extends ResumableEventHandler {
       f.on('fileSuccess', (...args) => this.handleFileSuccess(args, fileCategory));
       f.on('fileCancel', (...args) => this.handleFileCancel(args));
       f.on('fileRetry', () => this.handleFileRetry());
-      this.files.push(f);
+      this.files[fileCategory].push(f);
       this.fire('fileAdded', f, event, fileCategory);
     }
 
@@ -373,11 +401,13 @@ export class Resumable extends ResumableEventHandler {
    * Queue a new chunk to be uploaded that is currently awaiting upload.
    */
   private uploadNextChunk(): void {
+    const allResumableFiles = this.getFilesOfAllCategories();
+
     // In some cases (such as videos) it's really handy to upload the first
     // and last chunk of a file quickly; this lets the server check the file's
     // metadata and determine if there's even a point in continuing.
     if (this.prioritizeFirstAndLastChunk) {
-      for (const file of this.files) {
+      for (const file of allResumableFiles) {
         if (file.chunks.length && file.chunks[0].status === ResumableChunkStatus.PENDING) {
           file.chunks[0].send();
           return;
@@ -390,9 +420,36 @@ export class Resumable extends ResumableEventHandler {
     }
 
     // Now, simply look for the next best thing to upload
-    for (const file of this.files) {
+    for (const file of allResumableFiles) {
       if (file.upload()) return;
     }
+  }
+
+  /**
+   * Returns all ResumableFiles of the given file category.
+   *
+   * @param fileCategory The file category of which the files should be returned.
+   *                     If null, the default category will be used.
+   * @returns {ResumableFile[] | null} Array of all ResumableFiles that are stored for the given category or null if
+   *                                   category doesn't exist.
+   */
+  private getFilesOfCategory(fileCategory: string): ResumableFile[] | null {
+    return this.files[fileCategory ?? this.defaultFileCategory];
+  }
+
+  /**
+   * Returns all ResumableFiles of the given file category.
+   *
+   * @returns {ResumableFile[]} Array of all ResumableFiles that are stored for any category.
+   */
+  private getFilesOfAllCategories(): ResumableFile[] {
+    let allFiles = [];
+
+    this.fileCategories.forEach((fileCategory) => {
+      allFiles = allFiles.concat(this.files[fileCategory]);
+    });
+
+    return allFiles;
   }
 
   /**
@@ -514,7 +571,7 @@ export class Resumable extends ResumableEventHandler {
    * Check whether any files are currently uploading
    */
   get isUploading(): boolean {
-    return this.files.some((file) => file.isUploading);
+    return this.getFilesOfAllCategories().some((file) => file.isUploading);
   }
 
   /**
@@ -535,7 +592,7 @@ export class Resumable extends ResumableEventHandler {
    */
   pause(): void {
     // Resume all chunks currently being uploaded
-    for (const file of this.files) {
+    for (const file of this.getFilesOfAllCategories()) {
       file.abort();
     }
     this.fire('pause');
@@ -546,8 +603,9 @@ export class Resumable extends ResumableEventHandler {
    */
   cancel(): void {
     this.fire('beforeCancel');
-    for (let i = this.files.length - 1; i >= 0; i--) {
-      this.files[i].cancel();
+    const allFiles = this.getFilesOfAllCategories();
+    for (let i = allFiles.length - 1; i >= 0; i--) {
+      allFiles[i].cancel();
     }
     this.fire('cancel');
   };
@@ -556,7 +614,7 @@ export class Resumable extends ResumableEventHandler {
    * Return the progress of the current upload as a float between 0 and 1
    */
   progress(): number {
-    let totalDone = this.files.reduce((accumulator, file) => accumulator + file.size * file.progress(), 0);
+    let totalDone = this.getFilesOfAllCategories().reduce((accumulator, file) => accumulator + file.size * file.progress(), 0);
     let totalSize = this.getSize();
     return totalSize > 0 ? totalDone / totalSize : 0;
   };
@@ -592,9 +650,10 @@ export class Resumable extends ResumableEventHandler {
    * Cancel the upload of a specific ResumableFile object and remove it from the file list.
    */
   removeFile(file: ResumableFile): void {
-    for (let i = this.files.length - 1; i >= 0; i--) {
-      if (this.files[i] === file) {
-        this.files.splice(i, 1);
+    const fileCategory = file.fileCategory;
+    for (let i = this.files[fileCategory].length - 1; i >= 0; i--) {
+      if (this.files[fileCategory][i] === file) {
+        this.files[fileCategory].splice(i, 1);
         break;
       }
     }
@@ -604,14 +663,14 @@ export class Resumable extends ResumableEventHandler {
    * Retrieve a ResumableFile object from the file list by its unique identifier.
    */
   getFromUniqueIdentifier(uniqueIdentifier: string): ResumableFile {
-    return this.files.find((file) => file.uniqueIdentifier === uniqueIdentifier);
+    return this.getFilesOfAllCategories().find((file) => file.uniqueIdentifier === uniqueIdentifier);
   };
 
   /**
    * Get the combined size of all files for the upload
    */
   getSize(): number {
-    return this.files.reduce((accumulator, file) => accumulator + file.size, 0);
+    return this.getFilesOfAllCategories().reduce((accumulator, file) => accumulator + file.size, 0);
   }
 
   /**
@@ -634,11 +693,27 @@ export class Resumable extends ResumableEventHandler {
   }
 
   /**
-   * Check whether the upload is completed, i.e. if all files were uploaded successfully.
+   * Check whether the upload is completed (if all files of a category are uploaded and if all files in general are
+   * uploaded).
    */
   checkUploadComplete(): void {
-    let uploadCompleted = this.files.every((file) => file.isComplete);
-    if (uploadCompleted) {
+    const stillUncompletedFileCategories = [];
+    this.uncompletedFileCategories.forEach((fileCategory) => {
+      // If category is empty, no upload will happen, so no "complete" event needs to be fired.
+      if (this.files[fileCategory].length == 0) {
+        return;
+      }
+
+      if (this.files[fileCategory].every((file) => file.isComplete)) {
+        this.fire('categoryComplete', fileCategory);
+      } else {
+        stillUncompletedFileCategories.push(fileCategory);
+      }
+    });
+
+    this.uncompletedFileCategories = stillUncompletedFileCategories;
+
+    if (this.uncompletedFileCategories.length === 0) {
       // All chunks have been uploaded, complete
       this.fire('complete');
     }

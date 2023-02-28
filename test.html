@@ -1,4 +1,21 @@
+<style>
+  .dropArea {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 150px;
+    width: 150px;
+    background-color: rgba(175, 50, 50, 0.7);
+  }
+</style>
+
 <a href="#" id="browseButton">Select files</a>
+
+<div id="dropArea" class="dropArea">
+  <p>
+    DROP
+  </p>
+</div>
 
 <script src="dist/main.js"></script>
 <script>
@@ -7,6 +24,7 @@
   });
 
   r.assignBrowse(document.getElementById('browseButton'));
+  r.assignDrop(document.getElementById('dropArea'));
 
   r.on('fileSuccess', function(file) {
     console.debug('fileSuccess', file);

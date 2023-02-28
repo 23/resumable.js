@@ -233,8 +233,9 @@ export class Resumable extends ResumableEventHandler {
    * Validate and clean a list of files. This includes the removal of duplicates, a check whether the file type is
    * allowed and custom validation functions defined per file type.
    * @param {ExtendedFile[]} files A list of File instances that were previously extended with a uniqueIdentifier
+   * @param fileCategory The file category that has been provided for the files
    */
-  private async validateFiles(files: ExtendedFile[]): Promise<ExtendedFile[]> {
+  private async validateFiles(files: ExtendedFile[], fileCategory: string = null): Promise<ExtendedFile[]> {
     // Remove files that are duplicated in the original array, based on their unique identifiers
     let uniqueFiles = Helpers.uniqBy(files,
       (file) => file.uniqueIdentifier,
@@ -282,7 +283,7 @@ export class Resumable extends ResumableEventHandler {
       }
 
       // Apply a custom validator based on the file extension
-      if (fileExtension in this.validators && !await this.validators[fileExtension](file)) {
+      if (fileExtension in this.validators && !await this.validators[fileExtension](file, fileCategory)) {
         this.fire('fileProcessingFailed', file, 'validation');
         this.fileValidationErrorCallback(file);
         return false;
@@ -330,7 +331,7 @@ export class Resumable extends ResumableEventHandler {
     }));
 
     // Validate the files and remove duplicates
-    const validatedFiles = await this.validateFiles(filesWithUniqueIdentifiers);
+    const validatedFiles = await this.validateFiles(filesWithUniqueIdentifiers, fileCategory);
 
     let skippedFiles = filesWithUniqueIdentifiers.filter((file) => !validatedFiles.includes(file));
 

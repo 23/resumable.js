@@ -196,7 +196,7 @@ export class Resumable extends ResumableEventHandler {
     if (!items.length) {
       return; // nothing to do
     }
-    this.fire('fileProcessingBegin', items);
+    this.fire('fileProcessingBegin', items, fileCategory);
     let promises = items.map((item) => this.mapDragItemToFile(item, ''));
     let files = Helpers.flattenDeep(await Promise.all(promises));
     if (files.length) {
@@ -239,13 +239,13 @@ export class Resumable extends ResumableEventHandler {
     // Remove files that are duplicated in the original array, based on their unique identifiers
     let uniqueFiles = Helpers.uniqBy(files,
       (file) => file.uniqueIdentifier,
-      (file) => this.fire('fileProcessingFailed', file, 'duplicate'),
+      (file) => this.fire('fileProcessingFailed', file, 'duplicate', fileCategory),
     );
 
     let validationPromises = uniqueFiles.map(async (file) => {
       // Remove files that were already added based on their unique identifiers
       if (this.files.some((addedFile) => addedFile.uniqueIdentifier === file.uniqueIdentifier)) {
-        this.fire('fileProcessingFailed', file, 'duplicate');
+        this.fire('fileProcessingFailed', file, 'duplicate', fileCategory);
         return false;
       }
 
@@ -264,7 +264,7 @@ export class Resumable extends ResumableEventHandler {
             );
         });
         if (!fileTypeFound) {
-          this.fire('fileProcessingFailed', file, 'fileType');
+          this.fire('fileProcessingFailed', file, 'fileType', fileCategory);
           this.fileTypeErrorCallback(file);
           return false;
         }
@@ -272,19 +272,19 @@ export class Resumable extends ResumableEventHandler {
 
       // Validate the file size against minimum and maximum allowed sizes
       if (this.minFileSize !== undefined && file.size < this.minFileSize) {
-        this.fire('fileProcessingFailed', file, 'minFileSize');
+        this.fire('fileProcessingFailed', file, 'minFileSize', fileCategory);
         this.minFileSizeErrorCallback(file);
         return false;
       }
       if (this.maxFileSize !== undefined && file.size > this.maxFileSize) {
-        this.fire('fileProcessingFailed', file, 'maxFileSize');
+        this.fire('fileProcessingFailed', file, 'maxFileSize', fileCategory);
         this.maxFileSizeErrorCallback(file);
         return false;
       }
 
       // Apply a custom validator based on the file extension
       if (fileExtension in this.validators && !await this.validators[fileExtension](file, fileCategory)) {
-        this.fire('fileProcessingFailed', file, 'validation');
+        this.fire('fileProcessingFailed', file, 'validation', fileCategory);
         this.fileValidationErrorCallback(file);
         return false;
       }
@@ -299,15 +299,15 @@ export class Resumable extends ResumableEventHandler {
   }
 
   /**
-   * Add an array of files to this instance's file list by creating new ResumableFiles. This includes a validation and
-   * deduplication of the provided array.
+   * Add an array of files to this instance's file list (of the file category, if given) by creating new ResumableFiles.
+   * This includes a validation and deduplication of the provided array.
    * @param fileList An array containing File objects
    * @param event The event with which the fileList was provided
    * @param fileCategory The file category that has been provided for the file
    */
   private async appendFilesFromFileList(fileList: File[], event: Event, fileCategory: string = null): Promise<boolean> {
     if (fileCategory && !this.fileCategories.includes(fileCategory)) {
-      this.fire('fileProcessingFailed', undefined, 'unknownFileCategory');
+      this.fire('fileProcessingFailed', undefined, 'unknownFileCategory', fileCategory);
       return false;
     }
 
@@ -317,7 +317,7 @@ export class Resumable extends ResumableEventHandler {
       if (this.maxFiles === 1 && this.files.length === 1 && fileList.length === 1) {
         this.removeFile(this.files[0]);
       } else {
-        this.fire('fileProcessingFailed', undefined, 'maxFiles');
+        this.fire('fileProcessingFailed', undefined, 'maxFiles', fileCategory);
         this.maxFilesErrorCallback(fileList);
         return false;
       }
@@ -340,13 +340,13 @@ export class Resumable extends ResumableEventHandler {
       f.on('chunkSuccess', () => this.handleChunkSuccess());
       f.on('chunkError', () => this.handleChunkError());
       f.on('chunkCancel', () => this.handleChunkCancel());
-      f.on('fileProgress', (...args) => this.handleFileProgress(args));
-      f.on('fileError', (...args) => this.handleFileError(args));
-      f.on('fileSuccess', (...args) => this.handleFileSuccess(args));
+      f.on('fileProgress', (...args) => this.handleFileProgress(args, fileCategory));
+      f.on('fileError', (...args) => this.handleFileError(args, fileCategory));
+      f.on('fileSuccess', (...args) => this.handleFileSuccess(args, fileCategory));
       f.on('fileCancel', (...args) => this.handleFileCancel(args));
       f.on('fileRetry', () => this.handleFileRetry());
       this.files.push(f);
-      this.fire('fileAdded', f, event);
+      this.fire('fileAdded', f, event, fileCategory);
     }
 
     // all files processed, trigger event
@@ -354,7 +354,7 @@ export class Resumable extends ResumableEventHandler {
       // no succeeded files, just skip
       return;
     }
-    this.fire('filesAdded', validatedFiles, skippedFiles);
+    this.fire('filesAdded', validatedFiles, skippedFiles, fileCategory);
   }
 
   /**
@@ -626,7 +626,7 @@ export class Resumable extends ResumableEventHandler {
    */
   handleChangeEvent(e: InputEvent, fileCategory: string = null): void {
     const eventTarget = e.target as HTMLInputElement;
-    this.fire('fileProcessingBegin', eventTarget.files);
+    this.fire('fileProcessingBegin', eventTarget.files, fileCategory);
     this.appendFilesFromFileList([...eventTarget.files as any], e, fileCategory);
     if (this.clearInput) {
       eventTarget.value = '';
@@ -673,23 +673,23 @@ export class Resumable extends ResumableEventHandler {
   /**
    * The event handler when an error occurred during the upload of a file
    */
-  private handleFileError(args: any[]): void {
-    this.fire('error', args[1], args[0]);
+  private handleFileError(args: any[], fileCategory: string): void {
+    this.fire('error', args[1], args[0], fileCategory);
   }
 
   /**
    * The event handler when all chunks from a file were uploaded successfully
    */
-  private handleFileSuccess(args: any[]): void {
-    this.fire('fileSuccess', ...args);
+  private handleFileSuccess(args: any[], fileCategory: string): void {
+    this.fire('fileSuccess', ...args, fileCategory);
     this.checkUploadComplete();
   }
 
   /**
    * The event handler when a file progress event was received
    */
-  private handleFileProgress(args: any[]): void {
-    this.fire('fileProgress', ...args);
+  private handleFileProgress(args: any[], fileCategory: string): void {
+    this.fire('fileProgress', ...args, fileCategory);
     this.fire('progress');
   }
 

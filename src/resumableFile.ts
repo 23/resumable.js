@@ -56,7 +56,7 @@ export default class ResumableFile extends ResumableEventHandler {
         abortCount++;
       }
     }
-    if (abortCount > 0) this.fire('fileProgress', this);
+    if (abortCount > 0) this.fire('fileProgress', this, null);
   }
 
   /**
@@ -72,7 +72,7 @@ export default class ResumableFile extends ResumableEventHandler {
     // Reset this file to be void
     this.chunks = [];
     this.fire('fileCancel', this);
-    this.fire('fileProgress', this);
+    this.fire('fileProgress', this, null);
   }
 
   /**

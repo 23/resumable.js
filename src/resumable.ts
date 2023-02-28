@@ -335,7 +335,7 @@ export class Resumable extends ResumableEventHandler {
     let skippedFiles = filesWithUniqueIdentifiers.filter((file) => !validatedFiles.includes(file));
 
     for (const file of validatedFiles) {
-      let f = new ResumableFile(file, file.uniqueIdentifier, this.opts);
+      let f = new ResumableFile(file, file.uniqueIdentifier, fileCategory, this.opts);
       f.on('chunkSuccess', () => this.handleChunkSuccess());
       f.on('chunkError', () => this.handleChunkError());
       f.on('chunkCancel', () => this.handleChunkCancel());

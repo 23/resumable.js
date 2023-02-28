@@ -62,6 +62,10 @@ declare interface ResumableConfiguration {
    */
   identifierParameterName?: string;
   /**
+   * The name of the file category POST parameter to use for the file chunk (Default: resumableFileCategory)
+   */
+  fileCategoryParameterName?: string;
+  /**
    * The name of the original file name POST parameter to use for the file chunk (Default: resumableFilename)
    */
   fileNameParameterName?: string;

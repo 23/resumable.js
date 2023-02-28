@@ -21,10 +21,11 @@
 <script>
   var r = new resumablejs.Resumable({
     target: 'test.html',
+    fileCategories: ['test-category']
   });
 
-  r.assignBrowse(document.getElementById('browseButton'));
-  r.assignDrop(document.getElementById('dropArea'));
+  r.assignBrowse(document.getElementById('browseButton'), false, 'test-category');
+  r.assignDrop(document.getElementById('dropArea'), 'test-category');
 
   r.on('fileSuccess', function(file) {
     console.debug('fileSuccess', file);

@@ -302,6 +302,7 @@ export class Resumable extends ResumableEventHandler {
    * deduplication of the provided array.
    * @param fileList An array containing File objects
    * @param event The event with which the fileList was provided
+   * @param fileCategory The file category that has been provided for the file
    */
   private async appendFilesFromFileList(fileList: File[], event: Event, fileCategory: string = null): Promise<boolean> {
     if (fileCategory && !this.fileCategories.includes(fileCategory)) {
@@ -324,7 +325,7 @@ export class Resumable extends ResumableEventHandler {
     // Add the unique identifier for every new file.
     // Since this might return a promise, we have to wait until it completed.
     const filesWithUniqueIdentifiers = await Promise.all(fileList.map(async (file: ExtendedFile): Promise<ExtendedFile> => {
-      file.uniqueIdentifier = await this.generateUniqueIdentifier(file, event);
+      file.uniqueIdentifier = await this.generateUniqueIdentifier(file, event, fileCategory);
       return file;
     }));
 
@@ -360,10 +361,11 @@ export class Resumable extends ResumableEventHandler {
    * generator function.
    * @param file The file as an HTML 5 File object
    * @param event The event with which the file was provided originally
+   * @param fileCategory The file category that has been provided for the file
    */
-  private generateUniqueIdentifier(file: File, event: Event): string {
+  private generateUniqueIdentifier(file: File, event: Event, fileCategory: string = null): string {
     return typeof this._generateUniqueIdentifier === 'function' ?
-      this._generateUniqueIdentifier(file, event) : Helpers.generateUniqueIdentifier(file);
+      this._generateUniqueIdentifier(file, event, fileCategory) : Helpers.generateUniqueIdentifier(file);
   }
 
   /**

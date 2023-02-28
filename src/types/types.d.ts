@@ -138,6 +138,12 @@ declare interface ResumableConfiguration {
    **/
   maxFileSizeErrorCallback?: (file: ResumableFile) => void;
   /**
+   * The file categories that will be used. Every file that is added to this resumable instance can be added to any of
+   * these categories. The category is then send to the server along with the file and can be used to start different
+   * processing workflows after the upload. (Default: [], adds every file to the same unnamed category.)
+   */
+  fileCategories?: string[];
+  /**
    * The file types allowed to upload. An empty array allow any file type. (Default: [])
    **/
   fileTypes?: string[];

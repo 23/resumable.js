@@ -22,6 +22,7 @@ export class Resumable extends ResumableEventHandler {
   // Configuration Options
   clearInput: boolean = true;
   dragOverClass: string = 'dragover';
+  fileCategories: string[] = [];
   fileTypes: string[] = [];
   fileTypeErrorCallback: Function = (file) => {
     alert(`${file.fileName || file.name} has an unsupported file type, please upload files of type ${this.fileTypes}.`);

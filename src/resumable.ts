@@ -89,6 +89,10 @@ export class Resumable extends ResumableEventHandler {
     Object.assign(this, options);
     this.sanitizeFileTypes();
 
+    if (!this.defaultFileCategory) {
+      this.defaultFileCategory = 'default';
+    }
+
     if (!this.fileCategories.includes(this.defaultFileCategory)) {
       this.fileCategories.push(this.defaultFileCategory);
     }
@@ -197,7 +201,7 @@ export class Resumable extends ResumableEventHandler {
   /**
    * Handle the event when a new file was provided via drag-and-drop
    */
-  private async onDrop(e: DragEvent, fileCategory: string = null): Promise<void> {
+  private async onDrop(e: DragEvent, fileCategory: string = this.defaultFileCategory): Promise<void> {
     Helpers.stopEvent(e);
 
     let items = [];
@@ -251,16 +255,16 @@ export class Resumable extends ResumableEventHandler {
    * Validate and clean a list of files. This includes the removal of duplicates, a check whether the file type is
    * allowed and custom validation functions defined per file type.
    * @param {ExtendedFile[]} files A list of File instances that were previously extended with a uniqueIdentifier
-   * @param fileCategory The file category that has been provided for the files
+   * @param fileCategory The file category that has been provided for the files. Defaults to `defaultFileCategory`.
    */
-  private async validateFiles(files: ExtendedFile[], fileCategory: string = null): Promise<ExtendedFile[]> {
+  private async validateFiles(files: ExtendedFile[], fileCategory: string = this.defaultFileCategory): Promise<ExtendedFile[]> {
     // Remove files that are duplicated in the original array, based on their unique identifiers
     let uniqueFiles = Helpers.uniqBy(files,
       (file) => file.uniqueIdentifier,
       (file) => this.fire('fileProcessingFailed', file, 'duplicate', fileCategory),
     );
 
-    const resumableFiles = this.getFilesOfCategory(fileCategory);
+    const resumableFiles = this.files[fileCategory];
     let validationPromises = uniqueFiles.map(async (file) => {
       if (!resumableFiles) {
         this.fire('fileProcessingFailed', undefined, 'unknownFileCategory', fileCategory);
@@ -327,10 +331,10 @@ export class Resumable extends ResumableEventHandler {
    * This includes a validation and deduplication of the provided array.
    * @param fileList An array containing File objects
    * @param event The event with which the fileList was provided
-   * @param fileCategory The file category that has been provided for the file
+   * @param fileCategory The file category that has been provided for the file. Defaults to `defaultFileCategory`.
    */
-  private async appendFilesFromFileList(fileList: File[], event: Event, fileCategory: string = null): Promise<boolean> {
-    const resumableFiles = this.getFilesOfCategory(fileCategory);
+  private async appendFilesFromFileList(fileList: File[], event: Event, fileCategory: string = this.defaultFileCategory): Promise<boolean> {
+    const resumableFiles = this.files[fileCategory];
 
     if (!resumableFiles) {
       this.fire('fileProcessingFailed', undefined, 'unknownFileCategory', fileCategory);
@@ -390,9 +394,9 @@ export class Resumable extends ResumableEventHandler {
    * generator function.
    * @param file The file as an HTML 5 File object
    * @param event The event with which the file was provided originally
-   * @param fileCategory The file category that has been provided for the file
+   * @param fileCategory The file category that has been provided for the file. Defaults to `defaultFileCategory`.
    */
-  private generateUniqueIdentifier(file: File, event: Event, fileCategory: string = null): string {
+  private generateUniqueIdentifier(file: File, event: Event, fileCategory: string = this.defaultFileCategory): string {
     return typeof this._generateUniqueIdentifier === 'function' ?
       this._generateUniqueIdentifier(file, event, fileCategory) : Helpers.generateUniqueIdentifier(file);
   }
@@ -428,18 +432,6 @@ export class Resumable extends ResumableEventHandler {
   /**
    * Returns all ResumableFiles of the given file category.
    *
-   * @param fileCategory The file category of which the files should be returned.
-   *                     If null, the default category will be used.
-   * @returns {ResumableFile[] | null} Array of all ResumableFiles that are stored for the given category or null if
-   *                                   category doesn't exist.
-   */
-  private getFilesOfCategory(fileCategory: string): ResumableFile[] | null {
-    return this.files[fileCategory ?? this.defaultFileCategory];
-  }
-
-  /**
-   * Returns all ResumableFiles of the given file category.
-   *
    * @returns {ResumableFile[]} Array of all ResumableFiles that are stored for any category.
    */
   private getFilesOfAllCategories(): ResumableFile[] {
@@ -459,8 +451,12 @@ export class Resumable extends ResumableEventHandler {
 
   /**
    * Assign a browse action to one or more DOM nodes. Pass in true to allow directories to be selected (Chrome only).
+   *
+   * @param domNodes The dom nodes to which the browse action should be assigned (can be an array or a single dom node).
+   * @param isDirectory If true, directories can be added via the file picker (Chrome only).
+   * @param fileCategory The file category that will be assigned to all added files. Defaults to `defaultFileCategory`.
    */
-  assignBrowse(domNodes: HTMLElement | HTMLElement[], isDirectory: boolean = false, fileCategory: string = null): void {
+  assignBrowse(domNodes: HTMLElement | HTMLElement[], isDirectory: boolean = false, fileCategory: string = this.defaultFileCategory): void {
 
     if (domNodes instanceof HTMLElement) domNodes = [domNodes];
     for (const domNode of domNodes) {
@@ -505,7 +501,7 @@ export class Resumable extends ResumableEventHandler {
   /**
    * Assign one or more DOM nodes as a drop target.
    */
-  assignDrop(domNodes: HTMLElement | HTMLElement[], fileCategory: string = null): void {
+  assignDrop(domNodes: HTMLElement | HTMLElement[], fileCategory: string = this.defaultFileCategory): void {
     if (domNodes instanceof HTMLElement) domNodes = [domNodes];
 
     for (const domNode of domNodes) {
@@ -622,14 +618,14 @@ export class Resumable extends ResumableEventHandler {
   /**
    * Add a HTML5 File object to the list of files.
    */
-  addFile(file: File, event: Event, fileCategory: string = null): void {
+  addFile(file: File, event: Event, fileCategory: string = this.defaultFileCategory): void {
     this.appendFilesFromFileList([file], event, fileCategory);
   };
 
   /**
    * Add a list of HTML5 File objects to the list of files.
    */
-  addFiles(files: File[], event: Event, fileCategory: string = null): void {
+  addFiles(files: File[], event: Event, fileCategory: string = this.defaultFileCategory): void {
     this.appendFilesFromFileList(files, event, fileCategory);
   };
 
@@ -676,14 +672,14 @@ export class Resumable extends ResumableEventHandler {
   /**
    * Call the event handler for a DragEvent (when a file is dropped on a drop area).
    */
-  handleDropEvent(e: DragEvent, fileCategory: string = null): void {
+  handleDropEvent(e: DragEvent, fileCategory: string = this.defaultFileCategory): void {
     this.onDrop(e, fileCategory);
   }
 
   /**
    * Call the event handler for an InputEvent (i.e. received one or multiple files).
    */
-  handleChangeEvent(e: InputEvent, fileCategory: string = null): void {
+  handleChangeEvent(e: InputEvent, fileCategory: string = this.defaultFileCategory): void {
     const eventTarget = e.target as HTMLInputElement;
     this.fire('fileProcessingBegin', eventTarget.files, fileCategory);
     this.appendFilesFromFileList([...eventTarget.files as any], e, fileCategory);

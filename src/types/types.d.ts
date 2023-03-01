@@ -150,7 +150,8 @@ declare interface ResumableConfiguration {
   fileCategories?: string[];
   /**
    * The name of the default file category. This file category is always present, even when the fileCategories parameter
-   * is not set. (Default: 'default').
+   * is not set. If anything falsey (e.g. an empty string or null) is passed, the default value is used.
+   * (Default: 'default').
    */
   defaultFileCategory?: string;
   /**

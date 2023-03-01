@@ -16,7 +16,7 @@ export default class ResumableFile extends ResumableEventHandler {
   size: number;
   relativePath: string;
   uniqueIdentifier: string;
-  fileCategory: string = null;
+  fileCategory: string;
   private _error: boolean;
   chunks: ResumableChunk[] = [];
   private chunkSize: number = 1024 * 1024; // 1 MB

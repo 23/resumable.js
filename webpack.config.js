@@ -1,4 +1,5 @@
 const path = require('path');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   mode: 'none',
@@ -25,4 +26,14 @@ module.exports = {
       { test: /\.js$/, loader: "source-map-loader" },
     ],
   },
+  plugins: [
+    new CopyWebpackPlugin({
+        patterns: [
+          {
+            from: './src/types/types.d.ts',
+            to: './types/types.d.ts'
+          }
+        ]
+    })
+  ]
 };

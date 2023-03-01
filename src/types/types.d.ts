@@ -155,9 +155,14 @@ declare interface ResumableConfiguration {
    */
   defaultFileCategory?: string;
   /**
-   * The file types allowed to upload. An empty array allow any file type. (Default: [])
+   * The file types allowed to upload.
+   * If this is an array, the file types are used for all defined file catgories.
+   * Otherwise this needs to be an object, with an entry for every file category (category name as key, array of allowed
+   * file types as value).
+   * An empty array (either in the object of standalone) allows for any file type.
+   * Can also be changed later by calling setFileTypes(). (Default: [])
    **/
-  fileTypes?: string[];
+  fileTypes?: string[] | {[fileCategory: string]: string[]};
   /**
    * A function which displays an error a selected file has type not allowed. (Default: displays an alert for every bad file.)
    **/

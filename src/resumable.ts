@@ -31,7 +31,7 @@ export class Resumable extends ResumableEventHandler {
   clearInput: boolean = true;
   dragOverClass: string = 'dragover';
   fileCategories: string[] = [];
-  defaultFileCategory: string = 'default';
+  defaultFileCategory: string | null = 'default';
   fileTypes: string[] | {[fileCategory: string]: string[]} = [];
   fileTypeErrorCallback: Function = (file) => {
     alert(`${file.fileName || file.name} has an unsupported file type.`);
@@ -88,12 +88,15 @@ export class Resumable extends ResumableEventHandler {
   protected setInstanceProperties(options: ResumableConfiguration) {
     Object.assign(this, options);
 
-    if (!this.defaultFileCategory) {
-      this.defaultFileCategory = 'default';
-    }
-
-    if (!this.fileCategories.includes(this.defaultFileCategory)) {
+    // Explicitly test for null because other falsy values could be used as default.
+    if (this.defaultFileCategory === null) {
+      if (this.fileCategories.length === 0) {
+        throw new Error('If no default category is set, at least one file category must be defined.');
+      }
+    } else if (!this.fileCategories.includes(this.defaultFileCategory)) {
       this.fileCategories.push(this.defaultFileCategory);
+    } else {
+      console.warn('Default file category already part of file categories array. Will not be added again.');
     }
 
     this.fileCategories.forEach((fileCategory) => {

@@ -150,10 +150,11 @@ declare interface ResumableConfiguration {
   fileCategories?: string[];
   /**
    * The name of the default file category. This file category is always present, even when the fileCategories parameter
-   * is not set. If anything falsey (e.g. an empty string or null) is passed, the default value is used.
+   * is not set.
+   * If null is passed, the default category is not used. In this case, `fileCategories` must be set.
    * (Default: 'default').
    */
-  defaultFileCategory?: string;
+  defaultFileCategory?: string | null;
   /**
    * The file types allowed to upload.
    * If this is an array, the file types are used for all defined file catgories.

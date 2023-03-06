@@ -37,6 +37,7 @@ export declare class Resumable extends ResumableEventHandler {
      * Assign the attributes of this instance via destructuring of the options object.
      */
     protected setInstanceProperties(options: ResumableConfiguration): void;
+    private sanitizeFileTypes;
     /**
      * Transforms a single fileEntry or directoryEntry item into a list of File objects this method is used to convert
      * entries found inside dragged-and-dropped directories.
@@ -107,6 +108,11 @@ export declare class Resumable extends ResumableEventHandler {
      * Remove one or more DOM nodes as a drop target.
      */
     unAssignDrop(domNodes: HTMLElement | HTMLElement[]): void;
+    /**
+     * Set the file types allowed to upload. Optionally pass a dom node on which the accepted file types should be
+     * updated as well.
+     */
+    setFileTypes(fileTypes: string[], domNode?: HTMLInputElement): void;
     /**
      * Check whether any files are currently uploading
      */

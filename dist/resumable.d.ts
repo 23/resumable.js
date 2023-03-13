@@ -57,6 +57,14 @@ export declare class Resumable extends ResumableEventHandler {
      */
     private processDirectory;
     /**
+     * If "assignDrop" was used to assign the drop events to an element, we automatically add the "dragOverClass" CSS
+     * class to the element when a file is dropped onto it. In this case, we have to remove that class again before
+     * calling "onDrop()".
+     * If "onDrop()" is called from "handleDropEvent()" this is not needed.
+     *
+     */
+    private removeDragOverClassAndCallOnDrop;
+    /**
      * Handle the event when a new file was provided via drag-and-drop
      */
     private onDrop;
@@ -161,11 +169,11 @@ export declare class Resumable extends ResumableEventHandler {
      */
     getSize(): number;
     /**
-     * Call the event handler when a file is dropped on the drag-and-drop area
+     * Call the event handler for a DragEvent (when a file is dropped on a drop area).
      */
     handleDropEvent(e: DragEvent): void;
     /**
-     * Call the event handler when the provided input element changes (i.e. receives one or multiple files.
+     * Call the event handler for an InputEvent (i.e. received one or multiple files).
      */
     handleChangeEvent(e: InputEvent): void;
     /**

@@ -162,9 +162,13 @@ export class Resumable extends ResumableEventHandler {
   }
 
   /**
-   * Handle CSS related stuff (e.g. remove dragOverClass from target element) and then call onDrop().
+   * If "assignDrop" was used to assign the drop events to an element, we automatically add the "dragOverClass" CSS
+   * class to the element when a file is dropped onto it. In this case, we have to remove that class again before
+   * calling "onDrop()".
+   * If "onDrop()" is called from "handleDropEvent()" this is not needed.
+   * 
    */
-  private onDropWithCssHandling(e: DragEvent): Promise<void> {
+  private removeDragOverClassAndCallOnDrop(e: DragEvent): Promise<void> {
     (e.currentTarget as HTMLElement).classList.remove(this.dragOverClass);
 
     return this.onDrop(e);
@@ -434,7 +438,7 @@ export class Resumable extends ResumableEventHandler {
       domNode.addEventListener('dragover', this.onDragOverEnter.bind(this), false);
       domNode.addEventListener('dragenter', this.onDragOverEnter.bind(this), false);
       domNode.addEventListener('dragleave', this.onDragLeave.bind(this), false);
-      domNode.addEventListener('drop', this.onDropWithCssHandling.bind(this), false);
+      domNode.addEventListener('drop', this.removeDragOverClassAndCallOnDrop.bind(this), false);
     }
   }
 
@@ -448,7 +452,7 @@ export class Resumable extends ResumableEventHandler {
       domNode.removeEventListener('dragover', this.onDragOverEnter.bind(this));
       domNode.removeEventListener('dragenter', this.onDragOverEnter.bind(this));
       domNode.removeEventListener('dragleave', this.onDragLeave.bind(this));
-      domNode.removeEventListener('drop', this.onDropWithCssHandling.bind(this));
+      domNode.removeEventListener('drop', this.removeDragOverClassAndCallOnDrop.bind(this));
     }
   }
 

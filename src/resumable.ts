@@ -99,10 +99,20 @@ export class Resumable extends ResumableEventHandler {
       console.warn('Default file category already part of file categories array. Will not be added again.');
     }
 
+    // To avoid any problems if the same category was added twice, we use the following loop to also deduplicate the
+    // file categories.
+    const deduplicatedFileCategories = [];
     this.fileCategories.forEach((fileCategory) => {
+      if (this.files[fileCategory]) {
+        return;
+      }
+
       this.files[fileCategory] = [];
       this.uncompletedFileCategories.push(fileCategory);
+      deduplicatedFileCategories.push(fileCategory);
     });
+
+    this.fileCategories = deduplicatedFileCategories.slice();
 
     // Create/Check file types object.
     if (Array.isArray(this.fileTypes)) {

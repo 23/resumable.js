@@ -1,14 +1,22 @@
+/*
+* MIT Licensed
+*
+* For all code added/modified until Sep 24, 2020
+* (see original repo as original code was split up into multiple files)
+* https://www.twentythree.com
+* https://github.com/23/resumable.js
+* Steffen Fagerström Christensen, steffen@twentythree.com
+*
+* For all code added/modified since Sep 24, 2020
+* https://www.pointcloudtechnology.com/en/
+* https://github.com/pointcloudtechnology/resumable.js
+* For contact (not the sole author): Marcel Wendler, https://github.com/UniquePanda, marcel.wendler@pointcloudtechnology.com
+*/
+
 import Helpers from './resumableHelpers';
 import ResumableFile from './resumableFile';
 import ResumableEventHandler from './resumableEventHandler';
 import {ExtendedFile, ResumableChunkStatus, ResumableConfiguration} from './types/types';
-
-/*
-* MIT Licensed
-* http://www.twentythree.com/
-* http://github.com/23/resumable.js
-* Steffen Tiedemann Christensen, steffen@twentythree.com
-*/
 
 /**
  * An instance of a resumable upload handler that contains one or multiple files which should be uploaded in chunks.

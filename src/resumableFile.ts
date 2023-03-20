@@ -1,3 +1,18 @@
+/*
+* MIT Licensed
+*
+* For all code added/modified until Sep 24, 2020
+* (see original repo as original code was split up into multiple files)
+* https://www.twentythree.com
+* https://github.com/23/resumable.js
+* Steffen Fagerström Christensen, steffen@twentythree.com
+*
+* For all code added/modified since Sep 24, 2020
+* https://www.pointcloudtechnology.com/en/
+* https://github.com/pointcloudtechnology/resumable.js
+* For contact (not the sole author): Marcel Wendler, https://github.com/UniquePanda, marcel.wendler@pointcloudtechnology.com
+*/
+
 import ResumableChunk from './resumableChunk';
 import Helpers from './resumableHelpers';
 import ResumableEventHandler from './resumableEventHandler';

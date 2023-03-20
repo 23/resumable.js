@@ -16,19 +16,21 @@ export default class ResumableFile extends ResumableEventHandler {
   size: number;
   relativePath: string;
   uniqueIdentifier: string;
+  fileCategory: string;
   private _error: boolean;
   chunks: ResumableChunk[] = [];
   private chunkSize: number = 1024 * 1024; // 1 MB
 
-  constructor(file: File, uniqueIdentifier: string, options: object) {
+  constructor(file: File, uniqueIdentifier: string, fileCategory: string, options: object) {
     super();
     this.opts = options;
     this.setInstanceProperties(options);
     this.file = file;
     this.fileName = file.name;
     this.size = file.size;
-    this.relativePath = /*file.relativePath ||*/ file.webkitRelativePath || this.fileName;
+    this.relativePath = file.webkitRelativePath || this.fileName;
     this.uniqueIdentifier = uniqueIdentifier;
+    this.fileCategory = fileCategory;
     this._error = uniqueIdentifier !== undefined;
 
     // Bootstrap file
@@ -54,7 +56,7 @@ export default class ResumableFile extends ResumableEventHandler {
         abortCount++;
       }
     }
-    if (abortCount > 0) this.fire('fileProgress', this);
+    if (abortCount > 0) this.fire('fileProgress', this, null);
   }
 
   /**
@@ -70,7 +72,7 @@ export default class ResumableFile extends ResumableEventHandler {
     // Reset this file to be void
     this.chunks = [];
     this.fire('fileCancel', this);
-    this.fire('fileProgress', this);
+    this.fire('fileProgress', this, null);
   }
 
   /**

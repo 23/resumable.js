@@ -13,10 +13,11 @@ export default class ResumableFile extends ResumableEventHandler {
     size: number;
     relativePath: string;
     uniqueIdentifier: string;
+    fileCategory: string;
     private _error;
     chunks: ResumableChunk[];
     private chunkSize;
-    constructor(file: File, uniqueIdentifier: string, options: object);
+    constructor(file: File, uniqueIdentifier: string, fileCategory: string, options: object);
     /**
      * Set the options provided inside the configuration object on this instance
      */

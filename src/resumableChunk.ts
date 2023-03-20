@@ -30,6 +30,7 @@ export default class ResumableChunk extends ResumableEventHandler {
   totalSizeParameterName: string = 'resumableTotalSize';
   typeParameterName: string = 'resumableType';
   identifierParameterName: string = 'resumableIdentifier';
+  fileCategoryParameterName: string = 'resumableFileCategory';
   fileNameParameterName: string = 'resumableFilename';
   relativePathParameterName: string = 'resumableRelativePath';
   totalChunksParameterName: string = 'resumableTotalChunks';
@@ -106,6 +107,7 @@ export default class ResumableChunk extends ResumableEventHandler {
       [this.totalSizeParameterName]: this.fileObjSize,
       [this.typeParameterName]: this.fileObjType,
       [this.identifierParameterName]: this.fileObj.uniqueIdentifier,
+      [this.fileCategoryParameterName]: this.fileObj.fileCategory,
       [this.fileNameParameterName]: this.fileObj.fileName,
       [this.relativePathParameterName]: this.fileObj.relativePath,
       [this.totalChunksParameterName]: this.fileObj.chunks.length,

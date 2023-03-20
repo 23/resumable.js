@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/pointcloudtechnology/resumable.js#readme",
   "devDependencies": {
+    "copy-webpack-plugin": "^11.0.0",
     "source-map-loader": "^3.0.1",
     "ts-loader": "^9.2.6",
     "webpack": "^5.47.0",

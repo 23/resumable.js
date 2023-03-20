@@ -191,6 +191,8 @@ declare namespace Resumable {
     files: ResumableFile[];
     /**
      * A list of validator functions for the associated file types.
+     * The HTML5 file (with an added unique identifier) and the corresponding file category (if applicable) are passed
+     * to the validator function.
      */
     validators: {};
     /**

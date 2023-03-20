@@ -26,6 +26,7 @@ export default class ResumableChunk extends ResumableEventHandler {
     totalSizeParameterName: string;
     typeParameterName: string;
     identifierParameterName: string;
+    fileCategoryParameterName: string;
     fileNameParameterName: string;
     relativePathParameterName: string;
     totalChunksParameterName: string;

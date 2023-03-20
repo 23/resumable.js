@@ -1,12 +1,16 @@
 const path = require('path');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   mode: 'none',
-  entry: './src/resumable.ts',
+  entry: {
+    main: './src/resumable.ts',
+    helpers: './src/resumableHelpers.ts',
+  },
   target: ['web', 'es5'],
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'main.js',
+    filename: '[name].js',
     library: 'resumablejs',
     libraryTarget: 'umd',
     globalObject: 'this',
@@ -25,4 +29,14 @@ module.exports = {
       { test: /\.js$/, loader: "source-map-loader" },
     ],
   },
+  plugins: [
+    new CopyWebpackPlugin({
+        patterns: [
+          {
+            from: './src/types/types.d.ts',
+            to: './types/types.d.ts'
+          }
+        ]
+    })
+  ]
 };

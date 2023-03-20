@@ -130,7 +130,7 @@ declare interface ResumableConfiguration {
    **/
   minFileSize?: number;
   /**
-   * A function which displays an error a selected file is smaller than allowed. (Default: displays an alert for every bad file.)
+   * A function which displays an error when a selected file is smaller than allowed. (Default: displays an alert for every bad file.)
    **/
   minFileSizeErrorCallback?: (file: ResumableFile) => void;
   /**
@@ -138,7 +138,7 @@ declare interface ResumableConfiguration {
    **/
   maxFileSize?: number;
   /**
-   * A function which displays an error a selected file is larger than allowed. (Default: displays an alert for every bad file.)
+   * A function which displays an error when a selected file is larger than allowed. (Default: displays an alert for every bad file.)
    **/
   maxFileSizeErrorCallback?: (file: ResumableFile) => void;
   /**
@@ -165,7 +165,7 @@ declare interface ResumableConfiguration {
    **/
   fileTypes?: string[] | {[fileCategory: string]: string[]};
   /**
-   * A function which displays an error a selected file has type not allowed. (Default: displays an alert for every bad file.)
+   * A function which displays an error when a selected file has a type that is not allowed. (Default: displays an alert for every bad file.)
    **/
   fileTypeErrorCallback?: (file: ResumableFile) => void;
   /**

@@ -172,7 +172,8 @@
         }
         var relativePath = file.webkitRelativePath||file.relativePath||file.fileName||file.name; // Some confusion in different versions of Firefox
         var size = file.size;
-        return(size + '-' + relativePath.replace(/[^0-9a-zA-Z_-]/img, ''));
+        //the below regex helps in handling chinese character filenames which gets ignored because of unicode
+        return(size + '-' + relativePath.replace(/[^0-9a-zA-Z_-\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/img, ''));
       },
       contains:function(array,test) {
         var result = false;

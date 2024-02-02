@@ -221,17 +221,37 @@ export declare class Resumable extends ResumableEventHandler {
      * handle events coming from the files or chunks.
      */
     /**
+     * The event handler when the chunking of a file was started
+     */
+    private handleChunkingStart;
+    /**
+     * The event handler when there was any progress while chunking a file
+     */
+    private handleChunkingProgress;
+    /**
+     * The event handler when the chunking of a file was completed
+     */
+    private handleChunkingComplete;
+    /**
      * The event handler when a chunk was uploaded successfully
      */
     private handleChunkSuccess;
     /**
-     * The event handler when a chunk was uploaded successfully
+     * The event handler when an error happened while uploading a chunk
      */
     private handleChunkError;
     /**
-     * The event handler when an error occurred during the upload of a chunk
+     * The event handler when an the upload of a chunk was canceled
      */
     private handleChunkCancel;
+    /**
+     * The event handler when the upload of a chunk is being retried
+     */
+    private handleChunkRetry;
+    /**
+     * The event handler when there is any progress while uploading a chunk
+     */
+    private handleChunkProgress;
     /**
      * The event handler when an error occurred during the upload of a file
      */

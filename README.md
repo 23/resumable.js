@@ -46,13 +46,13 @@ The `dropEvent` needs to be the [drop event](https://developer.mozilla.org/en-US
 After this, interaction with Resumable.js is done by listening to events:
 
 ```js
-r.on('fileAdded', function(file, event, fileCategory){
+r.on('fileAdded', (file, event, fileCategory) => {
     ...
   });
-r.on('fileSuccess', function(file, message, fileCategory){
+r.on('fileSuccess', (file, message, fileCategory) => {
     ...
   });
-r.on('error', function(message, file, fileCategory){
+r.on('error', (message, file, fileCategory) => {
     ...
   });
 ```
@@ -140,7 +140,7 @@ adding the file. (Default: `null`)
 * `maxFileSizeErrorCallback(file, errorCount)` A function which displays an error when a selected file is larger than allowed. (Default: displays an alert for every bad file.)
 * `fileCategories` The file categories that will be used. Every file that is added to this resumable instance can be added to any of these categories. The order of the categories in this array also determines the order in which files are uploaded (files of first category are uploaded first). (Default: `[]`, only the default category will be available.)
 * `defaultFileCategory` The name of the default file category. This file category is always present, even when the fileCategories parameter is not set. If null is passed, the default category is not used. In this case, `fileCategories` must be set. (Default: `'default'`).
-* `fileTypes` The file types allowed to upload. If this is an array, the file types are used for all defined file catgories. Otherwise this needs to be an object, with an entry for every file category (category name as key, array of allowed file types as value). An empty array (either in the object or standalone) allows for any file type. Can also be changed later by calling `setFileTypes()`. (Default: `[]`)
+* `fileTypes` The file types allowed to upload. If this is an array, the file types are used for all defined file categories. Otherwise this needs to be an object, with an entry for every file category (category name as key, array of allowed file types as value). An empty array (either in the object or standalone) allows for any file type. Can also be changed later by calling `setFileTypes()`. (Default: `[]`)
 * `fileTypeErrorCallback(file)` A function which displays an error when a selected file has a type that is not allowed. (Default: displays an alert for every bad file.)
 * `fileValidationErrorCallback(file)` A function which displays an error when the validator for a given file has failed.
 * `maxChunkRetries` The maximum number of retries for a chunk before the upload is failed. Valid values are any positive integer and `undefined` for no limit. (Default: `undefined`)
@@ -178,29 +178,75 @@ adding the file. (Default: `null`)
 
 #### Events
 
-* `.fileProcessingBegin(arrayHtmlFiles, fileCategory)` File processing (e.g. transforming to chunks) of the provided [HTML files](https://developer.mozilla.org/en-US/docs/Web/API/File) has begun. The files are all part of the provided file category.
-* `.fileProcessingFailed(file, reason, fileCategory)` The processing of the provided ResumableFile was failed because of the given `reason`. The file belongs to the provided file category.
-  If `file` is undefined, the processing failed in general (e.g. unknown file category) and not because of a specific file.
-  `message` can be:
+The `Resumable` object fires events in different steps of the chunking and upload process.
+This includes events which occur on the top level (in the `Resumable` object itself), like `fileProcessingBegin`, but also all events that are fired by any `ResumableChunk` or by any `ResumableFile`.
+The re-fired events might contain additional information, but will always contain the information that was originally sent by the `ResumableChunk` or the `ResumableFile`.
+To listen to any event just call `.on('<event name>', callback())` on the `Resumable` object. E.g.:
+```js
+r.on('fileAdded', (file, event, fileCategory) => {
+    ...
+});
+```
+
+#### List of all events (parameters that are provided to the event listener are in parenthesis)
+##### Main Resumable events:
+* `fileProcessingBegin (htmlFiles, fileCategory)` File processing (e.g. transforming to chunks) of the provided [HTML files](https://developer.mozilla.org/en-US/docs/Web/API/File) has begun. The files are all part of the provided file category.
+* `fileProcessingFailed (htmlFile, reason, fileCategory)` The processing of the provided [HTML file](https://developer.mozilla.org/en-US/docs/Web/API/File) failed because of the given `reason`. The file belongs to the provided file category.  
+  If `file` is undefined, the processing failed in general (e.g. unknown file category) and not because of a specific file.  
+  (The `file` is actually an extended version of the normal HTML file. It additionally contains a `uniqueIdentifier` and a `relativePath` which defaults to the filename if no path information is available.)  
+  `reason` can be:
   * `unknownFileCategory` While validating files (e.g. added via `addFiles()`) the given file category was unknown. Usually Resumable should already throw an error somewhere else before this happens.
-  * `maxFiles` More files than allowed were added.
-  * `duplicate` The file was already added before.
-  * `fileType` The file type of the file is not part of the allowed file types.
-  * `minFileSize` The file is smaller than the allowed minimum file size.
-  * `maxFileSize` The file is bigger than the allowed maximum file size.
+  * `maxFiles` More files than allowed (set via `maxFiles`) were added.
+  * `duplicate` The same file has already been added before.
+  * `fileType` The file type of the file is not part of the allowed file types (set via `fileTypes` or `setFileTypes()`).
+  * `minFileSize` The file is smaller than the allowed minimum file size (set via `minFileSize`).
+  * `maxFileSize` The file is bigger than the allowed maximum file size (set via `maxFileSize`).
   * `validation` Validation of the file failed (can only happen if a validator for the corresponding file type was provided).
-* `.fileSuccess(file, message, fileCategory)` A specific file of the provided file category was completed. `message` is the response body from the server.
-* `.fileProgress(file, message, fileCategory)` Uploading progressed for a specific file of the provided file category. `message` is the response body from the server. It might be empty, if no response is available.
-* `.fileAdded(file, event, fileCategory)` A new file of the given file category was added. The browser `event` object from when the file was added is also provided.
-* `.filesAdded(arrayAdded, arraySkipped, fileCategory)` New files of the given file category were added (and maybe some have been skipped).
-* `.uploadStart()` Upload has been started on the Resumable object.
-* `.categoryComplete(fileCategory)` Uploading of the provided file category completed.
-* `.complete()` Uploading completed.
-* `.progress()` Uploading progress.
-* `.error(message, file, fileCategory)` An error occurred during upload of a specific file of the provided file category. `message` is the response body from the server that was given when the error occurred (while uploading a chunk). It might be empty, if no response is available.
-* `.pause()` Uploading was paused.
-* `.beforeCancel()` Triggers before the items are cancelled allowing to do any processing on uploading files.
-* `.cancel()` Uploading was canceled.
+* `fileAdded (file, event, fileCategory)` A new `ResumableFile` of the given file category was added. The DOM `event` object from when the [HTML file](https://developer.mozilla.org/en-US/docs/Web/API/File) was added is also provided.
+* `filesAdded (files, skippedFiles, fileCategory)` New `ResumableFile`s of the given file category were added. All `ResumableFile`s that were skipped (e.g. due to some processing error) are also provided. `fileProcessingFailed` events were very likely fired for all skipped files.
+* `uploadStart ()` Upload has been started.
+* `pause ()` Upload was paused.
+* `progress()` Upload progressed.
+  * This will always be fired together with a corresponding `fileProgress` event.
+* `complete ()` Upload of all files from all file categories is complete.
+* `categoryComplete (fileCategory)` Upload of all files of the provided file category is complete.
+  * If the completed category was the last one to complete its upload, a `complete` event is fired afterwards.
+* `beforeCancel ()` Upload is about to be cancelled. Triggers before anything is actually happening in the cancelling process, allowing to do any additional processing, e.g. on currently uploading files.
+  * This will be followed by a `chunkCancel` event for all currently uploading chunks.
+  * This will be followed by a `fileCancel` event for all `ResumableFiles`.
+* `cancel ()` Upload was canceled.
+  * This will be fired after all `chunkCancel` and `fileCancel` events were fired.
+* `error (message, file, fileCategory)` An error occurred during upload of the provided `ResumableFile` of the provided file category. `message` is the response body from the server that was given when the error occurred (while uploading a chunk).
+  * This will always be fired together with a corresponding `fileError` event, that contains the same information but in different order.  
+  As there currently are no other errors than `fileErrors`, there is no advantage in using one over the other.
+
+##### ResumableFile events:
+* `chunkingStart (file, fileCategory)` The chunking process for the provided `ResumableFile` of the provided file category has been started.
+* `chunkingProgress (file, progress, fileCategory)` The chunking process for the provided `ResumableFile` of the provided file category progressed. The current progress (0.0 to 1.0) is also provided.
+* `chunkingComplete (file, fileCategory)` The chunking process for the provided `ResumableFile` of the provided file category has been started.
+* `fileProgress (file, message, fileCategory)` The upload of the provided `ResumableFile` of the provided file category has progressed. `message` is the last response body that was received from the server (for the successful chunk upload).
+  * This will always be fired together with a corresponding `progress` event.
+* `fileSuccess (file, message, fileCategory)` Upload of the provided `ResumableFile` of the provided file category is complete. `message` is the last received response body from the server.
+* `fileCancel (file, fileCategory)` Upload of the provided `ResumableFile` of the provided file category has been canceled.
+  * This is fired after all corresponding `chunkCanceled` events of this `ResumableFile`.
+  * This is always followed by a `fileProgress` event (as upload progress is reset to 0).
+* `fileError (file, message, fileCategory)` An error occurred during upload of the provided `ResumableFile` of the provided file category. `message` is the response body from the server that was given when the error occurred (while uploading a chunk).
+  * This will always be fired together with a corresponding `error` event, that contains the same information but in different order.  
+  As there currently are no other errors than `fileErrors`, there is no advantage in using one over the other.
+* `fileRetry (file, message, fileCategory)` The upload of the provided `ResumableFile` of the provided file category or the upload of one of its chunks is being retried. `message` is the last received response body from the server before the retry was started.
+
+##### ResumableChunk events:
+* `chunkProgress (chunk, message, fileCategory)` The upload of the provided `ResumableChunk` of a `ResumableFile` of the provided file category has progressed. `message` is the last received response body from the server.
+  * This will always be fired together with a corresponding `fileProgress` event.
+* `chunkSuccess (chunk, message, fileCategory)` The upload of the provided `ResumableChunk` of a `ResumableFile` of the provided file category is complete. `message` is the last received response body from the server.
+  * This will always be fired together with a corresponding `fileProgress` event.
+  * If this was the last chunk of a file, a `fileSuccess` event will also be fired.
+* `chunkCancel (chunk, fileCategory)` The upload of the provided `ResumableChunk` of a `ResumableFile` of the provided file category was canceled.
+  * If this was the last chunk that needed to be cancelled for the corresponding `ResumableFile` a `fileCancel` event will also be fired.
+* `chunkError (chunk, message, fileCategory)` An error occurred during upload of the provided `ResumableChunk` of a `ResumableFile` of the provided file category. `message` is the response body from the server that was given when the error occurred.
+  * This will always be followed by a corresponding `fileError` event.
+* `chunkRetry (chunk, message, fileCategory)` The upload of the provided `ResumableChunk` of a `ResumableFile` of the provided file category is being retried. `message` is the last received response body from the server before the retry was started.
+  * This will always be followed by a corresponding `fileRetry` event.
 
 ### ResumableFile
 #### Properties

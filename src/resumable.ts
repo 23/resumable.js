@@ -422,14 +422,19 @@ export class Resumable extends ResumableEventHandler {
 
     for (const file of validatedFiles) {
       let f = new ResumableFile(file, file.uniqueIdentifier, fileCategory, this.opts);
-      f.on('chunkSuccess', () => this.handleChunkSuccess());
-      f.on('chunkError', () => this.handleChunkError());
-      f.on('chunkCancel', () => this.handleChunkCancel());
+      f.on('chunkingStart', (...args) => this.handleChunkingStart(args, fileCategory));
+      f.on('chunkingProgress', (...args) => this.handleChunkingProgress(args, fileCategory));
+      f.on('chunkingComplete', (...args) => this.handleChunkingComplete(args, fileCategory));
+      f.on('chunkSuccess', (...args) => this.handleChunkSuccess(args, fileCategory));
+      f.on('chunkError', (...args) => this.handleChunkError(args, fileCategory));
+      f.on('chunkCancel', (...args) => this.handleChunkCancel(args, fileCategory));
+      f.on('chunkRetry', (...args) => this.handleChunkRetry(args, fileCategory));
+      f.on('chunkProgress', (...args) => this.handleChunkProgress(args, fileCategory));
       f.on('fileProgress', (...args) => this.handleFileProgress(args, fileCategory));
       f.on('fileError', (...args) => this.handleFileError(args, fileCategory));
       f.on('fileSuccess', (...args) => this.handleFileSuccess(args, fileCategory));
-      f.on('fileCancel', (...args) => this.handleFileCancel(args));
-      f.on('fileRetry', () => this.handleFileRetry());
+      f.on('fileCancel', (...args) => this.handleFileCancel(args, fileCategory));
+      f.on('fileRetry', (...args) => this.handleFileRetry(args, fileCategory));
       this.files[fileCategory].push(f);
       this.fire('fileAdded', f, event, fileCategory);
     }
@@ -807,30 +812,72 @@ export class Resumable extends ResumableEventHandler {
    */
 
   /**
-   * The event handler when a chunk was uploaded successfully
+   * The event handler when the chunking of a file was started
    */
-  private handleChunkSuccess(): void {
-    this.uploadNextChunk();
+  private handleChunkingStart(args: any[], fileCategory: string): void {
+    this.fire('chunkingStart', ...args, fileCategory);
+  }
+
+  /**
+   * The event handler when there was any progress while chunking a file
+   */
+  private handleChunkingProgress(args: any[], fileCategory: string): void {
+    this.fire('chunkingProgress', ...args, fileCategory);
+  }
+
+  /**
+   * The event handler when the chunking of a file was completed
+   */
+  private handleChunkingComplete(args: any[], fileCategory: string): void {
+    this.fire('chunkingComplete', ...args, fileCategory);
   }
 
   /**
    * The event handler when a chunk was uploaded successfully
    */
-  private handleChunkError(): void {
+  private handleChunkSuccess(args: any[], fileCategory: string): void {
+    this.fire('chunkSuccess', ...args, fileCategory);
     this.uploadNextChunk();
   }
 
   /**
-   * The event handler when an error occurred during the upload of a chunk
+   * The event handler when an error happened while uploading a chunk
    */
-  private handleChunkCancel(): void {
+  private handleChunkError(args: any[], fileCategory: string): void {
+    this.fire('chunkError', ...args, fileCategory);
     this.uploadNextChunk();
+  }
+
+  /**
+   * The event handler when an the upload of a chunk was canceled
+   */
+  private handleChunkCancel(args: any[], fileCategory: string): void {
+    this.fire('chunkCancel', ...args, fileCategory);
+    this.uploadNextChunk();
+  }
+
+  /**
+   * The event handler when the upload of a chunk is being retried
+   */
+  private handleChunkRetry(args: any[], fileCategory: string): void {
+    this.fire('chunkRetry', ...args, fileCategory);
+  }
+
+  /**
+   * The event handler when there is any progress while uploading a chunk
+   */
+  private handleChunkProgress(args: any[], fileCategory: string): void {
+    this.fire('chunkProgress', ...args, fileCategory);
   }
 
   /**
    * The event handler when an error occurred during the upload of a file
    */
   private handleFileError(args: any[], fileCategory: string): void {
+    this.fire('fileError', ...args, fileCategory);
+    // 'error' event for backward compatibility ('fileError' was not fired in previous versions).
+    // If there will be other errors besides 'fileError's at some point, the 'error' event (as a general "catch all
+    // errors" event) would make more sense.
     this.fire('error', args[1], args[0], fileCategory);
   }
 
@@ -853,14 +900,16 @@ export class Resumable extends ResumableEventHandler {
   /**
    * The event handler when the upload of a file was canceled
    */
-  private handleFileCancel(args: any[]): void {
+  private handleFileCancel(args: any[], fileCategory: string): void {
+    this.fire('fileCancel', ...args, fileCategory);
     this.removeFile(args[0])
   }
 
   /**
    * The event handler, when the retry of a file was initiated
    */
-  private handleFileRetry(): void {
+  private handleFileRetry(args: any[], fileCategory: string): void {
+    this.fire('fileRetry', ...args, fileCategory);
     this.upload();
   }
 }

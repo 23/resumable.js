@@ -220,14 +220,14 @@ export default class ResumableChunk extends ResumableEventHandler {
     // Progress
     this.xhr.upload.addEventListener('progress', (e: ProgressEvent<XMLHttpRequestEventTarget>) => {
       if (Date.now() - this.lastProgressCallback.getTime() > this.throttleProgressCallbacks * 1000) {
-        this.fire('chunkProgress');
+        this.fire('chunkProgress', this.message());
         this.lastProgressCallback = new Date();
       }
       this.loaded = e.loaded || 0;
     }, false);
     this.loaded = 0;
     this.pendingRetry = false;
-    this.fire('chunkProgress');
+    this.fire('chunkProgress', this.message());
 
     /**
      * Handles the different xhr events based on the status of this chunk
@@ -236,8 +236,10 @@ export default class ResumableChunk extends ResumableEventHandler {
       var status = this.status;
       switch (status) {
         case ResumableChunkStatus.SUCCESS:
+          this.fire('chunkSuccess', this.message());
+          break;
         case ResumableChunkStatus.ERROR:
-          this.fire(status, this.message());
+          this.fire('chunkError', this.message());
           break;
         default:
           this.fire('chunkRetry', this.message());

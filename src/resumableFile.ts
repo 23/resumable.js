@@ -97,7 +97,7 @@ export default class ResumableFile extends ResumableEventHandler {
     this.bootstrap();
     let firedRetry = false;
     this.on('chunkingComplete', () => {
-      if (!firedRetry) this.fire('fileRetry');
+      if (!firedRetry) this.fire('fileRetry', this, null);
       firedRetry = true;
     });
   }
@@ -106,18 +106,24 @@ export default class ResumableFile extends ResumableEventHandler {
    * Prepare this file for a new upload, by dividing it into multiple chunks
    */
   bootstrap(): void {
-    const progressHandler = (message) => this.fire('fileProgress', this, message);
-    const retryHandler = () =>  this.fire('fileRetry', this);
-    const successHandler = (message) => {
+    const progressHandler = (message, chunk) => {
+      this.fire('chunkProgress', chunk, message);
+      this.fire('fileProgress', this, message);
+    };
+    const retryHandler = (message, chunk) => {
+      this.fire('chunkRetry', chunk, message);
+      this.fire('fileRetry', this, message);
+    }
+    const successHandler = (message, chunk) => {
       if (this._error) return;
-      this.fire('chunkSuccess');
-      this.fire('fileProgress', this, message); // it's at least progress
+      this.fire('chunkSuccess', chunk, message);
+      this.fire('fileProgress', this, message);
       if (this.isComplete) {
         this.fire('fileSuccess', this, message);
       }
     };
-    const errorHandler = (message) => {
-      this.fire('chunkError', message);
+    const errorHandler = (message, chunk) => {
+      this.fire('chunkError', chunk, message);
       this.abort();
       this._error = true;
       this.chunks = [];
@@ -132,10 +138,10 @@ export default class ResumableFile extends ResumableEventHandler {
     const maxOffset = Math.max(Math.ceil(this.file.size / this.chunkSize), 1);
     for (var offset = 0; offset < maxOffset; offset++) {
       const chunk = new ResumableChunk(this, offset, this.opts);
-      chunk.on('chunkProgress', progressHandler);
-      chunk.on('chunkError', errorHandler);
-      chunk.on('chunkSuccess', successHandler);
-      chunk.on('chunkRetry', retryHandler);
+      chunk.on('chunkProgress', (message) => progressHandler(message, chunk));
+      chunk.on('chunkError', (message) => errorHandler(message, chunk));
+      chunk.on('chunkSuccess', (message) => successHandler(message, chunk));
+      chunk.on('chunkRetry', (message) => retryHandler(message, chunk));
       this.chunks.push(chunk);
       this.fire('chunkingProgress', this, offset / maxOffset);
     }

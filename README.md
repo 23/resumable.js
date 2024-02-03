@@ -1,4 +1,9 @@
-## What is Resumable.js
+## Who created Resumable.js?
+The original library was developed and maintained mainly by [Steffen Fagerström Christensen](https://github.com/steffentchr) of [23](https://github.com/23).  
+[Point Cloud Technology](https://github.com/pointcloudtechnology) (PCT) forked the original repo on Sep 24, 2020. Any development/changes in this repo from this point on was done by PCT.  
+Big thanks to Steffen and 23 for providing us with this awesome piece of software! :D
+
+## What is Resumable.js?
 
 Resumable.js is a JavaScript library providing multiple simultaneous, stable and resumable uploads via the [`HTML5 File API`](http://www.w3.org/TR/FileAPI/).
 
@@ -8,21 +13,23 @@ Resumable.js does not have any external dependencies other than the `HTML5 File 
 However, as we want to prevent the usage of polyfills for already widely adopted functions, really old browsers are not supported.  
 Firefox 47+, Chrome 54+, Edge 14+, Safari 10.1 (all released around 2017) should be supported (though not all browsers and versions are tested). The Internet Explorer is not supported.
 
-Examples are available in the `samples/` folder. Please push your own as Markdown to help document the project.  
-(Some examples might be outdated, but should give an overview for how to work with this package. In general they should still work, but might not use newer/updated functionality. We'll try to go through the examples and update them as soon as possible (see issue #12), but this doesn't have a high poriority right now.)
-
+Examples are available in the `samples/` folder. Feel free to update the existing examples or add your own (via pull requests) to help document the project.  
+(Some examples might be outdated, but should give an overview for how to work with this package. In general they should still work, but might not use newer/updated functionality. We'll try to go through the examples and update them as soon as possible (see issue #12), but this doesn't have a high priority right now.)
 
 ## How can I use it?
 
 A new `Resumable` object is created with information of what and where to post:
 
 ```js
-var r = new Resumable({
-  target:'/api/photo/redeem-upload-token',
-  query:{upload_token:'my_token'}
-});
-// Resumable.js isn't supported, fall back on a different method
-if(!r.support) location.href = '/some-other-uploader';
+try {
+  var r = new Resumable({
+    target:'/api/photo/redeem-upload-token',
+    query:{upload_token: 'my_token'}
+  });
+} catch (error) {
+  // Resumable.js is very likely not supported in this browser, fall back on a different method.
+  if(!r.support) location.href = '/some-other-uploader';
+}
 ```
 
 To allow files to be selected and drag-dropped, you need to assign a drop target and a DOM item to be clicked for browsing:
@@ -47,15 +54,17 @@ After this, interaction with Resumable.js is done by listening to events:
 
 ```js
 r.on('fileAdded', (file, event, fileCategory) => {
-    ...
-  });
+  ...
+});
 r.on('fileSuccess', (file, message, fileCategory) => {
-    ...
-  });
+  ...
+});
 r.on('error', (message, file, fileCategory) => {
-    ...
-  });
+  ...
+});
 ```
+
+A full list of events can be found below.
 
 ## How do I set it up with my server?
 
@@ -65,11 +74,12 @@ To handle the state of upload chunks, a number of extra parameters are sent alon
 
 * `resumableChunkNumber`: The index of the chunk in the current upload. First chunk is `1` (no base-0 counting here).
 * `resumableTotalChunks`: The total number of chunks.
-* `resumableChunkSize`: The general chunk size. Using this value and `resumableTotalSize` you can calculate the total number of chunks. Please note that the size of the data received in the HTTP might be higher than `resumableChunkSize` for the last chunk for a file.
+* `resumableChunkSize`: The general chunk size. Using this value and `resumableTotalSize` you can calculate the total number of chunks. Please note that the size of the data received in the HTTP might be higher than `resumableChunkSize` for the last chunk for a file. See `resumableCurrentChunkSize`.
+* `resumableCurrentChunkSize` The actual size of the current chunk. For the last chunk of a file this might be smaller thant the general chunk size provided by `resumableChunkSize`, because the size of a file is usually not an exact multiple of the defined chunk size.
 * `resumableTotalSize`: The total file size.
 * `resumableIdentifier`: A unique identifier for the file contained in the request.
 * `resumableFilename`: The original file name (since a bug in Firefox results in the file name not being transmitted in chunk multipart posts).
-* `resumableRelativePath`: The file's relative path when selecting a directory (defaults to file name in all browsers except Chrome).
+* `resumableRelativePath`: The file's relative path when selecting a directory (might default to the file name if not supported by the client browser).
 * `resumableFileCategory`: The category that the file belongs to.
 
 You should allow for the same chunk to be uploaded more than once; this isn't standard behaviour, but on an unstable network environment it could happen, and this case is exactly what Resumable.js is designed for.
@@ -77,14 +87,15 @@ You should allow for the same chunk to be uploaded more than once; this isn't st
 For every request, you can confirm reception in HTTP status codes (can be changed through the `permanentErrors` option):
 
 * `200`, `201`: The chunk was accepted and correct. No need to re-upload.
-* `400`, `404`, `409`, `415`, `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload.
+* `400`, `401`, `403`, `404`, `409`, `415`, `500`, `501`: The file for which the chunk was uploaded is not supported, cancel the entire upload.
 * _Anything else_: Something went wrong, but try reuploading the file.
 
 ## Handling GET (or `test()` requests)
 
-Enabling the `testChunks` option will allow uploads to be resumed after browser restarts and even across browsers (in theory you could even run the same file upload across multiple tabs or different browsers).  The `POST` data requests listed are required to use Resumable.js to receive data, but you can extend support by implementing a corresponding `GET` request with the same parameters:
+Enabling the `testChunks` option will allow uploads to be resumed after browser restarts and even across browsers (in theory you could even run the same file upload across multiple tabs or different browsers).  
+The `POST` data requests listed are required to use Resumable.js to receive data, but you can extend support by implementing a corresponding `GET` request with the same parameters:
 
-* If this request returns a `200` HTTP code, the chunks is assumed to have been completed.
+* If this request returns a `200` HTTP code, the chunk is assumed to have been completed.
 * If the request returns anything else, the chunk will be uploaded in the standard fashion. (It is recommended to return *204 No Content* in these cases if possible to [avoid unwarranted notices in browser consoles](https://github.com/23/resumable.js/issues/160).)
 
 After this is done and `testChunks` enabled, an upload can quickly catch up even after a browser restart by simply verifying already uploaded chunks that do not need to be uploaded again.
@@ -144,36 +155,52 @@ adding the file. (Default: `null`)
 * `fileTypeErrorCallback(file)` A function which displays an error when a selected file has a type that is not allowed. (Default: displays an alert for every bad file.)
 * `fileValidationErrorCallback(file)` A function which displays an error when the validator for a given file has failed.
 * `maxChunkRetries` The maximum number of retries for a chunk before the upload is failed. Valid values are any positive integer and `undefined` for no limit. (Default: `undefined`)
-* `permanentErrors` List of HTTP status codes that define if the chunk upload was a permanent error and should not retry the upload. (Default: `[400, 404, 409, 415, 500, 501]`)
+* `permanentErrors` List of HTTP status codes that define if the chunk upload was a permanent error and should not retry the upload. (Default: `[400, 401, 403, 404, 409, 415, 500, 501]`)
 * `chunkRetryInterval` The number of milliseconds to wait before retrying a chunk on a non-permanent error.  Valid values are any positive integer and `undefined` for immediate retry.  (Default: `undefined`)
 * `withCredentials` Standard CORS requests do not send or set any cookies by default. In order to include cookies as part of the request, you need to set the `withCredentials` property to true. (Default: `false`)
 * `xhrTimeout` The timeout in milliseconds for each request (Default: `0`)
 * `setChunkTypeFromFile` Set chunk content-type from original file.type. (Default: `false`, if `false` default Content-Type: `application/octet-stream`)
 * `dragOverClass` The class name to add on drag over an assigned drop zone. (Default: `dragover`)
-* `clearInput` Whether the value of the HTML element that received the file input event should be cleared after adding new files. This is done for elements added via `assignBrowse` and also for elements that recevied the event given to `handleChangeEvent`. (Default: `true`).
+* `clearInput` Whether the value of the HTML element that received the file input event should be cleared after adding new files. This is done for elements added via `assignBrowse` and also for elements that received the event given to `handleChangeEvent`. (Default: `true`).
 
 #### Properties
-
-* `.support` A boolean value indicator whether or not Resumable.js is supported by the current browser.
-* `.opts` A hash object of the configuration of the Resumable.js instance.
-* `.files` An array of `ResumableFile` file objects added by the user (see full docs for this object type below).
+* `.isUploading` *[readonly]* Is `true` when the instance is uploading (as long as at least one chunk of any file is currently uploading). `false` otherwise.
 
 #### Methods
 
-* `.assignBrowse(domNodes, isDirectory)` Assign a browse action to one or more DOM nodes.  Pass in `true` to allow directories to be selected (Chrome only).  See the note above about using an HTML span instead of an actual button.
-* `.assignDrop(domNodes)` Assign one or more DOM nodes as a drop target.
-* `.handleChangeEvent(inputEvent)` Call the event handler for an InputEvent (i.e. received one or multiple files). Also used internally when an input occurs on an element that was added via `assignBrowse()`.
-* `.handleDropEvent(dropEvent)` Call the event handler for a DragEvent (when a file is dropped on a drop area). Also used internally when a drop occurs on an element that was added via `assignDrop()`.
-* `.on(event, callback)` Listen for an event from Resumable.js (see below).
+* `.assignBrowse(domNodes, isDirectory, fileCategory)` Assign a browse action to one or more DOM nodes. Pass in `true` for `isDirectory` to allow directories to be selected (Chrome only). Pass any file category (as string) for `fileCategory` to assign this file category to all files added via the DOM nodes (defaults to the `defaultFileCategory`).  
+See the note above about using an HTML span instead of an actual button.
+* `.assignDrop(domNodes, fileCategory)` Assign one or more DOM nodes as a drop target. Pass any file category (as string) for `fileCategory` to assign this file category to all files added via the DOM nodes (defaults to the `defaultFileCategory`).
+* `.unAssignDrop(domNodes)` Remove one or more DOM nodes as a drop target.
+* `.setFileTypes(fileTypes, domNode, fileCategory)` Set the file types allowed to upload. Optionally pass a DOM node (HTMLInputElement) on which the accepted file types should be updated as well. Pass any file category (as string) for `fileCategory` to set the file types for this file category (defaults to the `defaultFileCategory`).
+* `.handleChangeEvent(inputEvent, fileCategory)` Call the event handler for an InputEvent (i.e. received one or multiple files). Also used internally when an input occurs on an element that was added via `assignBrowse()`. `fileCategory` needs to be a valid file category (defaults to the `defaultFileCategory`).
+* `.handleDropEvent(dropEvent, fileCategory)` Call the event handler for a DragEvent (when a file is dropped on a drop area). Also used internally when a drop occurs on an element that was added via `assignDrop()`. `fileCategory` needs to be a valid file category (defaults to the `defaultFileCategory`).
+* `.on(event, callback)` Listen for an event from Resumable.js. A full list of events can be found below.
 * `.upload()` Start or resume uploading.
 * `.pause()` Pause uploading.
-* `.cancel()` Cancel upload of all `ResumableFile` objects and remove them from the list.
+* `.cancel()` Cancel upload of all `ResumableFile` objects and empty file list.
 * `.progress()` Returns a float between 0 and 1 indicating the current upload progress of all files.
-* `.isUploading()` Returns a boolean indicating whether or not the instance is currently uploading anything.
-* `.addFile(file)` Add a HTML5 File object to the list of files.
-* `.addFiles(files)` Add an Array of HTML5 File objects to the list of files.
-* `.removeFile(file)` Cancel upload of a specific `ResumableFile` object on the list from the list.
-* `.getFromUniqueIdentifier(uniqueIdentifier)` Look up a `ResumableFile` object by its unique identifier.
+* `.addFile(file, fileCategory)` Add a HTML5 File object to the list of files and assign the given `fileCategory` (defaults to the `defaultFileCategory`).
+* `.addFiles(files)` Add an Array of HTML5 File objects to the list of files and assign the given `fileCategory` to every file (defaults to the `defaultFileCategory`).
+* `addFileValidator(fileType, validatorFunction)` Add a validator function for the given file type. This can e.g. be used to read the file and validate checksums based on certain properties. `fileType` is the extension of the files that should be validated. `validatorFunction` is the function to validate the files.
+  * File validators can either return a function or a promise that returns a boolean determining if validation passed or not. E.g. to validate the signature bytes of a zip file:  
+  ```js
+  r.addFileValidator('zip', (file) => {
+    const readerPromise = new Promise((resolve, reject) => {
+      const fileReader = new FileReader();
+      fileReader.onload = (event) => resolve(event.target.result);
+      fileReader.onerror = reject;
+      fileReader.readAsArrayBuffer(file.slice(0, 4));
+    });
+
+    return readerPromise.then((result) => {
+      const result = new Uint32Array(result);
+      return result[0] === 0x04034b50;
+    });
+  })
+  ```
+* `.removeFile(file)` Cancel upload of a specific `ResumableFile` and remove it from the file list.
+* `.getFromUniqueIdentifier(uniqueIdentifier)` Look up a `ResumableFile` object by its unique identifier and return it.
 * `.getSize()` Returns the total size of the upload in bytes.
 
 #### Events
@@ -258,20 +285,34 @@ r.on('fileAdded', (file, event, fileCategory) => {
 * `.fileCategory` The file category this file belongs to.
 * `.uniqueIdentifier` A unique identifier assigned to this file object. This value is included in uploads to the server for reference, but can also be used in CSS classes etc when building your upload UI.
 * `.chunks` An array of `ResumableChunk` items. You shouldn't need to dig into these.
-* `.isUploading` A boolean indicating whether file chunks is uploading.
-* `.isComplete` A boolean indicating whether the file has completed uploading and received a server response.
+* `.isUploading` *[readonly]* A boolean indicating whether file chunks is uploading.
+* `.isComplete` *[readonly]* A boolean indicating whether the file has completed uploading and received a server response.
 
 #### Methods
 
-* `.progress(relative)` Returns a float between 0 and 1 indicating the current upload progress of the file. If `relative` is `true`, the value is returned relative to all files in the Resumable.js instance.
+* `.progress()` Returns a float between 0 and 1 indicating the current upload progress of the file.
 * `.abort()` Abort uploading the file.
 * `.cancel()` Abort uploading the file and delete it from the list of files to upload.
-* `.retry()` Retry uploading the file.
-* `.bootstrap()` Rebuild the state of a `ResumableFile` object, including reassigning chunks and XMLHttpRequest instances.
-* `.markChunksCompleted()` starts upload from the next chunk number while marking all previous chunks complete. Must be called before upload() method.
+* `.retry()` Retry uploading the file. This will also remove and recreate all chunks of this file.
+
+### ResumableChunk
+You should generally not need to mess around with the single chunks of a file. Usually working with the main `Resumable` object and sometimes with the `ResumableFile`s is enough. So use the following properties and functions with care!
+
+#### Properties
+* `.formattedQuery` *[readonly]* The query parameters for this chunk as an object, combined with custom parameters if provided.
+* `.status` *[readonly]* The status for this Chunk based on different parameters of the underlying [XMLHttpRequest](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest).
+
+#### Methods
+
+* `.getTarget(requestType)` Get the target url for the specified request type and the configured parameters of this chunk. `requestType` can either be `"test"` or `"upload"`.
+* `send()` Upload this chunk. If `testChunks` is `true`, this will first send a test GET request to the server. In this case, if the chunk was already uploaded previously, it won't be uploaded again.
+* `abort()` Abort the currently running upload of this chunk. If no upload is running, this function does nothing.
+* `message()` Get the last server response of the underlying [XMLHttpRequest](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest). If no XMLHttpRequest is present (no upload is running and no test request was sent), this returns an empty string.
+* `progress(relative)` Return the upload progress for the current chunk as a number between 0 and 1. If `relative` is `true`, the progress will be calculated based on the size of the entire file (e.g. if the file is 10mb with two chunks of 5mb each, this function returns `0.5` for the first chunk if the chunk is uploaded and `relative` is `true`. If `relative` is `false` it returns `1.0` in this case.).
+* `markComplete()` Mark this chunk as completed (as already uploaded). You should usually not have to call this manually as resumable is handling that already.
+
 
 ## Alternatives
 
-This library is explicitly designed for modern browsers supporting advanced HTML5 file features, and the motivation has been to provide stable and resumable support for large files (allowing uploads of several GB files through HTTP in a predictable fashion).
-
+This library is explicitly designed for modern browsers supporting advanced HTML5 file features, and the motivation has been to provide stable and resumable support for large files (allowing uploads of several GB files through HTTP in a predictable fashion).  
 If your aim is just to support progress indications during upload/uploading multiple files at once, Resumable.js isn't for you. In those cases, something like [Plupload](http://plupload.com/) provides the same features with wider browser support.

@@ -36,6 +36,7 @@ export class Resumable extends ResumableEventHandler {
   private support: boolean;
 
   // Configuration Options
+  // todo #23 (check all class properties)
   clearInput: boolean = true;
   dragOverClass: string = 'dragover';
   fileCategories: string[] = [];
@@ -778,7 +779,7 @@ export class Resumable extends ResumableEventHandler {
    * Check whether the upload is completed (if all files of a category are uploaded and if all files in general are
    * uploaded).
    */
-  checkUploadComplete(): void {
+  private checkUploadComplete(): void {
     // If no files were added, there is no upload that could be complete.
     if (this.getFilesOfAllCategories().length === 0) {
       return;

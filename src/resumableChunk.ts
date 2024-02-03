@@ -37,6 +37,7 @@ export default class ResumableChunk extends ResumableEventHandler {
   private xhr: XMLHttpRequest = null;
 
   // Option properties
+  // todo #23 (check all class properties)
   private chunkSize: number = 1024 * 1024; // 1 MB
   private fileParameterName: string = 'file';
   chunkNumberParameterName: string = 'resumableChunkNumber';
@@ -92,6 +93,7 @@ export default class ResumableChunk extends ResumableEventHandler {
   /**
    * Set the header values for the current XMLHttpRequest
    */
+  // todo #23
   setCustomHeaders(): void {
     if (!this.xhr) {
       return;
@@ -170,6 +172,7 @@ export default class ResumableChunk extends ResumableEventHandler {
   /**
    * Makes a GET request without any data to see if the chunk has already been uploaded in a previous session
    */
+  // todo #23
   test(): void {
     // Set up request and listen for event
     this.xhr = new XMLHttpRequest();

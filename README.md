@@ -203,7 +203,43 @@ See the note above about using an HTML span instead of an actual button.
 * `.getFromUniqueIdentifier(uniqueIdentifier)` Look up a `ResumableFile` object by its unique identifier and return it.
 * `.getSize()` Returns the total size of the upload in bytes.
 
-#### Events
+### ResumableFile
+#### Properties
+
+* `.file` The correlating HTML5 `File` object.
+* `.fileName` The name of the file.
+* `.relativePath` The relative path to the file (defaults to file name if relative path doesn't exist)
+* `.size` Size in bytes of the file.
+* `.fileCategory` The file category this file belongs to.
+* `.uniqueIdentifier` A unique identifier assigned to this file object. This value is included in uploads to the server for reference, but can also be used in CSS classes etc when building your upload UI.
+* `.chunks` An array of `ResumableChunk` items. You shouldn't need to dig into these.
+* `.isUploading` *[readonly]* A boolean indicating whether file chunks is uploading.
+* `.isComplete` *[readonly]* A boolean indicating whether the file has completed uploading and received a server response.
+
+#### Methods
+
+* `.progress()` Returns a float between 0 and 1 indicating the current upload progress of the file.
+* `.abort()` Abort uploading the file.
+* `.cancel()` Abort uploading the file and delete it from the list of files to upload.
+* `.retry()` Retry uploading the file. This will also remove and recreate all chunks of this file.
+
+### ResumableChunk
+You should generally not need to mess around with the single chunks of a file. Usually working with the main `Resumable` object and sometimes with the `ResumableFile`s is enough. So use the following properties and functions with care!
+
+#### Properties
+* `.formattedQuery` *[readonly]* The query parameters for this chunk as an object, combined with custom parameters if provided.
+* `.status` *[readonly]* The status for this Chunk based on different parameters of the underlying [XMLHttpRequest](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest).
+
+#### Methods
+
+* `.getTarget(requestType)` Get the target url for the specified request type and the configured parameters of this chunk. `requestType` can either be `"test"` or `"upload"`.
+* `send()` Upload this chunk. If `testChunks` is `true`, this will first send a test GET request to the server. In this case, if the chunk was already uploaded previously, it won't be uploaded again.
+* `abort()` Abort the currently running upload of this chunk. If no upload is running, this function does nothing.
+* `message()` Get the last server response of the underlying [XMLHttpRequest](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest). If no XMLHttpRequest is present (no upload is running and no test request was sent), this returns an empty string.
+* `progress(relative)` Return the upload progress for the current chunk as a number between 0 and 1. If `relative` is `true`, the progress will be calculated based on the size of the entire file (e.g. if the file is 10mb with two chunks of 5mb each, this function returns `0.5` for the first chunk if the chunk is uploaded and `relative` is `true`. If `relative` is `false` it returns `1.0` in this case.).
+* `markComplete()` Mark this chunk as completed (as already uploaded). You should usually not have to call this manually as resumable is handling that already.
+
+### Events
 
 The `Resumable` object fires events in different steps of the chunking and upload process.
 This includes events which occur on the top level (in the `Resumable` object itself), like `fileProcessingBegin`, but also all events that are fired by any `ResumableChunk` or by any `ResumableFile`.
@@ -274,43 +310,6 @@ r.on('fileAdded', (file, event, fileCategory) => {
   * This will always be followed by a corresponding `fileError` event.
 * `chunkRetry (chunk, message, fileCategory)` The upload of the provided `ResumableChunk` of a `ResumableFile` of the provided file category is being retried. `message` is the last received response body from the server before the retry was started.
   * This will always be followed by a corresponding `fileRetry` event.
-
-### ResumableFile
-#### Properties
-
-* `.file` The correlating HTML5 `File` object.
-* `.fileName` The name of the file.
-* `.relativePath` The relative path to the file (defaults to file name if relative path doesn't exist)
-* `.size` Size in bytes of the file.
-* `.fileCategory` The file category this file belongs to.
-* `.uniqueIdentifier` A unique identifier assigned to this file object. This value is included in uploads to the server for reference, but can also be used in CSS classes etc when building your upload UI.
-* `.chunks` An array of `ResumableChunk` items. You shouldn't need to dig into these.
-* `.isUploading` *[readonly]* A boolean indicating whether file chunks is uploading.
-* `.isComplete` *[readonly]* A boolean indicating whether the file has completed uploading and received a server response.
-
-#### Methods
-
-* `.progress()` Returns a float between 0 and 1 indicating the current upload progress of the file.
-* `.abort()` Abort uploading the file.
-* `.cancel()` Abort uploading the file and delete it from the list of files to upload.
-* `.retry()` Retry uploading the file. This will also remove and recreate all chunks of this file.
-
-### ResumableChunk
-You should generally not need to mess around with the single chunks of a file. Usually working with the main `Resumable` object and sometimes with the `ResumableFile`s is enough. So use the following properties and functions with care!
-
-#### Properties
-* `.formattedQuery` *[readonly]* The query parameters for this chunk as an object, combined with custom parameters if provided.
-* `.status` *[readonly]* The status for this Chunk based on different parameters of the underlying [XMLHttpRequest](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest).
-
-#### Methods
-
-* `.getTarget(requestType)` Get the target url for the specified request type and the configured parameters of this chunk. `requestType` can either be `"test"` or `"upload"`.
-* `send()` Upload this chunk. If `testChunks` is `true`, this will first send a test GET request to the server. In this case, if the chunk was already uploaded previously, it won't be uploaded again.
-* `abort()` Abort the currently running upload of this chunk. If no upload is running, this function does nothing.
-* `message()` Get the last server response of the underlying [XMLHttpRequest](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest). If no XMLHttpRequest is present (no upload is running and no test request was sent), this returns an empty string.
-* `progress(relative)` Return the upload progress for the current chunk as a number between 0 and 1. If `relative` is `true`, the progress will be calculated based on the size of the entire file (e.g. if the file is 10mb with two chunks of 5mb each, this function returns `0.5` for the first chunk if the chunk is uploaded and `relative` is `true`. If `relative` is `false` it returns `1.0` in this case.).
-* `markComplete()` Mark this chunk as completed (as already uploaded). You should usually not have to call this manually as resumable is handling that already.
-
 
 ## Alternatives
 
